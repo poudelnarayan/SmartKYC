@@ -27,6 +27,7 @@ dependencies:
   intl: ^0.20.1
   google_fonts: ^6.2.1
   permission_handler: ^11.3.1
+  flutter_launcher_icons: ^0.14.3
 
 dev_dependencies:
   flutter_test:
@@ -35,9 +36,9 @@ dev_dependencies:
 
 flutter_native_splash:
   color: "#ffffff"
-  image: assets/images/splash.png
+  image: assets/images/splash_screen_logo.png
   android_12:
-    image: assets/images/splash.png
+    image: assets/images/splash_screen_logo.png
     color: "#ffffff"
 
 flutter:
@@ -48,3 +49,9 @@ flutter:
     - assets/images/onboarding2.png
     - assets/images/onboarding3.png
     - assets/images/driving_liscense_spicemen.jpg
+
+flutter_icons:
+  android: true
+  image_path: "assets/images/app-icon.png"
+  adaptive_icon_foreground: "assets/images/app-icon.png"
+  adaptive_icon_background: "#ffffff"
