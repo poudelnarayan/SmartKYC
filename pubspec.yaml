@@ -22,6 +22,11 @@ dependencies:
   equatable: ^2.0.7
   camera: ^0.11.0+2
   get_it: ^8.0.3
+  lottie: ^3.3.1
+  flutter_animate: ^4.5.2
+  intl: ^0.20.1
+  google_fonts: ^6.2.1
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:

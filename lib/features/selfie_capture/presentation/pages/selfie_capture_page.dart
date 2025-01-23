@@ -26,16 +26,17 @@ class _SelfieCapturePageState extends State<SelfieCapturePage> {
   @override
   void initState() {
     super.initState();
-    _cameraController = CameraController(
-      widget.camera,
-      ResolutionPreset.medium,
-      enableAudio: false,
-    );
+
     _initializeCamera();
   }
 
   Future<void> _initializeCamera() async {
     try {
+      _cameraController = CameraController(
+        widget.camera,
+        ResolutionPreset.medium,
+        enableAudio: false,
+      );
       await _cameraController.initialize();
       if (mounted) {
         setState(() {});
@@ -55,46 +56,129 @@ class _SelfieCapturePageState extends State<SelfieCapturePage> {
     context.read<SelfieCaptureBloc>().add(CaptureSelfie());
   }
 
+  Future<void> _navigateToLiveliness(BuildContext context) async {
+    await _cameraController.dispose();
+
+    if (mounted) {
+      context.go('/liveliness-detection-start');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    print("##################");
-    print(widget.camera);
-    print("##################");
-
     if (!_cameraController.value.isInitialized) {
-      return Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+      );
     }
 
     return BlocProvider(
       create: (context) => SelfieCaptureBloc(_cameraController),
       child: Scaffold(
+        backgroundColor: Color.fromARGB(255, 180, 206, 249),
+        appBar: _isCaptured
+            ? AppBar(
+                elevation: 0,
+                backgroundColor: Colors.transparent,
+                leading: IconButton(
+                  icon: Icon(
+                    Icons.arrow_back,
+                    color: Colors.white,
+                  ),
+                  onPressed: () => setState(() {
+                    _isCaptured = false;
+                    _capturedImage = null;
+                  }),
+                ),
+                title: Text(
+                  'Review Selfie',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              )
+            : null,
         body: SafeArea(
           child: Column(
             children: [
-              if (!_isCaptured)
-                Container(
-                  height: MediaQuery.of(context).size.height - 200,
-                  child: RotatedBox(
-                    quarterTurns: 3,
-                    child: CameraPreview(
-                      _cameraController,
-                      child: OvalFaceOverlay(),
-                    ),
-                  ),
-                )
-              else if (_capturedImage != null)
-                Center(
-                  child: Image.file(
-                    File(_capturedImage!.path),
-                    fit: BoxFit.cover,
-                  ),
-                )
-              else
-                Center(
-                    child: Text("Failed to capture image",
-                        style: TextStyle(fontSize: 18))),
-              Align(
-                alignment: Alignment.bottomCenter,
+              Expanded(
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    if (!_isCaptured)
+                      Transform.scale(
+                        scaleX: -1,
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 500,
+                          child: AspectRatio(
+                            aspectRatio: _cameraController.value.aspectRatio,
+                            child: RotatedBox(
+                              quarterTurns: 3,
+                              child: CameraPreview(
+                                _cameraController,
+                                child: OvalFaceOverlay(),
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    else if (_capturedImage != null)
+                      Transform.scale(
+                        scaleX: -1,
+                        child: Container(
+                          width: double.infinity,
+                          child: Image.file(
+                            File(_capturedImage!.path),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      )
+                    else
+                      Center(
+                        child: Text(
+                          "Failed to capture image",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    if (!_isCaptured)
+                      Positioned(
+                        top: 16,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 12),
+                          margin: EdgeInsets.symmetric(horizontal: 24),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            'Position your face within the oval and ensure good lighting',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: const Color.fromARGB(173, 42, 40, 41),
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Container(
+                color: Color.fromARGB(255, 180, 206, 249),
+                padding: EdgeInsets.all(24),
                 child: BlocConsumer<SelfieCaptureBloc, SelfieCaptureState>(
                   listener: (context, state) {
                     if (state is SelfieCaptured) {
@@ -102,43 +186,78 @@ class _SelfieCapturePageState extends State<SelfieCapturePage> {
                         _isCaptured = true;
                         _capturedImage = state.image;
                       });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text("Selfie Captured Successfully!")),
-                      );
                     } else if (state is SelfieCaptureError) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(state.message)),
+                        SnackBar(
+                          content: Text(state.message),
+                          backgroundColor: Colors.red,
+                          behavior: SnackBarBehavior.floating,
+                        ),
                       );
                     }
                   },
                   builder: (context, state) {
+                    if (state is SelfieCaptureInProgress) {
+                      return Center(
+                        child: CircularProgressIndicator(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      );
+                    }
+
                     return _isCaptured
                         ? Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              Padding(
-                                padding: EdgeInsets.all(20),
-                                child: ElevatedButton(
-                                  onPressed: () => _capturePhoto(context),
-                                  child: Text("Retake Selfie"),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () {
+                                    setState(() {
+                                      _isCaptured = false;
+                                      _capturedImage = null;
+                                    });
+                                  },
+                                  icon: Icon(Icons.refresh),
+                                  label: Text('Retake'),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.white,
+                                    side: BorderSide(color: Colors.white),
+                                    padding: EdgeInsets.symmetric(vertical: 16),
+                                  ),
                                 ),
                               ),
-                              Padding(
-                                padding: EdgeInsets.all(20),
-                                child: ElevatedButton(
+                              SizedBox(width: 16),
+                              Expanded(
+                                child: FilledButton.icon(
                                   onPressed: () =>
-                                      context.go('/liveliness-detection'),
-                                  child: Text("Continue"),
+                                      _navigateToLiveliness(context),
+                                  icon: Icon(Icons.check),
+                                  label: Text('Continue'),
+                                  style: FilledButton.styleFrom(
+                                    padding: EdgeInsets.symmetric(vertical: 16),
+                                  ),
                                 ),
-                              )
+                              ),
                             ],
                           )
-                        : Padding(
-                            padding: EdgeInsets.all(20),
-                            child: ElevatedButton(
-                              onPressed: () => _capturePhoto(context),
-                              child: Text("Capture Selfie"),
+                        : Center(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              padding: EdgeInsets.all(4),
+                              child: IconButton(
+                                onPressed: () => _capturePhoto(context),
+                                icon: Icon(
+                                  Icons.camera,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  size: 32,
+                                ),
+                                style: IconButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  padding: EdgeInsets.all(16),
+                                ),
+                              ),
                             ),
                           );
                   },

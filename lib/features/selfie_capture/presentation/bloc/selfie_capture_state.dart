@@ -1,27 +1,19 @@
-import 'package:equatable/equatable.dart';
 import 'package:camera/camera.dart';
 
-abstract class SelfieCaptureState extends Equatable {
-  @override
-  List<Object?> get props => [];
-}
+abstract class SelfieCaptureState {}
 
-class SelfieInitial extends SelfieCaptureState {}
+class SelfieCaptureInitial extends SelfieCaptureState {}
 
-class SelfieCapturing extends SelfieCaptureState {}
+class SelfieCaptureInProgress extends SelfieCaptureState {}
 
 class SelfieCaptured extends SelfieCaptureState {
   final XFile image;
-  SelfieCaptured(this.image);
 
-  @override
-  List<Object?> get props => [image];
+  SelfieCaptured(this.image);
 }
 
 class SelfieCaptureError extends SelfieCaptureState {
   final String message;
-  SelfieCaptureError(this.message);
 
-  @override
-  List<Object?> get props => [message];
+  SelfieCaptureError(this.message);
 }

@@ -4,4 +4,6 @@ class NextPageEvent extends OnboardingEvent {}
 
 class PreviousPageEvent extends OnboardingEvent {}
 
-class FinishOnboardingEvent extends OnboardingEvent {}
+class SkipOnboardingEvent extends OnboardingEvent {}
+
+class CompleteOnboardingEvent extends OnboardingEvent {}
