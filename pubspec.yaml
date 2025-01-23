@@ -11,6 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   cupertino_icons: ^1.0.6
   image_picker: ^1.1.2
@@ -24,7 +26,7 @@ dependencies:
   get_it: ^8.0.3
   lottie: ^3.3.1
   flutter_animate: ^4.5.2
-  intl: ^0.20.1
+  intl: 0.19.0
   google_fonts: ^6.2.1
   permission_handler: ^11.3.1
   flutter_launcher_icons: ^0.14.3
@@ -43,6 +45,7 @@ flutter_native_splash:
 
 flutter:
   uses-material-design: true
+  generate: true
 
   assets:
     - assets/images/onboarding1.png

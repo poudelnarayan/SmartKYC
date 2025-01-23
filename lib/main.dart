@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smartkyc/config/routes.dart';
 import 'package:camera/camera.dart';
@@ -8,8 +9,7 @@ import 'package:smartkyc/features/liveliness_detection/presentation/bloc/livelin
 import 'package:smartkyc/features/onboarding/presentation/bloc/onboarding_bloc.dart';
 import 'package:flutter/services.dart';
 import 'package:smartkyc/features/upload_document/presentation/bloc/upload_document_bloc.dart';
-
-import 'features/selfie_capture/presentation/bloc/selfie_capture_bloc.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 final getIt = GetIt.instance;
 
@@ -57,6 +57,16 @@ class SmartKycApp extends StatelessWidget {
         ),
       ),
       routerConfig: appRouter,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate
+      ],
+      supportedLocales: const [
+        Locale('en'),
+        Locale('ne'),
+      ],
     );
   }
 }
