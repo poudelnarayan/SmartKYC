@@ -2,45 +2,47 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:smartkyc/features/language/presentation/widgets/language_switcher.dart';
 import '../bloc/onboarding_bloc.dart';
 import '../bloc/onboarding_event.dart';
 import '../bloc/onboarding_state.dart';
 import '../widgets/onboarding_content.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class OnboardingPage extends StatelessWidget {
   OnboardingPage({Key? key}) : super(key: key);
 
   final PageController _pageController = PageController();
 
-  final List<Map<String, String>> onboardingData = [
-    {
-      'image': 'assets/images/onboarding1.png',
-      'title': 'Secure Document Upload',
-      'description':
-          'Upload or capture your documents with bank-grade security. Your data is encrypted and protected at all times.',
-    },
-    {
-      'image': 'assets/images/onboarding2.png',
-      'title': 'AI-Powered Verification',
-      'description':
-          'Experience instant identity verification powered by advanced AI technology. Quick, accurate, and hassle-free.',
-    },
-    {
-      'image': 'assets/images/onboarding3.png',
-      'title': 'Fast & Reliable Process',
-      'description':
-          'Complete your KYC verification securely in minutes. Our streamlined process ensures a smooth experience.',
-    },
-  ];
+  List<Map<String, String>> _getOnboardingData(AppLocalizations l10n) => [
+        {
+          'image': 'assets/images/onboarding1.png',
+          'title': l10n.onboardingTitle1,
+          'description': l10n.onboardingDesc1,
+        },
+        {
+          'image': 'assets/images/onboarding2.png',
+          'title': l10n.onboardingTitle2,
+          'description': l10n.onboardingDesc2,
+        },
+        {
+          'image': 'assets/images/onboarding3.png',
+          'title': l10n.onboardingTitle3,
+          'description': l10n.onboardingDesc3,
+        },
+      ];
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final onboardingData = _getOnboardingData(l10n);
+
     return BlocProvider(
       create: (context) => OnboardingBloc(),
       child: BlocConsumer<OnboardingBloc, OnboardingState>(
         listener: (context, state) {
           if (state is OnboardingCompleted) {
-            context.go('/upload-document');
+            context.go('/liveliness-detection');
           }
         },
         builder: (context, state) {
@@ -50,19 +52,25 @@ class OnboardingPage extends StatelessWidget {
                 children: [
                   Align(
                     alignment: Alignment.topRight,
-                    child: TextButton(
-                      onPressed: () {
-                        context
-                            .read<OnboardingBloc>()
-                            .add(SkipOnboardingEvent());
-                      },
-                      child: Text(
-                        'Skip',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w600,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const LanguageSwitcher(),
+                        TextButton(
+                          onPressed: () {
+                            context
+                                .read<OnboardingBloc>()
+                                .add(SkipOnboardingEvent());
+                          },
+                          child: Text(
+                            l10n.skip,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ).animate().fadeIn(),
                   Expanded(
@@ -100,7 +108,7 @@ class OnboardingPage extends StatelessWidget {
                               );
                             },
                             child: Text(
-                              'Back',
+                              l10n.back,
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.primary,
                                 fontWeight: FontWeight.w600,
@@ -129,7 +137,7 @@ class OnboardingPage extends StatelessWidget {
                             ),
                           ),
                           child: Text(
-                            state.isLastPage ? 'Get Started' : 'Next',
+                            state.isLastPage ? l10n.getStarted : l10n.next,
                           ),
                         ),
                       ],

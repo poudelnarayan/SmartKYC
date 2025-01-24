@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SelfieStartPage extends StatelessWidget {
   const SelfieStartPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -15,7 +18,7 @@ class SelfieStartPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Take Your Selfie',
+                  l10n.selfieCapture,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).colorScheme.primary,
@@ -23,7 +26,7 @@ class SelfieStartPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Follow these guidelines to ensure a successful verification',
+                  l10n.selfieCaptureDesc,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: Colors.grey[600],
                       ),
@@ -46,7 +49,7 @@ class SelfieStartPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Selfie Guidelines',
+                        l10n.selfieGuidelines,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: Theme.of(context).colorScheme.primary,
@@ -74,25 +77,22 @@ class SelfieStartPage extends StatelessWidget {
                       _buildGuidelineItem(
                         context,
                         icon: Icons.wb_sunny,
-                        title: 'Good Lighting',
-                        description:
-                            'Ensure you are in a well-lit room with natural light',
+                        title: l10n.goodLighting,
+                        description: l10n.goodLightingDesc,
                       ),
                       const SizedBox(height: 20),
                       _buildGuidelineItem(
                         context,
                         icon: Icons.face,
-                        title: 'Face Position',
-                        description:
-                            'Keep your face centered and within the oval guide',
+                        title: l10n.facePosition,
+                        description: l10n.facePositionDesc,
                       ),
                       const SizedBox(height: 20),
                       _buildGuidelineItem(
                         context,
                         icon: Icons.no_flash,
-                        title: 'No Flash',
-                        description:
-                            'Avoid using flash, instead use ambient lighting',
+                        title: l10n.noFlash,
+                        description: l10n.noFlashDesc,
                       ),
                     ],
                   ),
@@ -105,9 +105,9 @@ class SelfieStartPage extends StatelessWidget {
                     minimumSize: const Size(double.infinity, 56),
                   ),
                   icon: const Icon(Icons.camera_alt),
-                  label: const Text(
-                    'Start Camera',
-                    style: TextStyle(
+                  label: Text(
+                    l10n.startCamera,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -126,7 +126,7 @@ class SelfieStartPage extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Make sure you\'re in a well-lit environment before proceeding',
+                          l10n.lightingTip,
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 14,

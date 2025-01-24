@@ -8,6 +8,7 @@ import '../features/upload_document/presentation/pages/upload_document_page.dart
 import '../features/selfie_capture/presentation/pages/selfie_capture_page.dart';
 import '../features/liveliness_detection/presentation/pages/liveliness_detection_page.dart';
 import '../features/success/presentation/pages/success_page.dart';
+import '../features/verification_steps/presentation/pages/verification_steps_page.dart';
 
 final appRouter = GoRouter(
   routes: [
@@ -55,6 +56,11 @@ final appRouter = GoRouter(
       name: "liveliness-detection-start",
       path: '/liveliness-detection-start',
       builder: (context, state) => LivenessDetectionStartPage(),
+    ),
+    GoRoute(
+      name: "verification-steps",
+      path: '/verification-steps',
+      builder: (context, state) => const VerificationStepsPage(),
     ),
   ],
 );

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class LivenessDetectionStartPage extends StatelessWidget {
   const LivenessDetectionStartPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -14,9 +17,8 @@ class LivenessDetectionStartPage extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Colors.blue.shade900,
-              Colors.blue.shade800,
-              Colors.blue.shade700,
+              Theme.of(context).colorScheme.primary,
+              Theme.of(context).colorScheme.secondary,
             ],
           ),
         ),
@@ -31,7 +33,6 @@ class LivenessDetectionStartPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 40),
-                        // Header Section
                         Center(
                           child: Container(
                             width: 80,
@@ -48,9 +49,9 @@ class LivenessDetectionStartPage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 32),
-                        const Text(
-                          'Face Verification',
-                          style: TextStyle(
+                        Text(
+                          l10n.faceVerification,
+                          style: const TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -59,7 +60,7 @@ class LivenessDetectionStartPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          "We need to verify that you're a real person to ensure the security of your account.",
+                          l10n.faceVerificationDesc,
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.white.withOpacity(0.8),
@@ -68,15 +69,13 @@ class LivenessDetectionStartPage extends StatelessWidget {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 48),
-                        // Requirements Section
-                        _buildRequirementsList(),
+                        _buildRequirementsList(context),
                         const SizedBox(height: 48),
                       ],
                     ),
                   ),
                 ),
               ),
-              // Bottom Action Section
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
@@ -89,7 +88,7 @@ class LivenessDetectionStartPage extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'This process will take less than a minute',
+                      l10n.verificationTimeEstimate,
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.8),
                         fontSize: 14,
@@ -112,9 +111,9 @@ class LivenessDetectionStartPage extends StatelessWidget {
                           ),
                           elevation: 0,
                         ),
-                        child: const Text(
-                          'Begin Verification',
-                          style: TextStyle(
+                        child: Text(
+                          l10n.beginVerification,
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
@@ -131,22 +130,24 @@ class LivenessDetectionStartPage extends StatelessWidget {
     );
   }
 
-  Widget _buildRequirementsList() {
+  Widget _buildRequirementsList(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     final requirements = [
       {
         'icon': Icons.wb_sunny_outlined,
-        'title': 'Good Lighting',
-        'description': 'Ensure you are in a well-lit environment',
+        'title': l10n.goodLighting,
+        'description': l10n.goodLightingDesc,
       },
       {
         'icon': Icons.face_outlined,
-        'title': 'Clear View',
-        'description': 'Remove glasses, mask or any face coverings',
+        'title': l10n.clearView,
+        'description': l10n.clearViewDesc,
       },
       {
         'icon': Icons.camera_front_outlined,
-        'title': 'Camera Ready',
-        'description': 'Position your face within the frame',
+        'title': l10n.cameraReady,
+        'description': l10n.cameraReadyDesc,
       },
     ];
 

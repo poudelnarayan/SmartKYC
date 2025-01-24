@@ -28,10 +28,10 @@ class UploadDocumentBloc
       if (image != null) {
         emit(UploadSuccess(image));
       } else {
-        emit(UploadFailure("No image selected"));
+        emit(const UploadFailure('no_image_selected'));
       }
     } catch (e) {
-      emit(UploadFailure("Failed to pick image: ${e.toString()}"));
+      emit(UploadFailure('failed_to_pick_image: ${e.toString()}'));
     }
   }
 
@@ -42,12 +42,12 @@ class UploadDocumentBloc
     try {
       final status = await Permission.camera.request();
       if (!status.isGranted) {
-        emit(UploadFailure("Camera permission denied"));
+        emit(const UploadFailure('camera_permission_denied'));
         return;
       }
       emit(UploadInProgress());
     } catch (e) {
-      emit(UploadFailure("Failed to capture image"));
+      emit(const UploadFailure('failed_to_capture_image'));
     }
   }
 
@@ -58,7 +58,7 @@ class UploadDocumentBloc
     if (event.image.path.isNotEmpty) {
       emit(UploadSuccess(event.image));
     } else {
-      emit(UploadFailure("Invalid image file"));
+      emit(const UploadFailure('invalid_image_file'));
     }
   }
 }

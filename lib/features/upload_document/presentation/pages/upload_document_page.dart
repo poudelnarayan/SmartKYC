@@ -2,7 +2,9 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
+import 'package:smartkyc/features/verification_steps/presentation/widgets/verification_progress_overlay.dart';
 import '../bloc/upload_document_bloc.dart';
 import '../bloc/upload_document_event.dart';
 import '../bloc/upload_document_state.dart';
@@ -13,12 +15,24 @@ class UploadDocumentPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return BlocConsumer<UploadDocumentBloc, UploadDocumentState>(
       listener: (context, state) {
         if (state is UploadFailure) {
+          final l10n = AppLocalizations.of(context)!;
+          final errorMessage = switch (state.error) {
+            'no_image_selected' => l10n.noImageSelected,
+            'camera_permission_denied' => l10n.cameraPermissionDenied,
+            'failed_to_capture_image' => l10n.failedToCaptureImage,
+            'invalid_image_file' => l10n.invalidImageFile,
+            String msg when msg.startsWith('failed_to_pick_image') =>
+              l10n.failedToPickImage + msg.substring(20),
+            _ => state.error,
+          };
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.error),
+              content: Text(errorMessage),
               backgroundColor: Colors.red,
               behavior: SnackBarBehavior.floating,
             ),
@@ -46,7 +60,7 @@ class UploadDocumentPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Upload Your ID',
+                      l10n.documentUpload,
                       style:
                           Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
@@ -55,7 +69,7 @@ class UploadDocumentPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Please upload a clear photo of your government-issued ID (License)',
+                      l10n.documentUploadDesc,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                             color: Colors.grey[600],
                           ),
@@ -70,7 +84,7 @@ class UploadDocumentPage extends StatelessWidget {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'Processing image...',
+                              l10n.processingImage,
                               style: Theme.of(context).textTheme.bodyLarge,
                             ),
                           ],
@@ -78,7 +92,7 @@ class UploadDocumentPage extends StatelessWidget {
                       )
                     else
                       GestureDetector(
-                        onTap: () => _showUploadOptions(context),
+                        onTap: () => _showUploadOptions(context, l10n),
                         child: Container(
                           width: double.infinity,
                           decoration: BoxDecoration(
@@ -124,7 +138,7 @@ class UploadDocumentPage extends StatelessWidget {
                                             ),
                                             const SizedBox(height: 16),
                                             Text(
-                                              'No document selected',
+                                              l10n.noDocumentSelected,
                                               style: TextStyle(
                                                 color: Colors.grey[600],
                                                 fontSize: 16,
@@ -149,8 +163,8 @@ class UploadDocumentPage extends StatelessWidget {
                                 ),
                                 child: Text(
                                   state is UploadSuccess
-                                      ? 'Tap to change document'
-                                      : 'Tap to upload document',
+                                      ? l10n.tapToChangeDocument
+                                      : l10n.tapToUploadDocument,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color:
@@ -166,15 +180,17 @@ class UploadDocumentPage extends StatelessWidget {
                     const SizedBox(height: 32),
                     if (state is UploadSuccess)
                       FilledButton.icon(
-                        onPressed: () => context.go('/selfie-start'),
+                        onPressed: () {
+                          context.go('/user-detail-form');
+                        },
                         style: FilledButton.styleFrom(
                           padding: const EdgeInsets.all(16),
                           minimumSize: const Size(double.infinity, 56),
                         ),
                         icon: const Icon(Icons.arrow_forward),
-                        label: const Text(
-                          'Continue',
-                          style: TextStyle(
+                        label: Text(
+                          l10n.continue_operation,
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
@@ -193,7 +209,7 @@ class UploadDocumentPage extends StatelessWidget {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Make sure your ID is clearly visible and all text is readable',
+                              l10n.documentUploadTip,
                               style: TextStyle(
                                 color: Colors.grey[600],
                                 fontSize: 14,
@@ -213,7 +229,7 @@ class UploadDocumentPage extends StatelessWidget {
     );
   }
 
-  void _showUploadOptions(BuildContext context) {
+  void _showUploadOptions(BuildContext context, AppLocalizations l10n) {
     showModalBottomSheet(
       context: context,
       builder: (context) => Container(
@@ -222,7 +238,7 @@ class UploadDocumentPage extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Choose Upload Method',
+              l10n.chooseUploadMethod,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.primary,
@@ -243,9 +259,9 @@ class UploadDocumentPage extends StatelessWidget {
                 minimumSize: const Size(double.infinity, 56),
               ),
               icon: const Icon(Icons.photo_library),
-              label: const Text(
-                'Choose from Gallery',
-                style: TextStyle(
+              label: Text(
+                l10n.chooseFromGallery,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -273,9 +289,9 @@ class UploadDocumentPage extends StatelessWidget {
                 minimumSize: const Size(double.infinity, 56),
               ),
               icon: const Icon(Icons.camera_alt),
-              label: const Text(
-                'Capture from Camera',
-                style: TextStyle(
+              label: Text(
+                l10n.captureFromCamera,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),

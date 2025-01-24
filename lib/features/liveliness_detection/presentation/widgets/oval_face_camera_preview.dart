@@ -39,7 +39,7 @@ class OvalClipper extends CustomClipper<Path> {
     path.addOval(Rect.fromCenter(
       center: Offset(size.width / 2, size.height / 2),
       width: size.width * 0.8,
-      height: size.height * 0.8,
+      height: size.height * 0.5,
     ));
     return path;
   }
