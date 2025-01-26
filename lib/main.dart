@@ -11,16 +11,24 @@ import 'package:smartkyc/features/onboarding/presentation/bloc/onboarding_bloc.d
 import 'package:flutter/services.dart';
 import 'package:smartkyc/features/upload_document/presentation/bloc/upload_document_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-
-import 'features/liveliness_detection/domain/entities/liveliness_strings.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 final getIt = GetIt.instance;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
+
+
+
+
+  
   final cameras = await availableCameras();
   getIt.registerSingleton<List<CameraDescription>>(cameras);
 

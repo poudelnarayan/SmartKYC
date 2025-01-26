@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
-import 'package:smartkyc/features/verification_steps/presentation/widgets/verification_progress_overlay.dart';
 import '../bloc/upload_document_bloc.dart';
 import '../bloc/upload_document_event.dart';
 import '../bloc/upload_document_state.dart';

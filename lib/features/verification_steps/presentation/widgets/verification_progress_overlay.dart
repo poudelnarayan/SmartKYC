@@ -69,7 +69,6 @@ class _VerificationProgressOverlayState
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
 
     return Material(
       color: Colors.black.withOpacity(0.9),
@@ -134,11 +133,6 @@ class _VerificationProgressOverlayState
         'icon': Icons.verified_user_outlined,
         'title': AppLocalizations.of(context)!.livenessCheck,
         'subtitle': AppLocalizations.of(context)!.livenessCheckDesc,
-      },
-      {
-        'icon': Icons.check_circle_outline,
-        'title': AppLocalizations.of(context)!.verificationComplete,
-        'subtitle': AppLocalizations.of(context)!.verificationCompleteDesc,
       },
     ];
 

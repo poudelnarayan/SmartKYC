@@ -42,7 +42,7 @@ class OnboardingPage extends StatelessWidget {
       child: BlocConsumer<OnboardingBloc, OnboardingState>(
         listener: (context, state) {
           if (state is OnboardingCompleted) {
-            context.go('/liveliness-detection');
+            context.go('/verification-steps');
           }
         },
         builder: (context, state) {

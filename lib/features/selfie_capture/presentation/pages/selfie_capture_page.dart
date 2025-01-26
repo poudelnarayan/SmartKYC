@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:camera/camera.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../../../verification_steps/presentation/widgets/verification_progress_overlay.dart';
 import '../bloc/selfie_capture_bloc.dart';
 import '../bloc/selfie_capture_event.dart';
 import '../bloc/selfie_capture_state.dart';
@@ -38,9 +40,7 @@ class _SelfieCapturePageState extends State<SelfieCapturePage> {
         enableAudio: false,
       );
       await _cameraController.initialize();
-      if (mounted) {
-        setState(() {});
-      }
+      if (mounted) setState(() {});
     } catch (e) {
       print("Error initializing camera: $e");
     }
@@ -59,19 +59,29 @@ class _SelfieCapturePageState extends State<SelfieCapturePage> {
   Future<void> _navigateToLiveliness(BuildContext context) async {
     await _cameraController.dispose();
     if (mounted) {
-      context.go('/liveliness-detection-start');
+      Navigator.push(
+        context,
+        PageRouteBuilder(
+          opaque: false,
+          pageBuilder: (context, _, __) => VerificationProgressOverlay(
+            completedStep: 2,
+            nextRoute: '/liveliness-detection-start',
+          ),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
     if (!_cameraController.value.isInitialized) {
       return Scaffold(
         body: Center(
           child: CircularProgressIndicator(
-            color: Theme.of(context).colorScheme.primary,
+            color: theme.colorScheme.primary,
           ),
         ),
       );
@@ -80,194 +90,210 @@ class _SelfieCapturePageState extends State<SelfieCapturePage> {
     return BlocProvider(
       create: (context) => SelfieCaptureBloc(_cameraController),
       child: Scaffold(
-        backgroundColor: const Color.fromARGB(255, 180, 206, 249),
-        appBar: _isCaptured
-            ? AppBar(
-                elevation: 0,
-                backgroundColor: Colors.transparent,
-                leading: IconButton(
-                  icon: const Icon(
-                    Icons.arrow_back,
-                    color: Colors.white,
-                  ),
-                  onPressed: () => setState(() {
-                    _isCaptured = false;
-                    _capturedImage = null;
-                  }),
+        backgroundColor: Colors.black,
+        body: BlocConsumer<SelfieCaptureBloc, SelfieCaptureState>(
+          listener: (context, state) {
+            if (state is SelfieCaptured) {
+              setState(() {
+                _isCaptured = true;
+                _capturedImage = state.image;
+              });
+            } else if (state is SelfieCaptureError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
                 ),
-                title: Text(
-                  l10n.reviewSelfie,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              )
-            : null,
-        body: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    if (!_isCaptured)
-                      Transform.scale(
-                        scaleX: -1,
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: 500,
-                          child: AspectRatio(
-                            aspectRatio: _cameraController.value.aspectRatio,
-                            child: RotatedBox(
-                              quarterTurns: 3,
-                              child: CameraPreview(
-                                _cameraController,
-                                child: OvalFaceOverlay(),
-                              ),
-                            ),
-                          ),
+              );
+            }
+          },
+          builder: (context, state) {
+            return SafeArea(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        // Camera Preview or Captured Image
+                        Positioned.fill(
+                          child: !_isCaptured
+                              ? Container(
+                                  color: Colors.black,
+                                  child: FittedBox(
+                                    fit: BoxFit.cover,
+                                    child: SizedBox(
+                                      width: _cameraController
+                                          .value.previewSize!.height,
+                                      height: _cameraController
+                                          .value.previewSize!.width,
+                                      child: RotatedBox(
+                                        quarterTurns: 1, // 90 degrees
+                                        child: Transform.scale(
+                                          scaleX: -1, // Mirror effect
+                                          child: CameraPreview(
+                                            _cameraController,
+                                            child: Stack(
+                                              children: [
+                                                OvalFaceOverlay(),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : Transform.scale(
+                                  scaleX: -1,
+                                  child: Image.file(
+                                    File(_capturedImage!.path),
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
                         ),
-                      )
-                    else if (_capturedImage != null)
-                      Transform.scale(
-                        scaleX: -1,
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: Image.file(
-                            File(_capturedImage!.path),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      )
-                    else
-                      Center(
-                        child: Text(
-                          l10n.captureError,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    if (!_isCaptured)
-                      Positioned(
-                        top: 16,
-                        left: 0,
-                        right: 0,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 12),
-                          margin: const EdgeInsets.symmetric(horizontal: 24),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            l10n.positionFace,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Color.fromARGB(173, 42, 40, 41),
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              Container(
-                color: const Color.fromARGB(255, 180, 206, 249),
-                padding: const EdgeInsets.all(24),
-                child: BlocConsumer<SelfieCaptureBloc, SelfieCaptureState>(
-                  listener: (context, state) {
-                    if (state is SelfieCaptured) {
-                      setState(() {
-                        _isCaptured = true;
-                        _capturedImage = state.image;
-                      });
-                    } else if (state is SelfieCaptureError) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(state.message),
-                          backgroundColor: Colors.red,
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
-                  },
-                  builder: (context, state) {
-                    if (state is SelfieCaptureInProgress) {
-                      return Center(
-                        child: CircularProgressIndicator(
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      );
-                    }
 
-                    return _isCaptured
-                        ? Row(
-                            children: [
-                              Expanded(
-                                child: OutlinedButton.icon(
-                                  onPressed: () {
-                                    setState(() {
-                                      _isCaptured = false;
-                                      _capturedImage = null;
-                                    });
-                                  },
-                                  icon: const Icon(Icons.refresh),
-                                  label: Text(l10n.retake),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: Colors.white,
-                                    side: const BorderSide(color: Colors.white),
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 16),
+                        // Top Bar
+                        SafeArea(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                IconButton(
+                                  onPressed: () => context.pop(),
+                                  icon: const Icon(Icons.close,
+                                      color: Colors.white),
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: Colors.black26,
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: FilledButton.icon(
-                                  onPressed: () =>
-                                      _navigateToLiveliness(context),
-                                  icon: const Icon(Icons.check),
-                                  label: Text(l10n.continue_operation),
-                                  style: FilledButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 16),
+                                if (_isCaptured)
+                                  Text(
+                                    l10n.reviewSelfie,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                ),
-                              ),
-                            ],
-                          )
-                        : Center(
-                            child: Container(
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
-                              padding: const EdgeInsets.all(4),
-                              child: IconButton(
-                                onPressed: () => _capturePhoto(context),
-                                icon: Icon(
-                                  Icons.camera,
-                                  color: Theme.of(context).colorScheme.primary,
-                                  size: 32,
-                                ),
-                                style: IconButton.styleFrom(
-                                  backgroundColor: Colors.white,
-                                  padding: const EdgeInsets.all(16),
-                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        // Bottom Controls
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.bottomCenter,
+                                end: Alignment.topCenter,
+                                colors: [
+                                  Colors.black87,
+                                  Colors.black54,
+                                  Colors.transparent,
+                                ],
                               ),
                             ),
-                          );
-                  },
-                ),
+                            child: SafeArea(
+                              child: state is SelfieCaptureInProgress
+                                  ? const Center(
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : _isCaptured
+                                      ? Row(
+                                          children: [
+                                            Expanded(
+                                              child: OutlinedButton.icon(
+                                                onPressed: () {
+                                                  setState(() {
+                                                    _isCaptured = false;
+                                                    _capturedImage = null;
+                                                  });
+                                                },
+                                                icon: const Icon(Icons.refresh),
+                                                label: Text(l10n.retake),
+                                                style: OutlinedButton.styleFrom(
+                                                  foregroundColor: Colors.white,
+                                                  side: const BorderSide(
+                                                      color: Colors.white),
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                    vertical: 16,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 16),
+                                            Expanded(
+                                              child: FilledButton.icon(
+                                                onPressed: () =>
+                                                    _navigateToLiveliness(
+                                                        context),
+                                                icon: const Icon(Icons.check),
+                                                label: Text(
+                                                    l10n.continue_operation),
+                                                style: FilledButton.styleFrom(
+                                                  backgroundColor: Colors.white,
+                                                  foregroundColor:
+                                                      theme.colorScheme.primary,
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                    vertical: 16,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ).animate().fadeIn().slideY()
+                                      : Center(
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              shape: BoxShape.circle,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.white
+                                                      .withOpacity(0.2),
+                                                  blurRadius: 16,
+                                                  spreadRadius: 4,
+                                                ),
+                                              ],
+                                            ),
+                                            padding: const EdgeInsets.all(4),
+                                            child: IconButton(
+                                              onPressed: () =>
+                                                  _capturePhoto(context),
+                                              icon: Icon(
+                                                Icons.camera,
+                                                color:
+                                                    theme.colorScheme.primary,
+                                                size: 32,
+                                              ),
+                                              style: IconButton.styleFrom(
+                                                backgroundColor: Colors.white,
+                                                padding:
+                                                    const EdgeInsets.all(16),
+                                              ),
+                                            ),
+                                          ),
+                                        ).animate().fadeIn().scale(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

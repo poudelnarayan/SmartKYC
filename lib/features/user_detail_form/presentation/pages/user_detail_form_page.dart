@@ -26,7 +26,6 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
     'phoneNumber': '+9779867513539',
     'issueDate': DateTime.now(),
     'expiryDate': DateTime.now().add(const Duration(days: 365 * 5)),
-    'category': null,
   };
 
   Future<void> _selectDate(BuildContext context, String field) async {
@@ -97,19 +96,22 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
         child: Column(
           children: [
             Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildFormSections(context),
-                        ],
+              child: GestureDetector(
+                onTap: FocusScope.of(context).unfocus,
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildFormSections(context),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -122,7 +124,6 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
 
   Widget _buildFormSections(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,21 +146,6 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
               },
             ),
             const SizedBox(height: 16),
-            _buildDropdownField(
-              label: l10n.licenseCategory,
-              value: _formData['category'] ?? l10n.categoryB,
-              items: [
-                l10n.categoryA,
-                l10n.categoryB,
-                l10n.categoryC,
-                l10n.categoryD,
-                l10n.categoryE,
-              ],
-              onChanged: (value) =>
-                  setState(() => _formData['category'] = value),
-              prefixIcon: Icons.directions_car_outlined,
-            ),
-            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
@@ -167,7 +153,6 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
                     label: l10n.issueDate,
                     value: _formData['issueDate'],
                     onTap: () => _selectDate(context, 'issueDate'),
-                    prefixIcon: Icons.event_outlined,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -176,7 +161,6 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
                     label: l10n.expiryDate,
                     value: _formData['expiryDate'],
                     onTap: () => _selectDate(context, 'expiryDate'),
-                    prefixIcon: Icons.event_busy_outlined,
                   ),
                 ),
               ],
@@ -233,20 +217,6 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return l10n.invalidCitizenshipNumber;
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            _buildTextField(
-              label: l10n.phoneNumber,
-              value: _formData['phoneNumber'],
-              onChanged: (value) => _formData['phoneNumber'] = value,
-              keyboardType: TextInputType.phone,
-              prefixIcon: Icons.phone_outlined,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return l10n.invalidPhoneNumber;
                 }
                 return null;
               },
@@ -336,7 +306,7 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
     required String label,
     required DateTime value,
     required VoidCallback onTap,
-    required IconData prefixIcon,
+    IconData? prefixIcon,
   }) {
     return TextFormField(
       readOnly: true,
@@ -344,7 +314,6 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
       decoration: _getInputDecoration(
         label,
         prefixIcon,
-        suffixIcon: Icons.calendar_today_outlined,
       ),
       controller: TextEditingController(
         text: _dateFormat.format(value),
@@ -352,40 +321,14 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
     );
   }
 
-  Widget _buildDropdownField({
-    required String label,
-    required String value,
-    required List<String> items,
-    required ValueChanged<String?> onChanged,
-    required IconData prefixIcon,
-  }) {
-    return DropdownButtonFormField<String>(
-      value: value,
-      items: items.map((String item) {
-        return DropdownMenuItem<String>(
-          value: item,
-          child: Text(item),
-        );
-      }).toList(),
-      onChanged: onChanged,
-      decoration: _getInputDecoration(label, prefixIcon),
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return AppLocalizations.of(context)!.requiredField;
-        }
-        return null;
-      },
-    );
-  }
-
   InputDecoration _getInputDecoration(
     String label,
-    IconData prefixIcon, {
+    IconData? prefixIcon, {
     IconData? suffixIcon,
   }) {
     return InputDecoration(
       labelText: label,
-      prefixIcon: Icon(prefixIcon),
+      prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
       suffixIcon: suffixIcon != null ? Icon(suffixIcon) : null,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

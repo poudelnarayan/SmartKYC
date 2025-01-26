@@ -19,7 +19,7 @@ class LivenessState extends Equatable {
   factory LivenessState.initial() {
     return const LivenessState(
       recordingState: RecordingState.initial,
-      instruction: 'Press start to begin liveness detection',
+      instruction: 'Press start to begin ',
       isRecording: false,
       recordingDuration: Duration.zero,
     );

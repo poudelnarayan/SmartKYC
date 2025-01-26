@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:camera/camera.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../bloc/liveliness_bloc.dart';
 import '../bloc/liveliness_state.dart';
 import '../bloc/liveliness_event.dart';
@@ -69,12 +68,12 @@ class _LivelinessPageState extends State<LivelinessPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: BlocConsumer<LivenessBloc, LivenessState>(
-        listener: (context, state) {
+        listener: (context, state) async {
           if (state.recordingState == RecordingState.completed) {
+            await Future.delayed(Duration(milliseconds: 800));
             context.go('/success');
           }
         },
@@ -97,8 +96,10 @@ class _LivelinessPageState extends State<LivelinessPage> {
 
               // Camera preview with face overlay
               if (_isCameraInitialized && _controller != null)
-                Positioned.fill(
-                  child: OvalFaceCameraPreview(controller: _controller!),
+                OvalFaceCameraPreview(
+                  controller: _controller!,
+                  recordingState: state.recordingState,
+                  instruction: state.instruction,
                 ),
 
               // Loading indicator
@@ -114,16 +115,11 @@ class _LivelinessPageState extends State<LivelinessPage> {
                 child: Column(
                   children: [
                     _buildTopBar(context, state),
-                    const Spacer(),
-                    _buildInstructions(context, state),
-                    const SizedBox(height: 24),
                     _buildProgressIndicator(context, state),
-                    const SizedBox(height: 32),
-                    _buildActionButton(context, state),
-                    const SizedBox(height: 48),
                   ],
                 ),
               ),
+              _buildActionButton(context, state),
             ],
           );
         },
@@ -178,41 +174,6 @@ class _LivelinessPageState extends State<LivelinessPage> {
     );
   }
 
-  Widget _buildInstructions(BuildContext context, LivenessState state) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.black26,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white24,
-          width: 1,
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            _getInstructionIcon(state.recordingState),
-            size: 32,
-            color: Colors.white,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            state.instruction,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn().scale();
-  }
-
   Widget _buildProgressIndicator(BuildContext context, LivenessState state) {
     if (!state.isRecording) return const SizedBox.shrink();
 
@@ -229,15 +190,6 @@ class _LivelinessPageState extends State<LivelinessPage> {
               minHeight: 8,
             ),
           ),
-          const SizedBox(height: 8),
-          // Text(
-          //   '${state.recordingDuration.inSeconds} / 15 seconds',
-          //   style: const TextStyle(
-          //     color: Colors.white70,
-          //     fontSize: 14,
-          //     fontWeight: FontWeight.w500,
-          //   ),
-          // ),
         ],
       ),
     ).animate().fadeIn();
@@ -245,80 +197,69 @@ class _LivelinessPageState extends State<LivelinessPage> {
 
   Widget _buildActionButton(BuildContext context, LivenessState state) {
     if (state.recordingState == RecordingState.initial) {
-      return FilledButton.icon(
-        onPressed: () =>
-            context.read<LivenessBloc>().add(StartDetectionProcess()),
-        icon: const Icon(Icons.play_arrow_rounded),
-        label: const Text('Start Verification'),
-        style: FilledButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: Theme.of(context).colorScheme.primary,
-          padding: const EdgeInsets.symmetric(
-            horizontal: 32,
-            vertical: 16,
+      return Positioned(
+        bottom: 30,
+        left: MediaQuery.of(context).size.width / 4.5,
+        child: FilledButton.icon(
+          onPressed: () =>
+              context.read<LivenessBloc>().add(StartDetectionProcess()),
+          icon: const Icon(Icons.play_arrow_rounded),
+          label: const Text('Start Verification'),
+          style: FilledButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: Theme.of(context).colorScheme.primary,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 32,
+              vertical: 16,
+            ),
+            textStyle: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          textStyle: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ).animate().fadeIn().scale();
+        ).animate().fadeIn().scale(),
+      );
     }
 
-    return Container(
-      width: 80,
-      height: 80,
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: Colors.white24,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: Colors.white,
-          width: 2,
-        ),
-      ),
+    return Positioned(
+      bottom: 30,
+      left: MediaQuery.of(context).size.width / 2.5,
       child: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        width: 60,
+        height: 60,
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: Colors.white24,
           shape: BoxShape.circle,
+          border: Border.all(
+            color: Colors.white,
+            width: 2,
+          ),
         ),
-        child: Icon(
-          Icons.videocam,
-          color: Theme.of(context).colorScheme.primary,
-          size: 32,
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.videocam,
+            color: Theme.of(context).colorScheme.primary,
+            size: 32,
+          ),
         ),
-      ),
-    )
-        .animate(onPlay: (controller) => controller.repeat())
-        .scale(
-          duration: const Duration(seconds: 1),
-          begin: const Offset(1, 1),
-          end: const Offset(1.2, 1.2),
-        )
-        .then()
-        .scale(
-          duration: const Duration(seconds: 1),
-          begin: const Offset(1.2, 1.2),
-          end: const Offset(1, 1),
-        );
-  }
-
-  IconData _getInstructionIcon(RecordingState state) {
-    switch (state) {
-      case RecordingState.lookUp:
-        return Icons.arrow_upward_rounded;
-      case RecordingState.lookDown:
-        return Icons.arrow_downward_rounded;
-      case RecordingState.lookLeft:
-        return Icons.arrow_back_rounded;
-      case RecordingState.lookRight:
-        return Icons.arrow_forward_rounded;
-      case RecordingState.recording:
-        return Icons.face_retouching_natural;
-      case RecordingState.completed:
-        return Icons.check_circle_rounded;
-      default:
-        return Icons.face_rounded;
-    }
+      )
+          .animate(onPlay: (controller) => controller.repeat())
+          .scale(
+            duration: const Duration(seconds: 1),
+            begin: const Offset(1, 1),
+            end: const Offset(1.2, 1.2),
+          )
+          .then()
+          .scale(
+            duration: const Duration(seconds: 1),
+            begin: const Offset(1.2, 1.2),
+            end: const Offset(1, 1),
+          ),
+    );
   }
 }

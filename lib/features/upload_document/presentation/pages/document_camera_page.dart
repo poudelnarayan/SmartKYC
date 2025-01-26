@@ -1,9 +1,5 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../bloc/upload_document_bloc.dart';
-import '../bloc/upload_document_state.dart';
 
 class DocumentCameraPage extends StatefulWidget {
   const DocumentCameraPage({super.key});

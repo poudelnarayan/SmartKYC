@@ -74,7 +74,7 @@ class LivenessBloc extends Bloc<LivenessEvent, LivenessState> {
       case RecordingState.lookLeft:
         emit(state.copyWith(
           recordingState: RecordingState.lookRight,
-          instruction: 'Finally, turn your head to the right',
+          instruction: 'Finally, turn to the right',
         ));
         break;
       case RecordingState.lookRight:
