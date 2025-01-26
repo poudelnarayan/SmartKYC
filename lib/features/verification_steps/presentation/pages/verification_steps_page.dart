@@ -71,7 +71,7 @@ class VerificationStepsPage extends StatelessWidget {
                         _buildVerificationSteps(context),
                         const SizedBox(height: 32),
                         FilledButton(
-                          onPressed: () => context.go('/upload-document'),
+                          onPressed: () => context.go('/auth'),
                           style: FilledButton.styleFrom(
                             backgroundColor: Colors.white,
                             foregroundColor:

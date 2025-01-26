@@ -1,8 +1,11 @@
 import 'package:go_router/go_router.dart';
+import 'package:smartkyc/features/auth/presentation/pages/auth_page.dart';
+import 'package:smartkyc/features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:smartkyc/features/liveliness_detection/presentation/pages/liveliness_detection_start_page.dart';
 import 'package:smartkyc/features/selfie_capture/presentation/pages/selfie_start_page.dart';
 import 'package:smartkyc/features/user_detail_form/presentation/pages/user_detail_form_page.dart';
 import 'package:smartkyc/features/user_profile/presentation/pages/user_profile_page.dart';
+import '../features/auth/presentation/pages/sign_up_page.dart';
 import '../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../features/upload_document/presentation/pages/upload_document_page.dart';
 import '../features/selfie_capture/presentation/pages/selfie_capture_page.dart';
@@ -16,6 +19,14 @@ final appRouter = GoRouter(
       name: "onboarding",
       path: '/',
       builder: (context, state) => OnboardingPage(),
+    ),
+    GoRoute(
+      path: '/auth',
+      builder: (context, state) => const AuthPage(),
+    ),
+     GoRoute(
+      path: '/sign-up',
+      builder: (context, state) => const SignUpPage(),
     ),
     GoRoute(
       name: "upload-document",
@@ -62,5 +73,9 @@ final appRouter = GoRouter(
       path: '/verification-steps',
       builder: (context, state) => const VerificationStepsPage(),
     ),
+    GoRoute(
+      path: '/forgot-password',
+      builder: (context, state) => ForgotPasswordPage(),
+    )
   ],
 );

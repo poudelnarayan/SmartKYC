@@ -1,6 +1,64 @@
 {
   "@@locale": "en",
   "appTitle": "Smart KYC",
+  "createAccount": "Create Account",
+  "createAccountDesc": "Please fill in the form to create your account",
+  "confirmPassword": "Confirm Password",
+  "confirmPasswordRequired": "Please confirm your password",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "alreadyHaveAccount": "Already have an account?",
+  "signUpError": "Failed to sign up: {error}",
+  "@signUpError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "passwordLabel": "Password",
+  "rememberMe": "Remember me",
+  "forgotPassword": "Forgot Password?",
+  "signIn": "Sign In",
+  "noAccount": "Don't have an account?",
+  "signUp": "Sign Up",
+  "passwordRequired": "Please enter your password",
+  "passwordTooShort": "Password must be at least 8 characters",
+  "invalidCredentials": "Invalid email or password",
+  "signInError": "Failed to sign in: {error}",
+  "@signInError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeTitle": "Welcome to SmartKYC",
+  "welcomeSubtitle": "Enter your email to continue",
+  "emailLabel": "Email",
+  "continueButton": "Continue",
+  "sendingCode": "Sending code...",
+  "verifyEmail": "Verify your email",
+  "verifyEmailDesc": "We've sent a verification code to\n{email}",
+  "@verifyEmailDesc": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "resendCode": "Resend Code",
+  "invalidEmail": "Please enter a valid email",
+  "emailRequired": "Please enter your email",
+  "verificationExpired": "Verification code expired. Please request a new one.",
+  "invalidCode": "Invalid verification code. Please try again.",
+  "verificationFailed": "Verification failed: {error}",
+  "@verificationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "verificationSteps": "Verification Steps",
   "languageSwitchWarn": "* Language preference will persist throughout the verification Process",
   "verificationStepsDesc": "Complete these steps to verify your identity",

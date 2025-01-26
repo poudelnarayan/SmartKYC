@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -12,6 +13,11 @@ import 'package:flutter/services.dart';
 import 'package:smartkyc/features/upload_document/presentation/bloc/upload_document_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'features/auth/data/repositories/auth_repository_impl.dart';
+import 'features/auth/domain/repositories/auth_repository.dart';
+import 'features/auth/domain/usecases/sign_in.dart';
+import 'features/auth/domain/usecases/sign_up.dart';
+import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'firebase_options.dart';
 
 final getIt = GetIt.instance;
@@ -21,14 +27,13 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  final authRepository = AuthRepositoryImpl(FirebaseAuth.instance);
+  final signInUseCase = SignInUseCase(authRepository);
+  final signUpUseCase = SignUpUseCase(authRepository);
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
 
-
-
-
-  
   final cameras = await availableCameras();
   getIt.registerSingleton<List<CameraDescription>>(cameras);
 
@@ -39,14 +44,28 @@ void main() async {
         BlocProvider(create: (context) => UploadDocumentBloc()),
         BlocProvider(create: (context) => LanguageBloc()),
         BlocProvider(create: (context) => LivenessBloc()),
+        BlocProvider<AuthBloc>(
+          create: (context) => AuthBloc(
+            signIn: signInUseCase,
+            signUp: signUpUseCase,
+            repository: authRepository,
+          ),
+        ),
       ],
-      child: const SmartKycApp(),
+      child: GestureDetector(
+        onTap: () {
+          FocusManager.instance.primaryFocus?.unfocus();
+        },
+        child: SmartKycApp(),
+      ),
     ),
   );
 }
 
 class SmartKycApp extends StatelessWidget {
-  const SmartKycApp({super.key});
+  const SmartKycApp({
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

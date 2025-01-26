@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -9,10 +10,20 @@ import '../bloc/onboarding_state.dart';
 import '../widgets/onboarding_content.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-class OnboardingPage extends StatelessWidget {
+class OnboardingPage extends StatefulWidget {
   OnboardingPage({Key? key}) : super(key: key);
 
+  @override
+  State<OnboardingPage> createState() => _OnboardingPageState();
+}
+
+class _OnboardingPageState extends State<OnboardingPage> {
   final PageController _pageController = PageController();
+  @override
+  void initState() {
+    SystemChannels.textInput.invokeMethod('TextInput.hide');
+    super.initState();
+  }
 
   List<Map<String, String>> _getOnboardingData(AppLocalizations l10n) => [
         {
