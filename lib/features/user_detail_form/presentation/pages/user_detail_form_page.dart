@@ -3,10 +3,13 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:smartkyc/features/selfie_capture/presentation/pages/selfie_start_page.dart';
 import '../../../verification_steps/presentation/widgets/verification_progress_overlay.dart';
 
 class UserDetailFormPage extends StatefulWidget {
   const UserDetailFormPage({super.key});
+
+  static const pageName = "/userDetailForm";
 
   @override
   State<UserDetailFormPage> createState() => _UserDetailFormPageState();
@@ -376,7 +379,7 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
                   opaque: false,
                   pageBuilder: (context, _, __) => VerificationProgressOverlay(
                     completedStep: 1,
-                    nextRoute: '/selfie-start',
+                    nextRoute: SelfieStartPage.pageName,
                   ),
                 ),
               );

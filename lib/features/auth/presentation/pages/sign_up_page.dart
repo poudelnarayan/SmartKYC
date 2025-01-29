@@ -3,12 +3,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:smartkyc/features/auth/presentation/pages/sign_up_success.dart';
+import '../../../../core/constants/app_dimensions.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
+
+  static const pageName = "/signup";
 
   @override
   State<SignUpPage> createState() => _SignUpPageState();
@@ -35,226 +39,239 @@ class _SignUpPageState extends State<SignUpPage> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
-    return Scaffold(
-      body: Container(
-        height: MediaQuery.of(context).size.height,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              theme.colorScheme.primary,
-              theme.colorScheme.secondary,
-            ],
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is SignUpSuccess) {
+          context.go(SignUpSuccessPage.pageName, extra: state.email);
+        } else if (state is AuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        body: Container(
+          height: MediaQuery.of(context).size.height,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                theme.colorScheme.primary,
+                theme.colorScheme.secondary,
+              ],
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 48),
-                  // Animated icon
-                  Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
-                          width: 2,
-                        ),
-                      ),
-                      child: Icon(
-                        Icons.person_add_outlined,
-                        size: 48,
-                        color: Colors.white.withOpacity(0.9),
-                      ),
-                    ),
-                  ).animate().scale(),
-                  const SizedBox(height: 32),
-                  // Title
-                  Text(
-                    l10n.createAccount,
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ).animate().fadeIn().slideY(),
-                  const SizedBox(height: 12),
-                  // Subtitle
-                  Text(
-                    l10n.createAccountDesc,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: Colors.white.withOpacity(0.9),
-                    ),
-                    textAlign: TextAlign.center,
-                  ).animate().fadeIn().slideY(),
-                  const SizedBox(height: 48),
-                  // Email field
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: _getInputDecoration(
-                      label: l10n.emailLabel,
-                      icon: Icons.email_outlined,
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return l10n.emailRequired;
-                      }
-                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                          .hasMatch(value)) {
-                        return l10n.invalidEmail;
-                      }
-                      return null;
-                    },
-                  ).animate().fadeIn().slideX(),
-                  const SizedBox(height: 16),
-                  // Password field
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: !_isPasswordVisible,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: _getInputDecoration(
-                      label: l10n.passwordLabel,
-                      icon: Icons.lock_outline_rounded,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _isPasswordVisible
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                          color: Colors.white.withOpacity(0.7),
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _isPasswordVisible = !_isPasswordVisible;
-                          });
-                        },
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return l10n.passwordRequired;
-                      }
-                      if (value.length < 8) {
-                        return l10n.passwordTooShort;
-                      }
-                      return null;
-                    },
-                  ).animate().fadeIn().slideX(),
-                  const SizedBox(height: 16),
-                  // Confirm password field
-                  TextFormField(
-                    controller: _confirmPasswordController,
-                    obscureText: !_isConfirmPasswordVisible,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: _getInputDecoration(
-                      label: l10n.confirmPassword,
-                      icon: Icons.lock_outline_rounded,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _isConfirmPasswordVisible
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                          color: Colors.white.withOpacity(0.7),
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _isConfirmPasswordVisible =
-                                !_isConfirmPasswordVisible;
-                          });
-                        },
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return l10n.confirmPasswordRequired;
-                      }
-                      if (value != _passwordController.text) {
-                        return l10n.passwordsDoNotMatch;
-                      }
-                      return null;
-                    },
-                  ).animate().fadeIn().slideX(),
-                  const SizedBox(height: 32),
-                  // Sign up button
-                  BlocBuilder<AuthBloc, AuthState>(
-                    builder: (context, state) {
-                      return FilledButton.icon(
-                        onPressed: state is AuthLoading
-                            ? null
-                            : () {
-                                if (_formKey.currentState?.validate() ??
-                                    false) {
-                                  context.read<AuthBloc>().add(
-                                        SignUpWithEmailAndPassword(
-                                          email: _emailController.text,
-                                          password: _passwordController.text,
-                                        ),
-                                      );
-                                }
-                              },
-                        icon: state is AuthLoading
-                            ? Container(
-                                width: 24,
-                                height: 24,
-                                padding: const EdgeInsets.all(2),
-                                child: const CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 3,
-                                ),
-                              )
-                            : const Icon(Icons.person_add_outlined),
-                        label: Text(
-                          l10n.signUp,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: AppDimensions.h48),
+                    // Animated icon
+                    Center(
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.3),
+                            width: 2,
                           ),
                         ),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: theme.colorScheme.primary,
-                          minimumSize: const Size(double.infinity, 56),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                      ).animate().fadeIn().scale();
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  // Sign in link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "already have an account",
-                        // l10n.alreadyHaveAccount,
-                        style: TextStyle(
+                        child: Icon(
+                          Icons.person_add_outlined,
+                          size: AppDimensions.s48,
                           color: Colors.white.withOpacity(0.9),
                         ),
                       ),
-                      TextButton(
-                        onPressed: () => context.pop(),
-                        child: Text(
-                          l10n.signIn,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                    ).animate().scale(),
+                    const SizedBox(height: AppDimensions.h32),
+                    // Title
+                    Text(
+                      l10n.createAccount,
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ).animate().fadeIn().slideY(),
+                    const SizedBox(height: 12),
+                    // Subtitle
+                    Text(
+                      l10n.createAccountDesc,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                      textAlign: TextAlign.center,
+                    ).animate().fadeIn().slideY(),
+                    const SizedBox(height: 48),
+                    // Email field
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: _getInputDecoration(
+                        label: l10n.emailLabel,
+                        icon: Icons.email_outlined,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return l10n.emailRequired;
+                        }
+                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                            .hasMatch(value)) {
+                          return l10n.invalidEmail;
+                        }
+                        return null;
+                      },
+                    ).animate().fadeIn().slideX(),
+                    const SizedBox(height: 16),
+                    // Password field
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: !_isPasswordVisible,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: _getInputDecoration(
+                        label: l10n.passwordLabel,
+                        icon: Icons.lock_outline_rounded,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isPasswordVisible
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            color: Colors.white.withOpacity(0.7),
                           ),
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
                         ),
                       ),
-                    ],
-                  ).animate().fadeIn(),
-                ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return l10n.passwordRequired;
+                        }
+                        if (value.length < 8) {
+                          return l10n.passwordTooShort;
+                        }
+                        return null;
+                      },
+                    ).animate().fadeIn().slideX(),
+                    const SizedBox(height: 16),
+                    // Confirm password field
+                    TextFormField(
+                      controller: _confirmPasswordController,
+                      obscureText: !_isConfirmPasswordVisible,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: _getInputDecoration(
+                        label: l10n.confirmPassword,
+                        icon: Icons.lock_outline_rounded,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isConfirmPasswordVisible
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            color: Colors.white.withOpacity(0.7),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isConfirmPasswordVisible =
+                                  !_isConfirmPasswordVisible;
+                            });
+                          },
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return l10n.confirmPasswordRequired;
+                        }
+                        if (value != _passwordController.text) {
+                          return l10n.passwordsDoNotMatch;
+                        }
+                        return null;
+                      },
+                    ).animate().fadeIn().slideX(),
+                    const SizedBox(height: 32),
+                    // Sign up button
+                    BlocBuilder<AuthBloc, AuthState>(
+                      builder: (context, state) {
+                        return FilledButton.icon(
+                          onPressed: state is AuthLoading
+                              ? null
+                              : () {
+                                  if (_formKey.currentState?.validate() ??
+                                      false) {
+                                    context.read<AuthBloc>().add(
+                                          SignUpWithEmailAndPassword(
+                                            email: _emailController.text,
+                                            password: _passwordController.text,
+                                          ),
+                                        );
+                                  }
+                                },
+                          icon: state is AuthLoading
+                              ? Container(
+                                  width: 24,
+                                  height: 24,
+                                  padding: const EdgeInsets.all(2),
+                                  child: const CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 3,
+                                  ),
+                                )
+                              : const Icon(Icons.person_add_outlined),
+                          label: Text(
+                            l10n.signUp,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: theme.colorScheme.primary,
+                            minimumSize: const Size(double.infinity, 56),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                        ).animate().fadeIn().scale();
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    // Sign in link
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          l10n.alreadyHaveAccount,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => context.pop(),
+                          child: Text(
+                            l10n.signIn,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ).animate().fadeIn(),
+                  ],
+                ),
               ),
             ),
           ),

@@ -5,13 +5,6 @@ import '../../domain/repositories/auth_repository.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
-// Events
-
-
-// States
-
-
-// BLoC
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignInUseCase signIn;
   final SignUpUseCase signUp;
@@ -37,7 +30,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       emit(AuthLoading());
       final user = await signIn(event.email, event.password);
-      emit(AuthSuccess(user));
+      emit(SigninSuccess(user));
     } catch (e) {
       emit(AuthError(e.toString()));
     }
@@ -50,7 +43,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       emit(AuthLoading());
       final user = await signUp(event.email, event.password);
-      emit(EmailVerificationSent(user.email));
+      emit(SignUpSuccess(event.email));
     } catch (e) {
       emit(AuthError(e.toString()));
     }
@@ -102,7 +95,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       emit(AuthLoading());
       await repository.signOut();
-      emit(SignedOut());
+      emit(SignOutSuccess());
     } catch (e) {
       emit(AuthError(e.toString()));
     }

@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartkyc/config/routes.dart';
 import 'package:camera/camera.dart';
 import 'package:get_it/get_it.dart';
+import 'package:smartkyc/core/services/locator.dart';
+import 'package:smartkyc/core/services/preferences_service.dart';
 import 'package:smartkyc/features/language/presentation/bloc/language_bloc.dart';
 import 'package:smartkyc/features/liveliness_detection/presentation/bloc/liveliness_bloc.dart';
 import 'package:smartkyc/features/onboarding/presentation/bloc/onboarding_bloc.dart';
@@ -24,9 +27,19 @@ final getIt = GetIt.instance;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  setupLocator();
+
+  final onboardingService = GetIt.instance<OnboardingService>();
+  await onboardingService.init();
+  try {
+    // Initialize Firebase with error handling
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print('Firebase initialized successfully');
+  } catch (e) {
+    print('Failed to initialize Firebase: $e');
+  }
   final authRepository = AuthRepositoryImpl(FirebaseAuth.instance);
   final signInUseCase = SignInUseCase(authRepository);
   final signUpUseCase = SignUpUseCase(authRepository);

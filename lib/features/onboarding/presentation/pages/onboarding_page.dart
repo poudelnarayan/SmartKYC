@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartkyc/features/language/presentation/widgets/language_switcher.dart';
+import 'package:smartkyc/features/verification_steps/presentation/pages/verification_steps_page.dart';
 import '../bloc/onboarding_bloc.dart';
 import '../bloc/onboarding_event.dart';
 import '../bloc/onboarding_state.dart';
@@ -12,6 +14,8 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class OnboardingPage extends StatefulWidget {
   OnboardingPage({Key? key}) : super(key: key);
+
+  static const pageName = "/onBoarding";
 
   @override
   State<OnboardingPage> createState() => _OnboardingPageState();
@@ -51,9 +55,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
     return BlocProvider(
       create: (context) => OnboardingBloc(),
       child: BlocConsumer<OnboardingBloc, OnboardingState>(
-        listener: (context, state) {
+        listener: (context, state) async {
           if (state is OnboardingCompleted) {
-            context.go('/verification-steps');
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setBool('hasSeenOnboarding', true);
+            context.go(VerificationStepsPage.pageName);
           }
         },
         builder: (context, state) {

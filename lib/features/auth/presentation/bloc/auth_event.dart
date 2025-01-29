@@ -42,15 +42,6 @@ class SendEmailVerification extends AuthEvent {
   List<Object?> get props => [email];
 }
 
-class VerifyEmailCode extends AuthEvent {
-  final String code;
-
-  const VerifyEmailCode(this.code);
-
-  @override
-  List<Object?> get props => [code];
-}
-
 class SendPasswordReset extends AuthEvent {
   final String email;
 

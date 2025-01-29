@@ -1,19 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:smartkyc/features/selfie_capture/presentation/pages/selfie_capture_page.dart';
+
+import '../../../../core/presentation/widgets/skip_button.dart';
 
 class SelfieStartPage extends StatelessWidget {
   const SelfieStartPage({Key? key}) : super(key: key);
+
+  static const pageName = "/selfieStart";
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        actions: [
+          SkipButton(onSkip: () {}),
+          SizedBox(
+            width: 25,
+          )
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.only(
+              left: 24.0,
+              right: 24,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -99,7 +117,7 @@ class SelfieStartPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 FilledButton.icon(
-                  onPressed: () => context.go('/selfie-capture'),
+                  onPressed: () => context.go(SelfieCapturePage.pageName),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.all(16),
                     minimumSize: const Size(double.infinity, 56),

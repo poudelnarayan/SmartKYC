@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:smartkyc/features/user_profile/presentation/pages/user_profile_page.dart';
 
 class VerificationSuccessPage extends StatelessWidget {
   const VerificationSuccessPage({super.key});
+
+  static const pageName = "/verificationSuccess";
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +86,7 @@ class VerificationSuccessPage extends StatelessWidget {
               const SizedBox(height: 48),
               // Continue button
               ElevatedButton(
-                onPressed: () => context.go('/user-profile'),
+                onPressed: () => context.go(UserProfilePage.pageName),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: Colors.blue.shade900,

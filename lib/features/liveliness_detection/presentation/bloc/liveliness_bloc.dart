@@ -106,7 +106,7 @@ class LivenessBloc extends Bloc<LivenessEvent, LivenessState> {
     emit(state.copyWith(
       recordingState: RecordingState.completed,
       isRecording: false,
-      instruction: 'Verification completed successfully!',
+      instruction: '',
     ));
   }
 

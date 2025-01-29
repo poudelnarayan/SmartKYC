@@ -4,13 +4,57 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
+import 'package:smartkyc/core/presentation/widgets/skip_button.dart';
+import 'package:smartkyc/features/user_detail_form/presentation/pages/user_detail_form_page.dart';
+import '../../../../core/services/storage_service.dart';
 import '../bloc/upload_document_bloc.dart';
 import '../bloc/upload_document_event.dart';
 import '../bloc/upload_document_state.dart';
 import './document_camera_page.dart';
 
-class UploadDocumentPage extends StatelessWidget {
+class UploadDocumentPage extends StatefulWidget {
   const UploadDocumentPage({Key? key}) : super(key: key);
+
+  static const pageName = "/uploadDocument";
+
+  @override
+  State<UploadDocumentPage> createState() => _UploadDocumentPageState();
+}
+
+class _UploadDocumentPageState extends State<UploadDocumentPage> {
+  bool _isUploading = false;
+
+  Future<void> _handleImageUpload(BuildContext context, XFile file) async {
+    setState(() {
+      _isUploading = true;
+    });
+
+    try {
+      final storageService = StorageService();
+      final downloadUrl = await storageService.uploadDocument(File(file.path));
+      print('Document uploaded successfully: $downloadUrl');
+
+      if (mounted) {
+        context.go(UserDetailFormPage.pageName);
+      }
+    } catch (e) {
+      print('Error uploading document: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to upload document: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +63,6 @@ class UploadDocumentPage extends StatelessWidget {
     return BlocConsumer<UploadDocumentBloc, UploadDocumentState>(
       listener: (context, state) {
         if (state is UploadFailure) {
-          final l10n = AppLocalizations.of(context)!;
           final errorMessage = switch (state.error) {
             'no_image_selected' => l10n.noImageSelected,
             'camera_permission_denied' => l10n.cameraPermissionDenied,
@@ -43,13 +86,12 @@ class UploadDocumentPage extends StatelessWidget {
           appBar: AppBar(
             elevation: 0,
             backgroundColor: Colors.transparent,
-            leading: IconButton(
-              icon: Icon(
-                Icons.arrow_back,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              onPressed: () => context.go('/home'),
-            ),
+            actions: [
+              SkipButton(onSkip: () {}),
+              SizedBox(
+                width: 25,
+              )
+            ],
           ),
           body: SafeArea(
             child: SingleChildScrollView(
@@ -179,16 +221,28 @@ class UploadDocumentPage extends StatelessWidget {
                     const SizedBox(height: 32),
                     if (state is UploadSuccess)
                       FilledButton.icon(
-                        onPressed: () {
-                          context.go('/user-detail-form');
-                        },
+                        onPressed: _isUploading
+                            ? null
+                            : () => _handleImageUpload(context, state.file),
                         style: FilledButton.styleFrom(
                           padding: const EdgeInsets.all(16),
                           minimumSize: const Size(double.infinity, 56),
                         ),
-                        icon: const Icon(Icons.arrow_forward),
+                        icon: _isUploading
+                            ? Container(
+                                width: 24,
+                                height: 24,
+                                padding: const EdgeInsets.all(2),
+                                child: const CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 3,
+                                ),
+                              )
+                            : const Icon(Icons.arrow_forward),
                         label: Text(
-                          l10n.continue_operation,
+                          _isUploading
+                              ? l10n.dataExtraction
+                              : l10n.continue_operation,
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,

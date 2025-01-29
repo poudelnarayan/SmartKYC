@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:smartkyc/features/language/presentation/widgets/language_switcher.dart';
+import 'package:smartkyc/features/upload_document/presentation/pages/upload_document_page.dart';
+import '../../../verification_steps/presentation/widgets/verification_progress_overlay.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_state.dart';
 import '../widgets/email_input.dart';
 
-class AuthPage extends StatelessWidget {
-  const AuthPage({super.key});
+class SinginPage extends StatelessWidget {
+  const SinginPage({super.key});
+
+  static const pageName = '/signin';
 
   @override
   Widget build(BuildContext context) {
@@ -19,9 +24,18 @@ class AuthPage extends StatelessWidget {
               backgroundColor: Colors.red,
             ),
           );
-        } else if (state is AuthSuccess) {
+        } else if (state is SigninSuccess) {
           // Navigate to home or next screen
-          context.go('/user-profile');
+          Navigator.push(
+            context,
+            PageRouteBuilder(
+              opaque: true,
+              pageBuilder: (context, _, __) => VerificationProgressOverlay(
+                completedStep: 0,
+                nextRoute: UploadDocumentPage.pageName,
+              ),
+            ),
+          );
         }
       },
       builder: (context, state) {
@@ -38,8 +52,8 @@ class AuthPage extends StatelessWidget {
                 ],
               ),
             ),
-            child: SafeArea(
-              child: const EmailInput(),
+            child: const SafeArea(
+              child: EmailInput(),
             ),
           ),
         );

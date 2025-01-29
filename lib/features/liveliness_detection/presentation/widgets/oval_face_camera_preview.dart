@@ -6,13 +6,13 @@ import '../../domain/entities/recording_state.dart';
 class OvalFaceCameraPreview extends StatelessWidget {
   final CameraController controller;
   final RecordingState recordingState;
-  final String instruction;
+  final String? instruction;
 
   const OvalFaceCameraPreview({
     super.key,
     required this.controller,
     required this.recordingState,
-    required this.instruction,
+    this.instruction,
   });
 
   @override
@@ -67,25 +67,27 @@ class OvalFaceCameraPreview extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 // Instruction text
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: Text(
-                    instruction,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ).animate().fadeIn().scale(),
+                instruction == ''
+                    ? SizedBox()
+                    : Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: Text(
+                          instruction!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ).animate().fadeIn().scale(),
               ],
             ),
           ),

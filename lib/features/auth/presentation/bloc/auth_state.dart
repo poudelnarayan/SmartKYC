@@ -13,12 +13,20 @@ class AuthInitial extends AuthState {}
 
 class AuthLoading extends AuthState {}
 
-class AuthSuccess extends AuthState {
+class SigninSuccess extends AuthState {
   final AuthUser user;
-  const AuthSuccess(this.user);
+  const SigninSuccess(this.user);
 
   @override
   List<Object?> get props => [user];
+}
+
+class SignUpSuccess extends AuthState {
+  final String email;
+  const SignUpSuccess(this.email);
+
+  @override
+  List<Object?> get props => [email];
 }
 
 class AuthError extends AuthState {
@@ -41,4 +49,4 @@ class EmailVerified extends AuthState {}
 
 class PasswordResetSent extends AuthState {}
 
-class SignedOut extends AuthState {}
+class SignOutSuccess extends AuthState {}

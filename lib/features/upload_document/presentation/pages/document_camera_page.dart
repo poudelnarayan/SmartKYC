@@ -4,6 +4,8 @@ import 'package:camera/camera.dart';
 class DocumentCameraPage extends StatefulWidget {
   const DocumentCameraPage({super.key});
 
+  static const pageName = "captureDocument";
+
   @override
   State<DocumentCameraPage> createState() => _DocumentCameraPageState();
 }

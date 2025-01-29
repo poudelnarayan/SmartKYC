@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:smartkyc/core/constants/app_dimensions.dart';
 
 class VerificationProgressOverlay extends StatefulWidget {
   final int completedStep;
@@ -69,7 +70,6 @@ class _VerificationProgressOverlayState
 
   @override
   Widget build(BuildContext context) {
-
     return Material(
       color: Colors.black.withOpacity(0.9),
       child: SafeArea(
@@ -243,7 +243,7 @@ class _VerificationProgressOverlayState
                       : isCurrent
                           ? Theme.of(context).colorScheme.primary
                           : Colors.white.withOpacity(0.5),
-                  size: 24,
+                  size: AppDimensions.s24,
                 ),
               ),
             );

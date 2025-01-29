@@ -5,6 +5,8 @@ import 'package:camera/camera.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:smartkyc/features/liveliness_detection/presentation/pages/liveness_detection_start_page.dart';
+import '../../../../core/services/storage_service.dart';
 import '../../../verification_steps/presentation/widgets/verification_progress_overlay.dart';
 import '../bloc/selfie_capture_bloc.dart';
 import '../bloc/selfie_capture_event.dart';
@@ -15,6 +17,8 @@ import 'package:get_it/get_it.dart';
 class SelfieCapturePage extends StatefulWidget {
   final CameraDescription camera = GetIt.I<List<CameraDescription>>()[1];
 
+  static const pageName = "/selfieCapture";
+
   SelfieCapturePage({Key? key}) : super(key: key);
 
   @override
@@ -24,6 +28,7 @@ class SelfieCapturePage extends StatefulWidget {
 class _SelfieCapturePageState extends State<SelfieCapturePage> {
   late CameraController _cameraController;
   bool _isCaptured = false;
+  bool _isUploading = false;
   XFile? _capturedImage;
 
   @override
@@ -56,16 +61,49 @@ class _SelfieCapturePageState extends State<SelfieCapturePage> {
     context.read<SelfieCaptureBloc>().add(CaptureSelfie());
   }
 
+  Future<void> _handleUploadAndNavigate(
+      BuildContext context, XFile image) async {
+    setState(() {
+      _isUploading = true;
+    });
+
+    try {
+      final storageService = StorageService();
+      final downloadUrl = await storageService.uploadSelfie(File(image.path));
+      print('Selfie uploaded successfully: $downloadUrl');
+
+      if (mounted) {
+        await _navigateToLiveliness(context);
+      }
+    } catch (e) {
+      print('Error uploading selfie: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to upload selfie: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+      }
+    }
+  }
+
   Future<void> _navigateToLiveliness(BuildContext context) async {
     await _cameraController.dispose();
     if (mounted) {
       Navigator.push(
         context,
         PageRouteBuilder(
-          opaque: false,
+          opaque: true,
           pageBuilder: (context, _, __) => VerificationProgressOverlay(
             completedStep: 2,
-            nextRoute: '/liveliness-detection-start',
+            nextRoute: LivenessDetectionStartPage.pageName,
           ),
         ),
       );
@@ -92,7 +130,7 @@ class _SelfieCapturePageState extends State<SelfieCapturePage> {
       child: Scaffold(
         backgroundColor: Colors.black,
         body: BlocConsumer<SelfieCaptureBloc, SelfieCaptureState>(
-          listener: (context, state) {
+          listener: (context, state) async {
             if (state is SelfieCaptured) {
               setState(() {
                 _isCaptured = true;
@@ -169,12 +207,21 @@ class _SelfieCapturePageState extends State<SelfieCapturePage> {
                                   ),
                                 ),
                                 if (_isCaptured)
-                                  Text(
-                                    l10n.reviewSelfie,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(20),
+                                      color: Colors.black54,
+                                    ),
+                                    child: Padding(
+                                      padding: EdgeInsets.all(8),
+                                      child: Text(
+                                        l10n.reviewSelfie,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
                                     ),
                                   ),
                               ],
@@ -209,36 +256,68 @@ class _SelfieCapturePageState extends State<SelfieCapturePage> {
                                   : _isCaptured
                                       ? Row(
                                           children: [
-                                            Expanded(
-                                              child: OutlinedButton.icon(
-                                                onPressed: () {
-                                                  setState(() {
-                                                    _isCaptured = false;
-                                                    _capturedImage = null;
-                                                  });
-                                                },
-                                                icon: const Icon(Icons.refresh),
-                                                label: Text(l10n.retake),
-                                                style: OutlinedButton.styleFrom(
-                                                  foregroundColor: Colors.white,
-                                                  side: const BorderSide(
-                                                      color: Colors.white),
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                    vertical: 16,
+                                            if (!_isUploading)
+                                              Expanded(
+                                                child: OutlinedButton.icon(
+                                                  onPressed: _isUploading
+                                                      ? null
+                                                      : () {
+                                                          setState(() {
+                                                            _isCaptured = false;
+                                                            _capturedImage =
+                                                                null;
+                                                          });
+                                                        },
+                                                  icon:
+                                                      const Icon(Icons.refresh),
+                                                  label: Text(l10n.retake),
+                                                  style:
+                                                      OutlinedButton.styleFrom(
+                                                    foregroundColor:
+                                                        Colors.white,
+                                                    side: BorderSide(
+                                                      color: _isUploading
+                                                          ? Colors.white38
+                                                          : Colors.white,
+                                                    ),
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                      vertical: 16,
+                                                    ),
                                                   ),
                                                 ),
                                               ),
-                                            ),
                                             const SizedBox(width: 16),
                                             Expanded(
                                               child: FilledButton.icon(
-                                                onPressed: () =>
-                                                    _navigateToLiveliness(
-                                                        context),
-                                                icon: const Icon(Icons.check),
+                                                onPressed: _isUploading
+                                                    ? () {}
+                                                    : () =>
+                                                        _handleUploadAndNavigate(
+                                                            context,
+                                                            _capturedImage!),
+                                                icon: _isUploading
+                                                    ? Container(
+                                                        width: 24,
+                                                        height: 24,
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(2),
+                                                        child:
+                                                            const CircularProgressIndicator(
+                                                          color: Colors.blue,
+                                                          strokeWidth: 3,
+                                                        ),
+                                                      )
+                                                    : const Icon(
+                                                        Icons.check,
+                                                        color: Colors.blue,
+                                                      ),
                                                 label: Text(
-                                                    l10n.continue_operation),
+                                                  _isUploading
+                                                      ? l10n.pleaseWait
+                                                      : l10n.continue_operation,
+                                                ),
                                                 style: FilledButton.styleFrom(
                                                   backgroundColor: Colors.white,
                                                   foregroundColor:

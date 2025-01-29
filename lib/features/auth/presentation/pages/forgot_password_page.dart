@@ -2,12 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:go_router/go_router.dart';
+import 'package:smartkyc/core/constants/app_dimensions.dart';
+import 'package:smartkyc/features/auth/presentation/pages/singin_page.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
+
+  static const pageName = "/forgotPassword";
 
   @override
   State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
@@ -21,6 +26,56 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   void dispose() {
     _emailController.dispose();
     super.dispose();
+  }
+
+  void _showResetSuccessDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        icon: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.green.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.mark_email_read_outlined,
+            color: Colors.green,
+            size: AppDimensions.s32,
+          ),
+        ),
+        title: Text(
+          l10n.resetLinkSent,
+          textAlign: TextAlign.center,
+        ),
+        content: Text(
+          l10n.resetLinkSentDesc,
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () {
+              context.go(SinginPage.pageName);
+            },
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(double.infinity, AppDimensions.s48),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(l10n.backToSignIn),
+          ),
+        ],
+        actionsAlignment: MainAxisAlignment.center,
+        actionsPadding: const EdgeInsets.all(16),
+      ),
+    );
   }
 
   @override
@@ -57,7 +112,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 48),
+                  const SizedBox(height: AppDimensions.s48),
                   // Icon
                   Center(
                     child: Container(
@@ -68,12 +123,12 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       ),
                       child: Icon(
                         Icons.lock_reset_outlined,
-                        size: 48,
+                        size: AppDimensions.s48,
                         color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ).animate().scale(),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: AppDimensions.h32),
                   // Title
                   Text(
                     l10n.forgotPassword,
@@ -83,17 +138,16 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     ),
                     textAlign: TextAlign.center,
                   ).animate().fadeIn().slideY(),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppDimensions.h12),
                   // Description
                   Text(
-                    "forgot password",
-                    // l10n.forgotPasswordDesc,
+                    l10n.forgotPasswordDesc,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: Colors.white.withOpacity(0.9),
                     ),
                     textAlign: TextAlign.center,
                   ).animate().fadeIn().slideY(),
-                  const SizedBox(height: 48),
+                  const SizedBox(height: AppDimensions.h48),
                   // Email field
                   TextFormField(
                     controller: _emailController,
@@ -137,9 +191,21 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       return null;
                     },
                   ).animate().fadeIn().slideX(),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: AppDimensions.h32),
                   // Reset button
-                  BlocBuilder<AuthBloc, AuthState>(
+                  BlocConsumer<AuthBloc, AuthState>(
+                    listener: (context, state) {
+                      if (state is PasswordResetSent) {
+                        _showResetSuccessDialog(context);
+                      } else if (state is AuthError) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(state.message),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
                     builder: (context, state) {
                       return FilledButton.icon(
                         onPressed: state is AuthLoading
@@ -149,23 +215,34 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                     false) {
                                   context.read<AuthBloc>().add(
                                         SendPasswordReset(
-                                            _emailController.text),
+                                          _emailController.text,
+                                        ),
                                       );
                                 }
                               },
-                        icon: const Icon(Icons.send_outlined),
+                        icon: state is AuthLoading
+                            ? Container(
+                                width: 24,
+                                height: 24,
+                                padding: const EdgeInsets.all(2),
+                                child: const CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 3,
+                                ),
+                              )
+                            : const Icon(Icons.send_outlined),
                         label: Text(
-                          "reset password",
-                          // l10n.resetPassword,
+                          l10n.resetPassword,
                           style: const TextStyle(
-                            fontSize: 16,
+                            fontSize: AppDimensions.s16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         style: FilledButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: theme.colorScheme.primary,
-                          minimumSize: const Size(double.infinity, 56),
+                          minimumSize:
+                              const Size(double.infinity, AppDimensions.s56),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),

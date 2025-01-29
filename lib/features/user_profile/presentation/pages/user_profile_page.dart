@@ -1,122 +1,171 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:go_router/go_router.dart';
+import 'package:smartkyc/features/auth/presentation/bloc/auth_event.dart';
+import 'package:smartkyc/features/auth/presentation/pages/singin_page.dart';
+
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
 
 class UserProfilePage extends StatelessWidget {
   const UserProfilePage({super.key});
+
+  static const pageName = "/userProfile";
+
+  void _showLogoutDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.logoutConfirmation),
+        content: Text(l10n.logoutConfirmationDesc),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.read<AuthBloc>().add(SignOut());
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color.fromARGB(255, 220, 113, 113),
+            ),
+            child: Text(l10n.logout),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        title: Text(
-          l10n.profile,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () {
-              // TODO: Navigate to settings
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout_outlined),
-            onPressed: () {
-              // TODO: Handle logout
-            },
-          ),
-        ],
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildProfileHeader(context),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  _buildQuickActions(context),
-                  const SizedBox(height: 24),
-                  _buildSection(
-                    context,
-                    title: l10n.personalInformation,
-                    icon: Icons.person_outline,
-                    items: [
-                      _ProfileItem(
-                        label: l10n.email,
-                        value: 'poudelnarayan434@gmail.com',
-                        icon: Icons.email_outlined,
-                      ),
-                      _ProfileItem(
-                        label: l10n.phone,
-                        value: '+9779867513539',
-                        icon: Icons.phone_outlined,
-                      ),
-                      _ProfileItem(
-                        label: l10n.location,
-                        value: 'Dhapakhel, Lalitpur',
-                        icon: Icons.location_on_outlined,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSection(
-                    context,
-                    title: l10n.documents,
-                    icon: Icons.description_outlined,
-                    items: [
-                      _ProfileItem(
-                        label: l10n.licenseNo,
-                        value: 'DL-123456789',
-                        icon: Icons.credit_card_outlined,
-                      ),
-                      _ProfileItem(
-                        label: l10n.idCard,
-                        value: 'ID-456789123',
-                        icon: Icons.badge_outlined,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSection(
-                    context,
-                    title: l10n.verificationStatus,
-                    icon: Icons.verified_user_outlined,
-                    items: [
-                      _ProfileItem(
-                        label: l10n.identity,
-                        value: l10n.verified,
-                        isVerified: true,
-                        icon: Icons.security_outlined,
-                      ),
-                      _ProfileItem(
-                        label: l10n.documents,
-                        value: l10n.verified,
-                        isVerified: true,
-                        icon: Icons.fact_check_outlined,
-                      ),
-                      _ProfileItem(
-                        label: l10n.livenessCheck,
-                        value: l10n.verified,
-                        isVerified: true,
-                        icon: Icons.face_outlined,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
-                ],
+    return BlocListener<AuthBloc, AuthState>(
+        listener: (context, state) {
+          if (state is SignOutSuccess) {
+            context.go(SinginPage.pageName);
+          } else if (state is AuthError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
               ),
+            );
+          }
+        },
+        child: Scaffold(
+          backgroundColor: Colors.grey[100],
+          appBar: AppBar(
+            title: Text(
+              l10n.profile,
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-          ],
-        ),
-      ),
-    );
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.settings_outlined),
+                onPressed: () {
+                  // TODO: Navigate to settings
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.logout_outlined),
+                onPressed: () => _showLogoutDialog(context),
+              ),
+            ],
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+          ),
+          body: SingleChildScrollView(
+            child: Column(
+              children: [
+                _buildProfileHeader(context),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      _buildQuickActions(context),
+                      const SizedBox(height: 24),
+                      _buildSection(
+                        context,
+                        title: l10n.personalInformation,
+                        icon: Icons.person_outline,
+                        items: [
+                          _ProfileItem(
+                            label: l10n.email,
+                            value: 'poudelnarayan434@gmail.com',
+                            icon: Icons.email_outlined,
+                          ),
+                          _ProfileItem(
+                            label: l10n.phone,
+                            value: '+9779867513539',
+                            icon: Icons.phone_outlined,
+                          ),
+                          _ProfileItem(
+                            label: l10n.location,
+                            value: 'Dhapakhel, Lalitpur',
+                            icon: Icons.location_on_outlined,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _buildSection(
+                        context,
+                        title: l10n.documents,
+                        icon: Icons.description_outlined,
+                        items: [
+                          _ProfileItem(
+                            label: l10n.licenseNo,
+                            value: 'DL-123456789',
+                            icon: Icons.credit_card_outlined,
+                          ),
+                          _ProfileItem(
+                            label: l10n.idCard,
+                            value: 'ID-456789123',
+                            icon: Icons.badge_outlined,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _buildSection(
+                        context,
+                        title: l10n.verificationStatus,
+                        icon: Icons.verified_user_outlined,
+                        items: [
+                          _ProfileItem(
+                            label: l10n.identity,
+                            value: l10n.verified,
+                            isVerified: true,
+                            icon: Icons.security_outlined,
+                          ),
+                          _ProfileItem(
+                            label: l10n.documents,
+                            value: l10n.verified,
+                            isVerified: true,
+                            icon: Icons.fact_check_outlined,
+                          ),
+                          _ProfileItem(
+                            label: l10n.livenessCheck,
+                            value: l10n.verified,
+                            isVerified: true,
+                            icon: Icons.face_outlined,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ));
   }
 
   Widget _buildProfileHeader(BuildContext context) {
@@ -256,7 +305,7 @@ class UserProfilePage extends StatelessWidget {
           Expanded(
             child: _QuickActionButton(
               icon: Icons.security_outlined,
-              label: l10n.next,
+              label: l10n.security,
               onTap: () {
                 // TODO: Navigate to security settings
               },
@@ -269,8 +318,8 @@ class UserProfilePage extends StatelessWidget {
           ),
           Expanded(
             child: _QuickActionButton(
-              icon: Icons.help_outline_rounded,
-              label: l10n.next,
+              icon: Icons.album_outlined,
+              label: l10n.about,
               onTap: () {
                 // TODO: Navigate to help center
               },

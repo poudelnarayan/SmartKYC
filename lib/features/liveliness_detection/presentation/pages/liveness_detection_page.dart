@@ -1,24 +1,31 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:camera/camera.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
+import 'package:smartkyc/features/success/presentation/pages/verification_success_page.dart';
 import '../bloc/liveliness_bloc.dart';
 import '../bloc/liveliness_state.dart';
 import '../bloc/liveliness_event.dart';
 import '../widgets/oval_face_camera_preview.dart';
 import '../../domain/entities/recording_state.dart';
+import '../../../../core/services/storage_service.dart';
 
-class LivelinessPage extends StatefulWidget {
-  const LivelinessPage({super.key});
+class LivenessDetectoinPage extends StatefulWidget {
+  const LivenessDetectoinPage({super.key});
+  static const pageName = "/livelinessDetection";
 
   @override
-  State<LivelinessPage> createState() => _LivelinessPageState();
+  State<LivenessDetectoinPage> createState() => _LivelinessPageState();
 }
 
-class _LivelinessPageState extends State<LivelinessPage> {
+class _LivelinessPageState extends State<LivenessDetectoinPage> {
   CameraController? _controller;
   bool _isCameraInitialized = false;
+  bool _isUploading = false;
+  XFile? _recordedVideo;
 
   @override
   void initState() {
@@ -59,6 +66,73 @@ class _LivelinessPageState extends State<LivelinessPage> {
     }
   }
 
+  Future<void> _startRecording() async {
+    if (_controller == null || !_controller!.value.isInitialized) return;
+
+    try {
+      await _controller!.startVideoRecording();
+      context.read<LivenessBloc>().add(StartDetectionProcess());
+    } catch (e) {
+      print('Error starting recording: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to start recording: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _stopAndUploadRecording(BuildContext context) async {
+    if (_controller == null || !_controller!.value.isInitialized) return;
+
+    setState(() {
+      _isUploading = true;
+    });
+
+    try {
+      final video = await _controller!.stopVideoRecording();
+      _recordedVideo = video;
+
+      // Create a new file with .mp4 extension
+      final videoFile = File(video.path);
+      final directory = await videoFile.parent.create(recursive: true);
+      final newPath =
+          '${directory.path}/${DateTime.now().millisecondsSinceEpoch}.mp4';
+      await videoFile.copy(newPath);
+      await videoFile.delete(); // Delete the original temp file
+
+      final storageService = StorageService();
+      final downloadUrl =
+          await storageService.uploadLivenessVideo(File(newPath));
+      print('Liveness video uploaded successfully: $downloadUrl');
+
+      // Clean up the copied file
+      await File(newPath).delete();
+
+      if (mounted) {
+        print(VerificationSuccessPage.pageName);
+        context.go(VerificationSuccessPage.pageName);
+      }
+    } catch (e) {
+      print('Error handling video: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to upload video: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+      }
+    }
+  }
+
   @override
   void dispose() {
     _controller?.dispose();
@@ -73,8 +147,7 @@ class _LivelinessPageState extends State<LivelinessPage> {
       body: BlocConsumer<LivenessBloc, LivenessState>(
         listener: (context, state) async {
           if (state.recordingState == RecordingState.completed) {
-            await Future.delayed(Duration(milliseconds: 800));
-            context.go('/success');
+            await _stopAndUploadRecording(context);
           }
         },
         builder: (context, state) {
@@ -119,7 +192,65 @@ class _LivelinessPageState extends State<LivelinessPage> {
                   ],
                 ),
               ),
-              _buildActionButton(context, state),
+
+              // Action button or uploading indicator
+              if (_isUploading)
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.black.withOpacity(0.9),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 200,
+                            height: 200,
+                            child: Lottie.network(
+                              // AI/ML processing animation
+                              'https://lottie.host/c9ef1b27-5c36-4287-98d0-f6cde70ae043/KKBXQbo4ma.json',
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const CircularProgressIndicator(
+                                  color: Colors.white,
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          const Text(
+                            'Processing Video',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: const Text(
+                              'Analyzing facial movements and gestures...',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
+                      ).animate().fadeIn().scale(),
+                    ),
+                  ),
+                )
+              else
+                _buildActionButton(context, state),
             ],
           );
         },
@@ -201,8 +332,7 @@ class _LivelinessPageState extends State<LivelinessPage> {
         bottom: 30,
         left: MediaQuery.of(context).size.width / 4.5,
         child: FilledButton.icon(
-          onPressed: () =>
-              context.read<LivenessBloc>().add(StartDetectionProcess()),
+          onPressed: _startRecording,
           icon: const Icon(Icons.play_arrow_rounded),
           label: const Text('Start Verification'),
           style: FilledButton.styleFrom(

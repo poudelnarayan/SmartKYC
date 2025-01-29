@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:smartkyc/features/auth/presentation/pages/forgot_password_page.dart';
+import 'package:smartkyc/features/auth/presentation/pages/sign_up_page.dart';
+import 'package:smartkyc/features/language/presentation/widgets/language_switcher.dart';
+import '../../../../core/services/preferences_service.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -22,6 +27,8 @@ class _EmailInputState extends State<EmailInput> {
   bool _isHovered = false;
   bool _rememberMe = false;
 
+  final onboardingService = GetIt.instance<OnboardingService>();
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -39,9 +46,12 @@ class _EmailInputState extends State<EmailInput> {
       child: Form(
         key: _formKey,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 48),
+            onboardingService.hasSeenOnboarding
+                ? LanguageSwitcher()
+                : SizedBox(),
+            const SizedBox(height: 24),
             // Logo/Icon with animated background
             Center(
               child: MouseRegion(
@@ -94,22 +104,26 @@ class _EmailInputState extends State<EmailInput> {
             ).animate().scale(),
             const SizedBox(height: 32),
             // Welcome text
-            Text(
-              l10n.welcomeTitle,
-              style: theme.textTheme.headlineMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ).animate().fadeIn().slideY(),
+            Center(
+              child: Text(
+                l10n.welcomeTitle,
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ).animate().fadeIn().slideY(),
+            ),
             const SizedBox(height: 8),
-            Text(
-              l10n.welcomeSubtitle,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: Colors.white.withOpacity(0.9),
-              ),
-              textAlign: TextAlign.center,
-            ).animate().fadeIn().slideY(),
+            Center(
+              child: Text(
+                l10n.welcomeSubtitle,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: Colors.white.withOpacity(0.9),
+                ),
+                textAlign: TextAlign.center,
+              ).animate().fadeIn().slideY(),
+            ),
             const SizedBox(height: 48),
             // Email field
             TextFormField(
@@ -221,7 +235,7 @@ class _EmailInputState extends State<EmailInput> {
                 ),
                 TextButton(
                   onPressed: () {
-                    context.push('/forgot-password');
+                    context.push(ForgotPasswordPage.pageName);
                   },
                   child: Text(
                     l10n.forgotPassword,
@@ -289,7 +303,7 @@ class _EmailInputState extends State<EmailInput> {
                 ),
                 TextButton(
                   onPressed: () {
-                    context.push('/sign-up');
+                    context.push(SignUpPage.pageName);
                   },
                   child: Text(
                     l10n.signUp,

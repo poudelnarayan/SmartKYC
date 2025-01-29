@@ -3,10 +3,13 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:smartkyc/features/auth/presentation/pages/singin_page.dart';
 import 'package:smartkyc/features/language/presentation/widgets/language_switcher.dart';
 
 class VerificationStepsPage extends StatelessWidget {
   const VerificationStepsPage({super.key});
+
+  static const pageName = "/verificationStep";
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +74,7 @@ class VerificationStepsPage extends StatelessWidget {
                         _buildVerificationSteps(context),
                         const SizedBox(height: 32),
                         FilledButton(
-                          onPressed: () => context.go('/auth'),
+                          onPressed: () => context.go(SinginPage.pageName),
                           style: FilledButton.styleFrom(
                             backgroundColor: Colors.white,
                             foregroundColor:
