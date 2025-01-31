@@ -40,9 +40,6 @@ class _EmailInputState extends State<EmailInput> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    print("****************");
-    print(onboardingService.hasSeenOnboarding);
-    print("****************");
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -52,8 +49,8 @@ class _EmailInputState extends State<EmailInput> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             onboardingService.hasSeenOnboarding
-                ? SizedBox()
-                : LanguageSwitcher(),
+                ? LanguageSwitcher()
+                : SizedBox(),
             const SizedBox(height: 24),
             // Logo/Icon with animated background
             Center(

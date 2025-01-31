@@ -1,3 +1,16 @@
-abstract class UserDetailFormEvent {}
+import 'package:equatable/equatable.dart';
+import 'package:smartkyc/domain/entities/user.dart';
 
-class InitializeUserDetailForm extends UserDetailFormEvent {}
+abstract class UserEvent extends Equatable {
+  @override
+  List<Object> get props => [];
+}
+
+class UpdateUserEvent extends UserEvent {
+  final User user;
+
+  UpdateUserEvent(this.user);
+
+  @override
+  List<Object> get props => [user];
+}

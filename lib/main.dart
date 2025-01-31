@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartkyc/config/routes.dart';
 import 'package:camera/camera.dart';
@@ -16,6 +17,10 @@ import 'package:flutter/services.dart';
 import 'package:smartkyc/features/upload_document/presentation/bloc/upload_document_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:smartkyc/features/user_detail_form/presentation/bloc/user_detail_form_bloc.dart';
+import 'domain/repository/user_repository.dart';
+import 'domain/repository/user_repository_impl.dart';
+import 'domain/usecases/update_user.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/domain/usecases/sign_in.dart';
@@ -57,6 +62,7 @@ void main() async {
         BlocProvider(create: (context) => UploadDocumentBloc()),
         BlocProvider(create: (context) => LanguageBloc()),
         BlocProvider(create: (context) => LivenessBloc()),
+        BlocProvider(create: (context) => UserBloc()),
         BlocProvider<AuthBloc>(
           create: (context) => AuthBloc(
             signIn: signInUseCase,

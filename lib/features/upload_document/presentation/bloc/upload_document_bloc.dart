@@ -8,11 +8,11 @@ class UploadDocumentBloc
     extends Bloc<UploadDocumentEvent, UploadDocumentState> {
   final ImagePicker _picker = ImagePicker();
 
-  UploadDocumentBloc() : super(UploadInitial()) {
+  UploadDocumentBloc() : super(DocumentPreviewInitial()) {
     on<PickFromGallery>(_pickFromGallery);
     on<CaptureFromCamera>(_captureFromCamera);
     on<SetCapturedImage>(_setCapturedImage);
-    on<ResetUpload>((event, emit) => emit(UploadInitial()));
+    on<ResetUpload>((event, emit) => emit(DocumentPreviewInitial()));
   }
 
   Future<void> _pickFromGallery(
@@ -20,18 +20,18 @@ class UploadDocumentBloc
     Emitter<UploadDocumentState> emit,
   ) async {
     try {
-      emit(UploadInProgress());
+      emit(DocumentPreviewInProgress());
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 85,
       );
       if (image != null) {
-        emit(UploadSuccess(image));
+        emit(DocumentPreviewSuccess(image));
       } else {
-        emit(const UploadFailure('no_image_selected'));
+        emit(DocumentPreviewFailure('no_image_selected'));
       }
     } catch (e) {
-      emit(UploadFailure('failed_to_pick_image: ${e.toString()}'));
+      emit(DocumentPreviewFailure('failed_to_pick_image: ${e.toString()}'));
     }
   }
 
@@ -42,12 +42,12 @@ class UploadDocumentBloc
     try {
       final status = await Permission.camera.request();
       if (!status.isGranted) {
-        emit(const UploadFailure('camera_permission_denied'));
+        emit(DocumentPreviewFailure('camera_permission_denied'));
         return;
       }
-      emit(UploadInProgress());
+      emit(DocumentPreviewInProgress());
     } catch (e) {
-      emit(const UploadFailure('failed_to_capture_image'));
+      emit(DocumentPreviewFailure('failed_to_capture_image'));
     }
   }
 
@@ -56,9 +56,9 @@ class UploadDocumentBloc
     Emitter<UploadDocumentState> emit,
   ) {
     if (event.image.path.isNotEmpty) {
-      emit(UploadSuccess(event.image));
+      emit(DocumentPreviewSuccess(event.image));
     } else {
-      emit(const UploadFailure('invalid_image_file'));
+      emit(DocumentPreviewFailure('invalid_image_file'));
     }
   }
 }

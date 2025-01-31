@@ -5,6 +5,7 @@ import 'package:camera/camera.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:smartkyc/domain/usecases/update_user.dart';
 import 'package:smartkyc/features/liveliness_detection/presentation/pages/liveness_detection_start_page.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../verification_steps/presentation/widgets/verification_progress_overlay.dart';
@@ -70,6 +71,7 @@ class _SelfieCapturePageState extends State<SelfieCapturePage> {
     try {
       final storageService = StorageService();
       final downloadUrl = await storageService.uploadSelfie(File(image.path));
+      // await UpdateUser().verifySelfie();
       print('Selfie uploaded successfully: $downloadUrl');
 
       if (mounted) {

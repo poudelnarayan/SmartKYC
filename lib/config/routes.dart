@@ -50,10 +50,16 @@ final appRouter = GoRouter(
       builder: (context, state) => const SignUpPage(),
     ),
     GoRoute(
-      name: UploadDocumentPage.pageName,
-      path: UploadDocumentPage.pageName,
-      builder: (context, state) => UploadDocumentPage(),
-    ),
+        name: UploadDocumentPage.pageName,
+        path: UploadDocumentPage.pageName,
+        builder: (context, state) => UploadDocumentPage(),
+        routes: [
+          GoRoute(
+            name: UserDetailFormPage.pageName,
+            path: UserDetailFormPage.pageName,
+            builder: (context, state) => const UserDetailFormPage(),
+          ),
+        ]),
     GoRoute(
         name: SelfieStartPage.pageName,
         path: SelfieStartPage.pageName,
@@ -80,11 +86,6 @@ final appRouter = GoRouter(
       name: VerificationSuccessPage.pageName,
       path: VerificationSuccessPage.pageName,
       builder: (context, state) => const VerificationSuccessPage(),
-    ),
-    GoRoute(
-      name: UserDetailFormPage.pageName,
-      path: UserDetailFormPage.pageName,
-      builder: (context, state) => const UserDetailFormPage(),
     ),
     GoRoute(
       name: UserProfilePage.pageName,

@@ -14,7 +14,6 @@ class CaptureFromCamera extends UploadDocumentEvent {}
 
 class ResetUpload extends UploadDocumentEvent {}
 
-
 class SetCapturedImage extends UploadDocumentEvent {
   final XFile image;
 

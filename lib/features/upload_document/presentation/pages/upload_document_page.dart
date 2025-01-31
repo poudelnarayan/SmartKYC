@@ -33,10 +33,11 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
     try {
       final storageService = StorageService();
       final downloadUrl = await storageService.uploadDocument(File(file.path));
+
       print('Document uploaded successfully: $downloadUrl');
 
       if (mounted) {
-        context.go(UserDetailFormPage.pageName);
+        context.goNamed(UserDetailFormPage.pageName);
       }
     } catch (e) {
       print('Error uploading document: $e');
@@ -63,7 +64,7 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
 
     return BlocConsumer<UploadDocumentBloc, UploadDocumentState>(
       listener: (context, state) {
-        if (state is UploadFailure) {
+        if (state is DocumentPreviewFailure) {
           final errorMessage = switch (state.error) {
             'no_image_selected' => l10n.noImageSelected,
             'camera_permission_denied' => l10n.cameraPermissionDenied,
@@ -119,7 +120,7 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
                           ),
                     ),
                     const SizedBox(height: 32),
-                    if (state is UploadInProgress)
+                    if (state is DocumentPreviewInProgress)
                       Center(
                         child: Column(
                           children: [
@@ -153,7 +154,7 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
                             children: [
                               Padding(
                                 padding: const EdgeInsets.all(16.0),
-                                child: state is UploadSuccess
+                                child: state is DocumentPreviewSuccess
                                     ? ClipRRect(
                                         borderRadius: BorderRadius.circular(12),
                                         child: Image.file(
@@ -206,7 +207,7 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
                                   ),
                                 ),
                                 child: Text(
-                                  state is UploadSuccess
+                                  state is DocumentPreviewSuccess
                                       ? l10n.tapToChangeDocument
                                       : l10n.tapToUploadDocument,
                                   textAlign: TextAlign.center,
@@ -222,7 +223,7 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
                         ),
                       ),
                     const SizedBox(height: 32),
-                    if (state is UploadSuccess)
+                    if (state is DocumentPreviewSuccess)
                       FilledButton.icon(
                         onPressed: _isUploading
                             ? null

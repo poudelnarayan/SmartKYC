@@ -67,12 +67,22 @@ class _OnboardingPageState extends State<OnboardingPage> {
             body: SafeArea(
               child: Column(
                 children: [
+                  SizedBox(
+                    height: 10,
+                  ),
                   Align(
                     alignment: Alignment.topRight,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const LanguageSwitcher(),
+                        const Row(
+                          children: [
+                            SizedBox(
+                              width: 10,
+                            ),
+                            LanguageSwitcher(),
+                          ],
+                        ),
                         TextButton(
                           onPressed: () {
                             context

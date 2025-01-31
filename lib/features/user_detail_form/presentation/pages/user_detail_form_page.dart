@@ -26,9 +26,6 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
     'dob': DateTime(1990, 1, 1),
     'fatherName': 'Jeevlal Poudel',
     'citizenshipNumber': 'CTZ123456',
-    'phoneNumber': '+9779867513539',
-    'issueDate': DateTime.now(),
-    'expiryDate': DateTime.now().add(const Duration(days: 365 * 5)),
   };
 
   Future<void> _selectDate(BuildContext context, String field) async {
@@ -147,26 +144,6 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
                 }
                 return null;
               },
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildDateField(
-                    label: l10n.issueDate,
-                    value: _formData['issueDate'],
-                    onTap: () => _selectDate(context, 'issueDate'),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildDateField(
-                    label: l10n.expiryDate,
-                    value: _formData['expiryDate'],
-                    onTap: () => _selectDate(context, 'expiryDate'),
-                  ),
-                ),
-              ],
             ),
           ],
         ),
@@ -377,7 +354,7 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
                 context,
                 PageRouteBuilder(
                   opaque: false,
-                  pageBuilder: (context, _, __) => VerificationProgressOverlay(
+                  pageBuilder: (context, _, __) => const VerificationProgressOverlay(
                     completedStep: 1,
                     nextRoute: SelfieStartPage.pageName,
                   ),

@@ -8,23 +8,25 @@ abstract class UploadDocumentState extends Equatable {
   List<Object?> get props => [];
 }
 
-class UploadInitial extends UploadDocumentState {}
+abstract class PreviewDocumentState extends UploadDocumentState {}
 
-class UploadInProgress extends UploadDocumentState {}
+class DocumentPreviewInitial extends PreviewDocumentState {}
 
-class UploadSuccess extends UploadDocumentState {
+class DocumentPreviewInProgress extends PreviewDocumentState {}
+
+class DocumentPreviewSuccess extends PreviewDocumentState {
   final XFile file;
 
-  const UploadSuccess(this.file);
+  DocumentPreviewSuccess(this.file);
 
   @override
   List<Object?> get props => [file.path];
 }
 
-class UploadFailure extends UploadDocumentState {
+class DocumentPreviewFailure extends PreviewDocumentState {
   final String error;
 
-  const UploadFailure(this.error);
+  DocumentPreviewFailure(this.error);
 
   @override
   List<Object?> get props => [error];
