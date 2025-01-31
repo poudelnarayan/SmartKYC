@@ -9,13 +9,14 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this._firebaseAuth);
 
   @override
-  Future<AuthUser> signInWithEmailAndPassword(String email, String password) async {
+  Future<AuthUser> signInWithEmailAndPassword(
+      String email, String password) async {
     try {
       final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-      
+
       if (userCredential.user == null) {
         throw Exception('Failed to sign in');
       }
@@ -27,13 +28,14 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<AuthUser> signUpWithEmailAndPassword(String email, String password) async {
+  Future<AuthUser> signUpWithEmailAndPassword(
+      String email, String password) async {
     try {
       final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      
+
       if (userCredential.user == null) {
         throw Exception('Failed to sign up');
       }

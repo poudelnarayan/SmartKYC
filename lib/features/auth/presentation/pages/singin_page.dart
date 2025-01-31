@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartkyc/config/routes.dart';
+import 'package:smartkyc/features/auth/presentation/pages/verify_email_page.dart';
 import 'package:smartkyc/features/language/presentation/widgets/language_switcher.dart';
 import 'package:smartkyc/features/upload_document/presentation/pages/upload_document_page.dart';
 import '../../../verification_steps/presentation/widgets/verification_progress_overlay.dart';
@@ -21,13 +22,7 @@ class SinginPage extends StatefulWidget {
 }
 
 class _SinginPageState extends State<SinginPage> {
-  String nextRoute = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _checkNavigation(); // Call the async function separately
-  }
+  String nextRoute = UploadDocumentPage.pageName;
 
   Future<void> _checkNavigation() async {
     final route = await handleKYCNavigation(context);
@@ -49,7 +44,10 @@ class _SinginPageState extends State<SinginPage> {
               backgroundColor: Colors.red,
             ),
           );
+        } else if (state is EmailVerificationRequired) {
+          context.go(VerifyEmailPage.pageName);
         } else if (state is SigninSuccess) {
+          await _checkNavigation();
           Navigator.push(
             context,
             PageRouteBuilder(

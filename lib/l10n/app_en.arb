@@ -15,6 +15,10 @@
       }
     }
   },
+  "verifyNow": "I've Verified My Email",
+  "checking": "Checking...",
+  "resendEmail": "Resend Verification Email",
+  "sending": "Sending...",
   "dataExtraction": "Extracting Data ...",
   "security": "Security",
   "about": "About",
@@ -62,7 +66,7 @@
       }
     }
   },
-  "pleaseWait":"Please wait for a while ...",
+  "pleaseWait": "Please wait for a while ...",
   "resendCode": "Resend Code",
   "invalidEmail": "Please enter a valid email",
   "emailRequired": "Please enter your email",

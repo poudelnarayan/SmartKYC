@@ -15,6 +15,7 @@ import 'package:smartkyc/features/user_detail_form/presentation/pages/user_detai
 import 'package:smartkyc/features/user_profile/presentation/pages/user_profile_page.dart';
 import '../features/auth/presentation/pages/sign_up_page.dart';
 import '../features/auth/presentation/pages/sign_up_success.dart';
+import '../features/auth/presentation/pages/verify_email_page.dart';
 import '../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../features/upload_document/presentation/pages/upload_document_page.dart';
 import '../features/selfie_capture/presentation/pages/selfie_capture_page.dart';
@@ -27,8 +28,12 @@ bool isLoggedIn() => FirebaseAuth.instance.currentUser != null;
 
 Future<String> handleKYCNavigation(BuildContext context) async {
   final user = FirebaseAuth.instance.currentUser;
-  final userDoc =
+  final DocumentSnapshot<Map<String, dynamic>> userDoc =
       await FirebaseFirestore.instance.collection('users').doc(user!.uid).get();
+
+  if (userDoc.data() == null) {
+    return UploadDocumentPage.pageName;
+  }
 
   final bool isDocumentVerified = userDoc['isDocumentVerified'] ?? false;
   final bool isSelfieVerified = userDoc['isSelfieVerified'] ?? false;
@@ -70,6 +75,11 @@ final appRouter = GoRouter(
       name: SignUpPage.pageName,
       path: SignUpPage.pageName,
       builder: (context, state) => const SignUpPage(),
+    ),
+    GoRoute(
+      name: VerifyEmailPage.pageName,
+      path: VerifyEmailPage.pageName,
+      builder: (context, state) => const VerifyEmailPage(),
     ),
     GoRoute(
         name: UploadDocumentPage.pageName,

@@ -162,5 +162,9 @@
   "invalidCitizenshipNumber": "कृपया मान्य नागरिकता नम्बर प्रविष्ट गर्नुहोस्",
   "invalidLicenseNumber": "कृपया मान्य लाइसेन्स नम्बर प्रविष्ट गर्नुहोस्",
   "formProgress": "फारम प्रगति",
-  "step": "{total} मध्ये {current} चरण"
+  "step": "{total} मध्ये {current} चरण",
+  "verifyNow": "इमेल प्रमाणित गर्नुहोस्",
+  "checking": "जाँच गर्दै...",
+  "resendEmail": "पुन: प्रमाणिकरण इमेल पठाउनुहोस्",
+  "sending": "पठाउँदै..."
 }

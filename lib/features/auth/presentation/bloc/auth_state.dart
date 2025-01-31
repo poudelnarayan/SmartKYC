@@ -21,6 +21,8 @@ class SigninSuccess extends AuthState {
   List<Object?> get props => [user];
 }
 
+class EmailVerificationRequired extends AuthState {}
+
 class SignUpSuccess extends AuthState {
   final String email;
   const SignUpSuccess(this.email);

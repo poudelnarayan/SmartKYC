@@ -30,7 +30,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       emit(AuthLoading());
       final user = await signIn(event.email, event.password);
-      emit(SigninSuccess(user));
+
+      if (!user.isEmailVerified) {
+        emit(EmailVerificationRequired());
+      } else {
+        emit(SigninSuccess(user));
+      }
     } catch (e) {
       emit(AuthError(e.toString()));
     }
