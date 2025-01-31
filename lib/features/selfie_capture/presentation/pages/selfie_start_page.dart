@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:smartkyc/features/liveliness_detection/presentation/pages/liveness_detection_start_page.dart';
 import 'package:smartkyc/features/selfie_capture/presentation/pages/selfie_capture_page.dart';
 
 import '../../../../core/presentation/widgets/skip_button.dart';
@@ -19,7 +20,9 @@ class SelfieStartPage extends StatelessWidget {
         elevation: 0,
         backgroundColor: Colors.transparent,
         actions: [
-          SkipButton(onSkip: () {}),
+          SkipButton(onSkip: () {
+            context.go(LivenessDetectionStartPage.pageName);
+          }),
           SizedBox(
             width: 25,
           )
@@ -117,7 +120,8 @@ class SelfieStartPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 FilledButton.icon(
-                  onPressed: () => context.go(SelfieCapturePage.pageName),
+                  onPressed: () =>
+                      context.pushNamed(SelfieCapturePage.pageName),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.all(16),
                     minimumSize: const Size(double.infinity, 56),

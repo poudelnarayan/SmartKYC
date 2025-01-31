@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,6 +21,7 @@ import '../features/success/presentation/pages/verification_success_page.dart';
 import '../features/verification_steps/presentation/pages/verification_steps_page.dart';
 
 final onboardingService = GetIt.instance<OnboardingService>();
+bool isLoggedIn() => FirebaseAuth.instance.currentUser != null;
 
 final appRouter = GoRouter(
   initialLocation: onboardingService.hasSeenOnboarding
@@ -51,15 +55,27 @@ final appRouter = GoRouter(
       builder: (context, state) => UploadDocumentPage(),
     ),
     GoRoute(
-      name: SelfieCapturePage.pageName,
-      path: SelfieCapturePage.pageName,
-      builder: (context, state) => SelfieCapturePage(),
-    ),
+        name: SelfieStartPage.pageName,
+        path: SelfieStartPage.pageName,
+        builder: (context, state) => SelfieStartPage(),
+        routes: [
+          GoRoute(
+            name: SelfieCapturePage.pageName,
+            path: SelfieCapturePage.pageName,
+            builder: (context, state) => SelfieCapturePage(),
+          ),
+        ]),
     GoRoute(
-      name: LivenessDetectoinPage.pageName,
-      path: LivenessDetectoinPage.pageName,
-      builder: (context, state) => LivenessDetectoinPage(),
-    ),
+        name: LivenessDetectionStartPage.pageName,
+        path: LivenessDetectionStartPage.pageName,
+        builder: (context, state) => LivenessDetectionStartPage(),
+        routes: [
+          GoRoute(
+            name: LivenessDetectoinPage.pageName,
+            path: LivenessDetectoinPage.pageName,
+            builder: (context, state) => LivenessDetectoinPage(),
+          ),
+        ]),
     GoRoute(
       name: VerificationSuccessPage.pageName,
       path: VerificationSuccessPage.pageName,
@@ -76,16 +92,6 @@ final appRouter = GoRouter(
       builder: (context, state) => UserProfilePage(),
     ),
     GoRoute(
-      name: SelfieStartPage.pageName,
-      path: SelfieStartPage.pageName,
-      builder: (context, state) => SelfieStartPage(),
-    ),
-    GoRoute(
-      name: LivenessDetectionStartPage.pageName,
-      path: LivenessDetectionStartPage.pageName,
-      builder: (context, state) => LivenessDetectionStartPage(),
-    ),
-    GoRoute(
       name: VerificationStepsPage.pageName,
       path: VerificationStepsPage.pageName,
       builder: (context, state) => const VerificationStepsPage(),
@@ -96,4 +102,29 @@ final appRouter = GoRouter(
       builder: (context, state) => ForgotPasswordPage(),
     )
   ],
+  redirect: (context, state) {
+    final isAuthenticated = isLoggedIn();
+
+    final protectedRoutes = [
+      SignUpPage.pageName,
+      SignUpSuccessPage.pageName,
+      UploadDocumentPage.pageName,
+      SelfieCapturePage.pageName,
+      VerificationSuccessPage.pageName,
+      LivenessDetectoinPage.pageName,
+      VerificationStepsPage.pageName,
+      LivenessDetectionStartPage.pageName,
+      SelfieStartPage.pageName,
+      UserProfilePage.pageName,
+    ];
+
+    final isTryingToAccessProtectedRoute =
+        protectedRoutes.contains(state.matchedLocation);
+
+    if (!isAuthenticated && isTryingToAccessProtectedRoute) {
+      return SinginPage.pageName;
+    }
+
+    return null;
+  },
 );

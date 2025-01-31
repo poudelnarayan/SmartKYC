@@ -139,16 +139,16 @@ class UserProfilePage extends StatelessWidget {
                         icon: Icons.verified_user_outlined,
                         items: [
                           _ProfileItem(
-                            label: l10n.identity,
-                            value: l10n.verified,
-                            isVerified: true,
-                            icon: Icons.security_outlined,
-                          ),
-                          _ProfileItem(
                             label: l10n.documents,
                             value: l10n.verified,
                             isVerified: true,
                             icon: Icons.fact_check_outlined,
+                          ),
+                          _ProfileItem(
+                            label: l10n.identity,
+                            value: l10n.verified,
+                            isVerified: true,
+                            icon: Icons.security_outlined,
                           ),
                           _ProfileItem(
                             label: l10n.livenessCheck,

@@ -17,7 +17,7 @@ import 'package:get_it/get_it.dart';
 class SelfieCapturePage extends StatefulWidget {
   final CameraDescription camera = GetIt.I<List<CameraDescription>>()[1];
 
-  static const pageName = "/selfieCapture";
+  static const pageName = "selfieCapture";
 
   SelfieCapturePage({Key? key}) : super(key: key);
 

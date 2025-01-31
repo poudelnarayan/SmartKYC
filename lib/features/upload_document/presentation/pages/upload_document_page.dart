@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartkyc/core/presentation/widgets/skip_button.dart';
+import 'package:smartkyc/features/selfie_capture/presentation/pages/selfie_start_page.dart';
 import 'package:smartkyc/features/user_detail_form/presentation/pages/user_detail_form_page.dart';
 import '../../../../core/services/storage_service.dart';
 import '../bloc/upload_document_bloc.dart';
@@ -87,7 +88,9 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
             elevation: 0,
             backgroundColor: Colors.transparent,
             actions: [
-              SkipButton(onSkip: () {}),
+              SkipButton(onSkip: () {
+                context.go(SelfieStartPage.pageName);
+              }),
               SizedBox(
                 width: 25,
               )

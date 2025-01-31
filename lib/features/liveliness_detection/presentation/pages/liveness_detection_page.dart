@@ -15,7 +15,7 @@ import '../../../../core/services/storage_service.dart';
 
 class LivenessDetectoinPage extends StatefulWidget {
   const LivenessDetectoinPage({super.key});
-  static const pageName = "/livelinessDetection";
+  static const pageName = "livelinessDetection";
 
   @override
   State<LivenessDetectoinPage> createState() => _LivelinessPageState();
@@ -111,7 +111,6 @@ class _LivelinessPageState extends State<LivenessDetectoinPage> {
       await File(newPath).delete();
 
       if (mounted) {
-        print(VerificationSuccessPage.pageName);
         context.go(VerificationSuccessPage.pageName);
       }
     } catch (e) {
@@ -136,6 +135,8 @@ class _LivelinessPageState extends State<LivenessDetectoinPage> {
   @override
   void dispose() {
     _controller?.dispose();
+
+    context.read<LivenessBloc>().close();
     super.dispose();
   }
 

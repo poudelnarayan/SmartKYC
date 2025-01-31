@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:smartkyc/core/presentation/widgets/skip_button.dart';
 import 'package:smartkyc/features/liveliness_detection/presentation/pages/liveness_detection_page.dart';
+import 'package:smartkyc/features/user_profile/presentation/pages/user_profile_page.dart';
 
 class LivenessDetectionStartPage extends StatelessWidget {
   const LivenessDetectionStartPage({super.key});
@@ -37,7 +38,9 @@ class LivenessDetectionStartPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SkipButton(
-                          onSkip: () {},
+                          onSkip: () {
+                            context.go(UserProfilePage.pageName);
+                          },
                           textColor: Colors.white,
                         ),
                         Center(
@@ -106,7 +109,7 @@ class LivenessDetectionStartPage extends StatelessWidget {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () =>
-                            context.go(LivenessDetectoinPage.pageName),
+                            context.pushNamed(LivenessDetectoinPage.pageName),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: Colors.blue.shade900,

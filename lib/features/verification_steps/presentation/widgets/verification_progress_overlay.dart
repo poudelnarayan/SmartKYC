@@ -54,7 +54,7 @@ class _VerificationProgressOverlayState
     _pulseController.repeat(reverse: true);
 
     // Auto-dismiss after 3 seconds and navigate
-    Future.delayed(const Duration(seconds: 4), () {
+    Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
         context.go(widget.nextRoute);
       }
