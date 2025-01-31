@@ -26,12 +26,14 @@ import '../features/verification_steps/presentation/pages/verification_steps_pag
 final onboardingService = GetIt.instance<OnboardingService>();
 bool isLoggedIn() => FirebaseAuth.instance.currentUser != null;
 
-Future<String> handleKYCNavigation(BuildContext context) async {
+Future<String> handleKYCNavigation(BuildContext context,
+    {String? skipStep}) async {
   final user = FirebaseAuth.instance.currentUser;
-  final DocumentSnapshot<Map<String, dynamic>> userDoc =
+
+  final userDoc =
       await FirebaseFirestore.instance.collection('users').doc(user!.uid).get();
 
-  if (userDoc.data() == null) {
+  if (userDoc.data() == null && skipStep == null) {
     return UploadDocumentPage.pageName;
   }
 
@@ -39,15 +41,30 @@ Future<String> handleKYCNavigation(BuildContext context) async {
   final bool isSelfieVerified = userDoc['isSelfieVerified'] ?? false;
   final bool isLivenessVerified = userDoc['isLivenessVerified'] ?? false;
 
-  if (!isDocumentVerified) {
-    return UploadDocumentPage.pageName;
-  } else if (!isSelfieVerified) {
-    return SelfieStartPage.pageName;
-  } else if (!isLivenessVerified) {
-    return LivenessDetectionStartPage.pageName;
-  } else {
+  if (skipStep == 'document') {
+    if (!isSelfieVerified) return SelfieStartPage.pageName;
+    if (!isLivenessVerified) return LivenessDetectionStartPage.pageName;
     return UserProfilePage.pageName;
   }
+
+  if (skipStep == 'selfie') {
+    if (!isLivenessVerified) return LivenessDetectionStartPage.pageName;
+    return UserProfilePage.pageName;
+  }
+
+  if (skipStep == 'liveness') {
+    return UserProfilePage.pageName;
+  }
+
+  print("^^^^^^^^^^^^^^");
+  print(skipStep);
+  print("^^^^^^^^^^^^^^");
+
+  if (!isDocumentVerified) return UploadDocumentPage.pageName;
+  if (!isSelfieVerified) return SelfieStartPage.pageName;
+  if (!isLivenessVerified) return LivenessDetectionStartPage.pageName;
+
+  return UserProfilePage.pageName;
 }
 
 final appRouter = GoRouter(

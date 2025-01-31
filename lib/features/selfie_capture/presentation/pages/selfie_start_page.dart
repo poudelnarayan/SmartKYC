@@ -26,7 +26,7 @@ class _SelfieStartPageState extends State<SelfieStartPage> {
   }
 
   Future<void> _checkNavigation() async {
-    final route = await handleKYCNavigation(context);
+    final route = await handleKYCNavigation(context, skipStep: 'selfie');
     if (mounted) {
       setState(() {
         nextRoute = route;
