@@ -9,14 +9,7 @@ class UpdateUser {
     return await userRepository.updateUser(user);
   }
 
-  Future<void> verifyDocument(
-    String userId,
-    String field,
-    dynamic value,
-  ) async {
-    return await userRepository.updateUserDocumentVerification(
-        userId, field, value);
-  }
+  
 
   Future<void> verifySelfie(
     String userId,

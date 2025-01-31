@@ -20,12 +20,15 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:smartkyc/features/user_detail_form/presentation/bloc/user_detail_form_bloc.dart';
 import 'domain/repository/user_repository.dart';
 import 'domain/repository/user_repository_impl.dart';
+import 'domain/usecases/delete_user.dart';
+import 'domain/usecases/get_user.dart';
 import 'domain/usecases/update_user.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/domain/usecases/sign_in.dart';
 import 'features/auth/domain/usecases/sign_up.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/user_profile/presentation/bloc/user_profile_bloc.dart';
 import 'firebase_options.dart';
 
 final getIt = GetIt.instance;
@@ -48,6 +51,9 @@ void main() async {
   final authRepository = AuthRepositoryImpl(FirebaseAuth.instance);
   final signInUseCase = SignInUseCase(authRepository);
   final signUpUseCase = SignUpUseCase(authRepository);
+  final userRepository = UserRepositoryImpl();
+  final getUser = GetUser(userRepository);
+  final deleteUser = DeleteUser();
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
@@ -68,6 +74,12 @@ void main() async {
             signIn: signInUseCase,
             signUp: signUpUseCase,
             repository: authRepository,
+          ),
+        ),
+        BlocProvider<UserProfileBloc>(
+          create: (context) => UserProfileBloc(
+            getUser: getUser,
+            deleteUser: deleteUser,
           ),
         ),
       ],

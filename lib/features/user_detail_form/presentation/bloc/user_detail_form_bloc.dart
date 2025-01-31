@@ -13,8 +13,8 @@ class UserBloc extends Bloc<UserEvent, UserState> {
     on<UpdateUserEvent>((event, emit) async {
       emit(UserUpdating());
       try {
-        await updateUser
-            .call(event.user); // ✅ Now passing the correct User object
+        await updateUser.call(event.user);
+        await Future.delayed(Duration(seconds: 3));
         emit(UserUpdated());
       } catch (e) {
         emit(UserUpdateError(e.toString()));

@@ -1,10 +1,19 @@
+import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:smartkyc/core/extensions/string_extension.dart';
+import 'package:smartkyc/core/presentation/widgets/upload_overlay.dart';
 import 'package:smartkyc/features/selfie_capture/presentation/pages/selfie_start_page.dart';
+import 'package:smartkyc/features/user_profile/presentation/pages/user_profile_page.dart';
+import '../../../../domain/entities/user.dart';
 import '../../../verification_steps/presentation/widgets/verification_progress_overlay.dart';
+import '../bloc/user_detail_form_bloc.dart';
+import '../bloc/user_detail_form_event.dart';
+import '../bloc/user_detail_form_state.dart';
 
 class UserDetailFormPage extends StatefulWidget {
   const UserDetailFormPage({super.key});
@@ -26,6 +35,7 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
     'dob': DateTime(1990, 1, 1),
     'fatherName': 'Jeevlal Poudel',
     'citizenshipNumber': 'CTZ123456',
+    'address': 'Butwal',
   };
 
   Future<void> _selectDate(BuildContext context, String field) async {
@@ -60,66 +70,109 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                Icons.assignment_ind,
-                color: theme.colorScheme.primary,
-              ),
+    return BlocConsumer<UserBloc, UserState>(listener: (context, state) {
+      if (state is UserUpdateError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(state.message),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      if (state is UserUpdated) {
+        final extraData = GoRouterState.of(context).extra;
+        final returnToProfile = (extraData is Map<String, dynamic>)
+            ? extraData['returnToProfile'] ?? false
+            : false;
+
+        if (returnToProfile) {
+          context.go(UserProfilePage.pageName);
+        }
+
+        Navigator.push(
+          context,
+          PageRouteBuilder(
+            opaque: false,
+            pageBuilder: (context, _, __) => const VerificationProgressOverlay(
+              completedStep: 1,
+              nextRoute: SelfieStartPage.pageName,
             ),
-            const SizedBox(width: 12),
-            Text(
-              l10n.licenseDetails,
-              style: const TextStyle(fontSize: 20),
-            ),
-          ],
-        ),
-        centerTitle: false,
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-      ),
-      body: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            Expanded(
-              child: GestureDetector(
-                onTap: FocusScope.of(context).unfocus,
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildFormSections(context),
-                          ],
+          ),
+        );
+      }
+    }, builder: (context, state) {
+      return state is UserUpdating
+          ? UploadOverlay(
+              title: "Uploading Details",
+              message: 'Please wait while we process your details...',
+              lottieUrl:
+                  'https://lottie.host/7a5f681f-48d9-4af3-9413-a0c09368d996/s3byanoCZ1.json',
+              onCancel: () {
+                UploadOverlay.hide(context);
+              },
+            )
+          : Scaffold(
+              backgroundColor: Colors.grey[100],
+              appBar: AppBar(
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => context.pop(),
+                ),
+                title: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.assignment_ind,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      l10n.licenseDetails,
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                  ],
+                ),
+                centerTitle: false,
+                elevation: 0,
+                backgroundColor: Colors.transparent,
+              ),
+              body: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: FocusScope.of(context).unfocus,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildFormSections(context),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    _buildBottomBar(context),
+                  ],
                 ),
               ),
-            ),
-            _buildBottomBar(context),
-          ],
-        ),
-      ),
-    );
+            );
+    });
   }
 
   Widget _buildFormSections(BuildContext context) {
@@ -197,6 +250,19 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return l10n.invalidCitizenshipNumber;
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              label: "Address".hardcoded,
+              value: _formData['address'],
+              onChanged: (value) => _formData['address'] = value,
+              prefixIcon: Icons.location_city,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return "Invalid Address".hardcoded;
                 }
                 return null;
               },
@@ -350,16 +416,19 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
         child: FilledButton.icon(
           onPressed: () {
             if (_formKey.currentState?.validate() ?? false) {
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  opaque: false,
-                  pageBuilder: (context, _, __) => const VerificationProgressOverlay(
-                    completedStep: 1,
-                    nextRoute: SelfieStartPage.pageName,
-                  ),
-                ),
+              final User user = User(
+                licenseNumber: _formData['licenseNumber'],
+                citizenshipNumber: _formData['citizenshipNumber'],
+                dob: _formData['dob'],
+                fatherName: _formData['fatherName'],
+                firstName: _formData['firstName'],
+                lastName: _formData['lastName'],
+                address: _formData['address'],
+                uid: auth.FirebaseAuth.instance.currentUser!.uid,
+                isDocumentVerified: true,
+                email: auth.FirebaseAuth.instance.currentUser!.email!,
               );
+              context.read<UserBloc>().add(UpdateUserEvent(user));
             }
           },
           icon: const Icon(Icons.check_circle_outline),

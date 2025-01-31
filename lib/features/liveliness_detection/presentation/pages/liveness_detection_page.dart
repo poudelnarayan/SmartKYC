@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -6,6 +7,7 @@ import 'package:camera/camera.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import 'package:smartkyc/features/success/presentation/pages/verification_success_page.dart';
+import '../../../../domain/usecases/update_user.dart';
 import '../bloc/liveliness_bloc.dart';
 import '../bloc/liveliness_state.dart';
 import '../bloc/liveliness_event.dart';
@@ -109,6 +111,11 @@ class _LivelinessPageState extends State<LivenessDetectoinPage> {
 
       // Clean up the copied file
       await File(newPath).delete();
+      await UpdateUser().verifySelfie(
+        FirebaseAuth.instance.currentUser!.uid,
+        'isLivenessVerified',
+        true,
+      );
 
       if (mounted) {
         context.go(VerificationSuccessPage.pageName);
@@ -161,8 +168,8 @@ class _LivelinessPageState extends State<LivenessDetectoinPage> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      theme.colorScheme.primary.withOpacity(0.9),
-                      Colors.black87,
+                      Theme.of(context).colorScheme.primary,
+                      Theme.of(context).colorScheme.secondary,
                     ],
                   ),
                 ),

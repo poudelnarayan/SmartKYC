@@ -1,9 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:smartkyc/core/constants/app_dimensions.dart';
 
 class VerificationProgressOverlay extends StatefulWidget {
   final int completedStep;
@@ -25,24 +26,53 @@ class _VerificationProgressOverlayState
   late AnimationController _checkmarkController;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
+  Map<String, bool> _verificationStatus = {
+    'isEmailVerified': false,
+    'isDocumentVerified': false,
+    'isSelfieVerified': false,
+    'isLivenessVerified': false,
+  };
+
+  Future<void> _loadVerificationStatus() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        if (doc.exists) {
+          setState(() {
+            _verificationStatus = {
+              'isEmailVerified': doc.data()?['isEmailVerified'] ?? false,
+              'isDocumentVerified': doc.data()?['isDocumentVerified'] ?? false,
+              'isSelfieVerified': doc.data()?['isSelfieVerified'] ?? false,
+              'isLivenessVerified': doc.data()?['isLivenessVerified'] ?? false,
+            };
+          });
+        }
+      }
+    } catch (e) {
+      print('Error loading verification status: $e');
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    _loadVerificationStatus();
 
-    // Initialize checkmark animation controller
     _checkmarkController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
 
-    // Initialize pulse animation controller
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     );
 
-    // Create pulse animation
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
       CurvedAnimation(
         parent: _pulseController,
@@ -50,10 +80,8 @@ class _VerificationProgressOverlayState
       ),
     );
 
-    // Start pulse animation with repeat
     _pulseController.repeat(reverse: true);
 
-    // Auto-dismiss after 3 seconds and navigate
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
         context.go(widget.nextRoute);
@@ -70,6 +98,8 @@ class _VerificationProgressOverlayState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Material(
       color: Colors.black.withOpacity(0.9),
       child: SafeArea(
@@ -118,21 +148,25 @@ class _VerificationProgressOverlayState
         'icon': Icons.email_outlined,
         'title': AppLocalizations.of(context)!.emailVerification,
         'subtitle': AppLocalizations.of(context)!.emailVerificationDesc,
+        'isCompleted': _verificationStatus['isEmailVerified'] ?? false,
       },
       {
         'icon': Icons.document_scanner_outlined,
         'title': AppLocalizations.of(context)!.documentUpload,
         'subtitle': AppLocalizations.of(context)!.documentUploadDesc,
+        'isCompleted': _verificationStatus['isDocumentVerified'] ?? false,
       },
       {
         'icon': Icons.face_outlined,
         'title': AppLocalizations.of(context)!.selfieCapture,
         'subtitle': AppLocalizations.of(context)!.selfieCaptureDesc,
+        'isCompleted': _verificationStatus['isSelfieVerified'] ?? false,
       },
       {
         'icon': Icons.verified_user_outlined,
         'title': AppLocalizations.of(context)!.livenessCheck,
         'subtitle': AppLocalizations.of(context)!.livenessCheckDesc,
+        'isCompleted': _verificationStatus['isLivenessVerified'] ?? false,
       },
     ];
 
@@ -141,8 +175,8 @@ class _VerificationProgressOverlayState
         final index = entry.key;
         final step = entry.value;
         final isLast = index == steps.length - 1;
-        final isCompleted = index <= widget.completedStep;
         final isCurrent = index == widget.completedStep;
+        final isCompleted = step['isCompleted'] as bool;
 
         return Column(
           children: [
@@ -243,7 +277,7 @@ class _VerificationProgressOverlayState
                       : isCurrent
                           ? Theme.of(context).colorScheme.primary
                           : Colors.white.withOpacity(0.5),
-                  size: AppDimensions.s24,
+                  size: 24,
                 ),
               ),
             );

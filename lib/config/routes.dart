@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -22,6 +24,26 @@ import '../features/verification_steps/presentation/pages/verification_steps_pag
 
 final onboardingService = GetIt.instance<OnboardingService>();
 bool isLoggedIn() => FirebaseAuth.instance.currentUser != null;
+
+Future<String> handleKYCNavigation(BuildContext context) async {
+  final user = FirebaseAuth.instance.currentUser;
+  final userDoc =
+      await FirebaseFirestore.instance.collection('users').doc(user!.uid).get();
+
+  final bool isDocumentVerified = userDoc['isDocumentVerified'] ?? false;
+  final bool isSelfieVerified = userDoc['isSelfieVerified'] ?? false;
+  final bool isLivenessVerified = userDoc['isLivenessVerified'] ?? false;
+
+  if (!isDocumentVerified) {
+    return UploadDocumentPage.pageName;
+  } else if (!isSelfieVerified) {
+    return SelfieStartPage.pageName;
+  } else if (!isLivenessVerified) {
+    return LivenessDetectionStartPage.pageName;
+  } else {
+    return UserProfilePage.pageName;
+  }
+}
 
 final appRouter = GoRouter(
   initialLocation: onboardingService.hasSeenOnboarding
@@ -107,7 +129,6 @@ final appRouter = GoRouter(
     final isAuthenticated = isLoggedIn();
 
     final protectedRoutes = [
-      SignUpPage.pageName,
       SignUpSuccessPage.pageName,
       UploadDocumentPage.pageName,
       SelfieCapturePage.pageName,

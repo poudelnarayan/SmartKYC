@@ -3,21 +3,53 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
-import 'package:smartkyc/features/auth/presentation/bloc/auth_event.dart';
 import 'package:smartkyc/features/auth/presentation/pages/singin_page.dart';
+import 'package:smartkyc/features/liveliness_detection/presentation/pages/liveness_detection_start_page.dart';
+import 'package:smartkyc/features/selfie_capture/presentation/pages/selfie_start_page.dart';
+import 'package:smartkyc/features/upload_document/presentation/pages/upload_document_page.dart';
+import '../../../language/presentation/bloc/language_bloc.dart';
+import '../bloc/user_profile_bloc.dart';
+import '../bloc/user_profile_event.dart';
+import '../bloc/user_profile_state.dart';
+import '../widgets/delete_account_overlay.dart';
+import '../widgets/profile_section.dart';
+import '../widgets/quick_action_button.dart';
+import '../widgets/about_bottom_sheet.dart';
+import '../widgets/security_bottom_sheet.dart';
 
-import '../../../auth/presentation/bloc/auth_bloc.dart';
-import '../../../auth/presentation/bloc/auth_state.dart';
-
-class UserProfilePage extends StatelessWidget {
+class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
 
-  static const pageName = "/userProfile";
+  static const pageName = '/userProfilePage';
+
+  @override
+  State<UserProfilePage> createState() => _UserProfilePageState();
+}
+
+class _UserProfilePageState extends State<UserProfilePage> {
+  final _refreshKey = GlobalKey<RefreshIndicatorState>();
+
+  @override
+  void initState() {
+    super.initState();
+    // Load user profile when page initializes
+    context.read<UserProfileBloc>().add(LoadUserProfile());
+  }
+
+  void _toggleLanguage(BuildContext context) {
+    final currentLocale = Localizations.localeOf(context);
+    final newLocale = currentLocale.languageCode == 'en'
+        ? const Locale('ne')
+        : const Locale('en');
+    context.read<LanguageBloc>().add(ChangeLanguage(newLocale));
+  }
+
+  Future<void> _refreshProfile() async {
+    context.read<UserProfileBloc>().add(LoadUserProfile());
+  }
 
   void _showLogoutDialog(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -30,12 +62,9 @@ class UserProfilePage extends StatelessWidget {
           ),
           FilledButton(
             onPressed: () {
-              Navigator.pop(context);
-              context.read<AuthBloc>().add(SignOut());
+              context.read<UserProfileBloc>().add(LogoutUser());
             },
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color.fromARGB(255, 220, 113, 113),
-            ),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
             child: Text(l10n.logout),
           ),
         ],
@@ -47,237 +76,306 @@ class UserProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return BlocListener<AuthBloc, AuthState>(
-        listener: (context, state) {
-          if (state is SignOutSuccess) {
-            context.go(SinginPage.pageName);
-          } else if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        },
-        child: Scaffold(
-          backgroundColor: Colors.grey[100],
-          appBar: AppBar(
-            title: Text(
-              l10n.profile,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+    return BlocListener<UserProfileBloc, UserProfileState>(
+      listener: (context, state) {
+        if (state is UserAccountDeleted || state is UserLoggedOut) {
+          context.pushReplacement(SinginPage.pageName);
+        } else if (state is UserProfileError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.red,
             ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.settings_outlined),
-                onPressed: () {
-                  // TODO: Navigate to settings
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.logout_outlined),
-                onPressed: () => _showLogoutDialog(context),
-              ),
-            ],
-            elevation: 0,
-            backgroundColor: Colors.transparent,
-          ),
-          body: SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildProfileHeader(context),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      _buildQuickActions(context),
-                      const SizedBox(height: 24),
-                      _buildSection(
-                        context,
-                        title: l10n.personalInformation,
-                        icon: Icons.person_outline,
-                        items: [
-                          _ProfileItem(
-                            label: l10n.email,
-                            value: 'poudelnarayan434@gmail.com',
-                            icon: Icons.email_outlined,
-                          ),
-                          _ProfileItem(
-                            label: l10n.phone,
-                            value: '+9779867513539',
-                            icon: Icons.phone_outlined,
-                          ),
-                          _ProfileItem(
-                            label: l10n.location,
-                            value: 'Dhapakhel, Lalitpur',
-                            icon: Icons.location_on_outlined,
-                          ),
-                        ],
+          );
+        }
+      },
+      child: BlocBuilder<UserProfileBloc, UserProfileState>(
+        builder: (context, state) {
+          return state is UserAccountDeleting
+              ? DeleteAccountOverlay()
+              : Scaffold(
+                  backgroundColor: Colors.grey[100],
+                  appBar: AppBar(
+                    title: Text(
+                      l10n.profile,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    actions: [
+                      IconButton(
+                        icon: const Icon(Icons.language),
+                        onPressed: () => _toggleLanguage(context),
+                        tooltip: 'Change Language',
                       ),
-                      const SizedBox(height: 16),
-                      _buildSection(
-                        context,
-                        title: l10n.documents,
-                        icon: Icons.description_outlined,
-                        items: [
-                          _ProfileItem(
-                            label: l10n.licenseNo,
-                            value: 'DL-123456789',
-                            icon: Icons.credit_card_outlined,
-                          ),
-                          _ProfileItem(
-                            label: l10n.idCard,
-                            value: 'ID-456789123',
-                            icon: Icons.badge_outlined,
-                          ),
-                        ],
+                      IconButton(
+                        icon: const Icon(Icons.logout),
+                        onPressed: () => _showLogoutDialog(context),
+                        tooltip: 'Logout',
                       ),
-                      const SizedBox(height: 16),
-                      _buildSection(
-                        context,
-                        title: l10n.verificationStatus,
-                        icon: Icons.verified_user_outlined,
-                        items: [
-                          _ProfileItem(
-                            label: l10n.documents,
-                            value: l10n.verified,
-                            isVerified: true,
-                            icon: Icons.fact_check_outlined,
-                          ),
-                          _ProfileItem(
-                            label: l10n.identity,
-                            value: l10n.verified,
-                            isVerified: true,
-                            icon: Icons.security_outlined,
-                          ),
-                          _ProfileItem(
-                            label: l10n.livenessCheck,
-                            value: l10n.verified,
-                            isVerified: true,
-                            icon: Icons.face_outlined,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 32),
                     ],
                   ),
-                ),
-              ],
-            ),
-          ),
-        ));
-  }
-
-  Widget _buildProfileHeader(BuildContext context) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(80, 20, 80, 24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.bottomRight,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: theme.colorScheme.primary,
-                    width: 3,
+                  body: RefreshIndicator(
+                    key: _refreshKey,
+                    onRefresh: _refreshProfile,
+                    child: state is UserProfileLoading ||
+                            state is UserLoggingOut
+                        ? const Center(child: CircularProgressIndicator())
+                        : state is UserProfileError
+                            ? _buildErrorState(context, state)
+                            : state is UserProfileLoaded
+                                ? SingleChildScrollView(
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    child: Column(
+                                      children: [
+                                        _buildHeader(context, state),
+                                        Padding(
+                                          padding: const EdgeInsets.all(16),
+                                          child: Column(
+                                            children: [
+                                              _buildQuickActions(context),
+                                              const SizedBox(height: 24),
+                                              _buildContactInfo(context, state),
+                                              const SizedBox(height: 16),
+                                              _buildPersonalInfo(
+                                                  context, state),
+                                              const SizedBox(height: 16),
+                                              _buildVerificationStatus(
+                                                  context, state),
+                                              const SizedBox(height: 32),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : const Center(
+                                    child: Text('Failed to load profile'),
+                                  ),
                   ),
-                ),
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-                  child: Text(
-                    'NP',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                right: -4,
-                bottom: -4,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.camera_alt,
-                        size: 20, color: Colors.white),
-                    onPressed: () {
-                      // TODO: Handle profile picture update
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ).animate().scale(),
-          const SizedBox(height: 16),
-          Text(
-            'Narayan Poudel',
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ).animate().fadeIn(),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.star_rounded,
-                  size: 18,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  l10n.premiumMember,
-                  style: TextStyle(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ).animate().fadeIn(),
-        ],
+                );
+        },
       ),
     );
   }
 
   Widget _buildQuickActions(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        QuickActionButton(
+          icon: Icons.edit_note,
+          label: 'Edit',
+          onTap: () {},
+        ),
+        QuickActionButton(
+          icon: Icons.security_outlined,
+          label: 'Security',
+          onTap: () {
+            showModalBottomSheet(
+              context: context,
+              builder: (context) => const SecurityBottomSheet(),
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+            );
+          },
+        ),
+        QuickActionButton(
+          icon: Icons.info_outline,
+          label: 'About',
+          onTap: () {
+            showModalBottomSheet(
+              context: context,
+              builder: (context) => const AboutBottomSheet(),
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+            );
+          },
+        ),
+      ],
+    ).animate().fadeIn().slideY();
+  }
 
+  Widget _buildPersonalInfo(BuildContext context, UserProfileLoaded state) {
+    return ProfileSection(
+      title: 'Personal Information',
+      icon: Icons.person_outline,
+      items: [
+        ProfileItem(
+          icon: Icons.badge_outlined,
+          label: 'License Number',
+          value: state.user.licenseNumber,
+        ),
+        ProfileItem(
+          icon: Icons.assignment_ind_outlined,
+          label: 'Citizenship Number',
+          value: state.user.citizenshipNumber,
+        ),
+        ProfileItem(
+          icon: Icons.calendar_today_outlined,
+          label: 'Date of Birth',
+          value: state.user.dob.toString().split(' ')[0],
+        ),
+        ProfileItem(
+          icon: Icons.family_restroom_outlined,
+          label: "Father's Name",
+          value: state.user.fatherName,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContactInfo(BuildContext context, UserProfileLoaded state) {
+    return ProfileSection(
+      title: 'Contact Information',
+      icon: Icons.contact_phone_outlined,
+      items: [
+        ProfileItem(
+          icon: Icons.phone_outlined,
+          label: 'Phone Number',
+          value: state.user.phoneNumber.isEmpty
+              ? 'Not provided'
+              : state.user.phoneNumber,
+        ),
+        ProfileItem(
+          icon: Icons.location_on_outlined,
+          label: 'Address',
+          value:
+              state.user.address.isEmpty ? 'Not provided' : state.user.address,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVerificationStatus(
+      BuildContext context, UserProfileLoaded state) {
+    return ProfileSection(
+      title: 'Verification Status',
+      icon: Icons.verified_user_outlined,
+      items: [
+        _buildVerificationItem(
+          context,
+          icon: Icons.document_scanner_outlined,
+          label: 'Document Verification',
+          isVerified: state.user.isDocumentVerified,
+          verificationScreenPath: UploadDocumentPage.pageName,
+        ),
+        _buildVerificationItem(
+          context,
+          icon: Icons.face_outlined,
+          label: 'Selfie Verification',
+          isVerified: state.user.isSelfieVerified,
+          verificationScreenPath: SelfieStartPage.pageName,
+        ),
+        _buildVerificationItem(
+          context,
+          icon: Icons.security_outlined,
+          label: 'Liveness Check',
+          isVerified: state.user.isLivenessVerified,
+          verificationScreenPath: LivenessDetectionStartPage.pageName,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVerificationItem(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required bool isVerified,
+    required String verificationScreenPath,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icon,
+              size: 20,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  isVerified ? 'Verified' : 'Not Verified',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                ),
+              ],
+            ),
+          ),
+          if (isVerified)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.verified,
+                    size: 16,
+                    color: Colors.green[700],
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Verified',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.green[700],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            FilledButton.icon(
+              onPressed: () {
+                context.push(
+                  verificationScreenPath,
+                  extra: {'returnToProfile': true},
+                );
+              },
+              icon: const Icon(Icons.verified_user_outlined, size: 16),
+              label: const Text('Verify Now'),
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                textStyle: const TextStyle(fontSize: 12),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, UserProfileLoaded state) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -288,229 +386,66 @@ class UserProfilePage extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(
-            child: _QuickActionButton(
-              icon: Icons.edit_outlined,
-              label: l10n.editProfile,
-              onTap: () {
-                // TODO: Navigate to edit profile
-              },
+          CircleAvatar(
+            radius: 40,
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            child: Text(
+              state.user.initials,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
           ),
-          Container(
-            height: 24,
-            width: 1,
-            color: Colors.grey[300],
-          ),
+          const SizedBox(width: 16),
           Expanded(
-            child: _QuickActionButton(
-              icon: Icons.security_outlined,
-              label: l10n.security,
-              onTap: () {
-                // TODO: Navigate to security settings
-              },
-            ),
-          ),
-          Container(
-            height: 24,
-            width: 1,
-            color: Colors.grey[300],
-          ),
-          Expanded(
-            child: _QuickActionButton(
-              icon: Icons.album_outlined,
-              label: l10n.about,
-              onTap: () {
-                // TODO: Navigate to help center
-              },
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn().slideY();
-  }
-
-  Widget _buildSection(
-    BuildContext context, {
-    required String title,
-    required IconData icon,
-    required List<Widget> items,
-  }) {
-    final theme = Theme.of(context);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: theme.colorScheme.primary,
+                Text(
+                  state.user.fullName,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(height: 4),
                 Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                  state.user.email,
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 16,
                   ),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1),
-          ...items,
         ],
       ),
     ).animate().fadeIn().slideY();
   }
-}
 
-class _QuickActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _QuickActionButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Column(
-          children: [
-            Icon(icon, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ProfileItem extends StatelessWidget {
-  final String label;
-  final String value;
-  final bool isVerified;
-  final IconData icon;
-
-  const _ProfileItem({
-    required this.label,
-    required this.value,
-    this.isVerified = false,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return InkWell(
-      onTap: () {
-        // TODO: Handle item tap
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                size: 20,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    value,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isVerified)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.verified,
-                      size: 16,
-                      color: Colors.green[700],
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      value,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.green[700],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
+  Widget _buildErrorState(BuildContext context, UserProfileError state) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.error_outline,
+            size: 48,
+            color: Colors.red,
+          ),
+          const SizedBox(height: 16),
+          Text(state.message),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {
+              context.read<UserProfileBloc>().add(LoadUserProfile());
+            },
+            child: const Text('Retry'),
+          ),
+        ],
       ),
     );
   }

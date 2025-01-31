@@ -4,12 +4,35 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:smartkyc/features/liveliness_detection/presentation/pages/liveness_detection_start_page.dart';
 import 'package:smartkyc/features/selfie_capture/presentation/pages/selfie_capture_page.dart';
 
+import '../../../../config/routes.dart';
 import '../../../../core/presentation/widgets/skip_button.dart';
 
-class SelfieStartPage extends StatelessWidget {
+class SelfieStartPage extends StatefulWidget {
   const SelfieStartPage({Key? key}) : super(key: key);
 
   static const pageName = "/selfieStart";
+
+  @override
+  State<SelfieStartPage> createState() => _SelfieStartPageState();
+}
+
+class _SelfieStartPageState extends State<SelfieStartPage> {
+  String nextRoute = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _checkNavigation(); // Call the async function separately
+  }
+
+  Future<void> _checkNavigation() async {
+    final route = await handleKYCNavigation(context);
+    if (mounted) {
+      setState(() {
+        nextRoute = route;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +44,7 @@ class SelfieStartPage extends StatelessWidget {
         backgroundColor: Colors.transparent,
         actions: [
           SkipButton(onSkip: () {
-            context.go(LivenessDetectionStartPage.pageName);
+            context.go(nextRoute);
           }),
           SizedBox(
             width: 25,

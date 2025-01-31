@@ -29,10 +29,7 @@ class OvalFaceCameraPreview extends StatelessWidget {
           scaleX: -1,
           child: RotatedBox(
             quarterTurns: 3,
-            child: ClipPath(
-              clipper: OvalClipper(),
-              child: CameraPreview(controller),
-            ),
+            child: CameraPreview(controller),
           ),
         ),
 
@@ -140,22 +137,6 @@ class OvalFaceCameraPreview extends StatelessWidget {
   }
 }
 
-class OvalClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    path.addOval(Rect.fromCenter(
-      center: Offset(size.width / 2, size.height / 2),
-      width: size.width * 0.6,
-      height: size.height * 0.7,
-    ));
-    return path;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
-}
-
 class OvalOverlayPainter extends CustomPainter {
   final RecordingState recordingState;
 
@@ -174,8 +155,8 @@ class OvalOverlayPainter extends CustomPainter {
     );
 
     // Calculate oval dimensions
-    final ovalWidth = size.width * 0.8;
-    final ovalHeight = size.height * 0.7;
+    final ovalWidth = size.width * 0.85;
+    final ovalHeight = size.height * 0.6;
     final ovalRect = Rect.fromCenter(
       center: Offset(size.width / 2, size.height / 2),
       width: ovalWidth,

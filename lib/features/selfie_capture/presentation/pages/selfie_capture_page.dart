@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:camera/camera.dart';
@@ -71,7 +72,11 @@ class _SelfieCapturePageState extends State<SelfieCapturePage> {
     try {
       final storageService = StorageService();
       final downloadUrl = await storageService.uploadSelfie(File(image.path));
-      // await UpdateUser().verifySelfie();
+      await UpdateUser().verifySelfie(
+        FirebaseAuth.instance.currentUser!.uid,
+        'isSelfieVerified',
+        true,
+      );
       print('Selfie uploaded successfully: $downloadUrl');
 
       if (mounted) {
