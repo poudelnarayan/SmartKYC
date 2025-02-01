@@ -8,7 +8,7 @@ import '../../../../config/routes.dart';
 import '../../../../core/presentation/widgets/skip_button.dart';
 
 class SelfieStartPage extends StatefulWidget {
-  const SelfieStartPage({Key? key}) : super(key: key);
+  const SelfieStartPage({super.key});
 
   static const pageName = "/selfieStart";
 
@@ -37,15 +37,20 @@ class _SelfieStartPageState extends State<SelfieStartPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final extraData = GoRouterState.of(context).extra;
+    final bool returnToProfile = (extraData is Map<String, dynamic>)
+        ? (extraData['returnToProfile'] ?? false)
+        : false;
 
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
         actions: [
-          SkipButton(onSkip: () {
-            context.go(nextRoute);
-          }),
+          if (!returnToProfile)
+            SkipButton(onSkip: () {
+              context.go(nextRoute);
+            }),
           SizedBox(
             width: 25,
           )
@@ -143,8 +148,10 @@ class _SelfieStartPageState extends State<SelfieStartPage> {
                 ),
                 const SizedBox(height: 24),
                 FilledButton.icon(
-                  onPressed: () =>
-                      context.pushNamed(SelfieCapturePage.pageName),
+                  onPressed: () => context.pushNamed(
+                    SelfieCapturePage.pageName,
+                    extra: extraData,
+                  ),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.all(16),
                     minimumSize: const Size(double.infinity, 56),

@@ -8,6 +8,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:smartkyc/domain/usecases/update_user.dart';
 import 'package:smartkyc/features/liveliness_detection/presentation/pages/liveness_detection_start_page.dart';
+import 'package:smartkyc/features/user_profile/presentation/pages/user_profile_page.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../verification_steps/presentation/widgets/verification_progress_overlay.dart';
 import '../bloc/selfie_capture_bloc.dart';
@@ -103,17 +104,26 @@ class _SelfieCapturePageState extends State<SelfieCapturePage> {
 
   Future<void> _navigateToLiveliness(BuildContext context) async {
     await _cameraController.dispose();
+    final extraData = GoRouterState.of(context).extra;
+    final bool returnToProfile = (extraData is Map<String, dynamic>)
+        ? (extraData['returnToProfile'] ?? false)
+        : false;
+
     if (mounted) {
-      Navigator.push(
-        context,
-        PageRouteBuilder(
-          opaque: true,
-          pageBuilder: (context, _, __) => VerificationProgressOverlay(
-            completedStep: 2,
-            nextRoute: LivenessDetectionStartPage.pageName,
+      if (returnToProfile) {
+        context.pushReplacement(UserProfilePage.pageName);
+      } else {
+        Navigator.push(
+          context,
+          PageRouteBuilder(
+            opaque: true,
+            pageBuilder: (context, _, __) => VerificationProgressOverlay(
+              completedStep: 2,
+              nextRoute: LivenessDetectionStartPage.pageName,
+            ),
           ),
-        ),
-      );
+        );
+      }
     }
   }
 

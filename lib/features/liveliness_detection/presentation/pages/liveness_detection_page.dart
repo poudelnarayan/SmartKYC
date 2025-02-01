@@ -7,6 +7,7 @@ import 'package:camera/camera.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import 'package:smartkyc/features/success/presentation/pages/verification_success_page.dart';
+import 'package:smartkyc/features/user_profile/presentation/pages/user_profile_page.dart';
 import '../../../../domain/usecases/update_user.dart';
 import '../bloc/liveliness_bloc.dart';
 import '../bloc/liveliness_state.dart';
@@ -117,8 +118,17 @@ class _LivelinessPageState extends State<LivenessDetectoinPage> {
         true,
       );
 
+      final extraData = GoRouterState.of(context).extra;
+      final bool returnToProfile = (extraData is Map<String, dynamic>)
+          ? (extraData['returnToProfile'] ?? false)
+          : false;
+
       if (mounted) {
-        context.go(VerificationSuccessPage.pageName);
+        if (returnToProfile) {
+          context.pushReplacement(UserProfilePage.pageName);
+        } else {
+          context.go(VerificationSuccessPage.pageName);
+        }
       }
     } catch (e) {
       print('Error handling video: $e');

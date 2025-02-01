@@ -19,10 +19,11 @@ class UserRepositoryImpl implements UserRepository {
 
   @override
   Future<void> updateUser(User user) async {
-    await _firestore
-        .collection('users')
-        .doc(user.uid)
-        .set(user.toJson(), SetOptions(merge: true));
+    await _firestore.collection('users').doc(user.uid).set(
+        user.toJson(),
+        SetOptions(
+          merge: true,
+        ));
   }
 
   @override

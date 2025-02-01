@@ -25,7 +25,8 @@ class UploadDocumentPage extends StatefulWidget {
 class _UploadDocumentPageState extends State<UploadDocumentPage> {
   bool _isUploading = false;
 
-  Future<void> _handleImageUpload(BuildContext context, XFile file) async {
+  Future<void> _handleImageUpload(
+      BuildContext context, XFile file, Object? extradata) async {
     setState(() {
       _isUploading = true;
     });
@@ -37,7 +38,10 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
       print('Document uploaded successfully: $downloadUrl');
 
       if (mounted) {
-        context.goNamed(UserDetailFormPage.pageName);
+        context.goNamed(
+          UserDetailFormPage.pageName,
+          extra: extradata,
+        );
       }
     } catch (e) {
       print('Error uploading document: $e');
@@ -61,6 +65,10 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final extraData = GoRouterState.of(context).extra;
+    final bool returnToProfile = (extraData is Map<String, dynamic>)
+        ? (extraData['returnToProfile'] ?? false)
+        : false;
 
     return BlocConsumer<UploadDocumentBloc, UploadDocumentState>(
       listener: (context, state) {
@@ -89,9 +97,10 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
             elevation: 0,
             backgroundColor: Colors.transparent,
             actions: [
-              SkipButton(onSkip: () {
-                context.go(SelfieStartPage.pageName);
-              }),
+              if (!returnToProfile)
+                SkipButton(onSkip: () {
+                  context.go(SelfieStartPage.pageName);
+                }),
               SizedBox(
                 width: 25,
               )
@@ -227,7 +236,11 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
                       FilledButton.icon(
                         onPressed: _isUploading
                             ? null
-                            : () => _handleImageUpload(context, state.file),
+                            : () => _handleImageUpload(
+                                  context,
+                                  state.file,
+                                  extraData,
+                                ),
                         style: FilledButton.styleFrom(
                           padding: const EdgeInsets.all(16),
                           minimumSize: const Size(double.infinity, 56),

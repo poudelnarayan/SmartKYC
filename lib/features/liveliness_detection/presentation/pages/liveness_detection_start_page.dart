@@ -13,6 +13,10 @@ class LivenessDetectionStartPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final extraData = GoRouterState.of(context).extra;
+    final bool returnToProfile = (extraData is Map<String, dynamic>)
+        ? (extraData['returnToProfile'] ?? false)
+        : false;
 
     return Scaffold(
       body: Container(
@@ -33,16 +37,26 @@ class LivenessDetectionStartPage extends StatelessWidget {
               Expanded(
                 child: SingleChildScrollView(
                   child: Padding(
-                    padding: const EdgeInsets.all(24.0),
+                    padding: const EdgeInsets.only(left: 21, right: 24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SkipButton(
-                          onSkip: () {
-                            context.go(UserProfilePage.pageName);
-                          },
-                          textColor: Colors.white,
-                        ),
+                        if (!returnToProfile)
+                          SkipButton(
+                            onSkip: () {
+                              context.go(UserProfilePage.pageName);
+                            },
+                            textColor: Colors.white,
+                          ),
+                        if (returnToProfile)
+                          IconButton(
+                            onPressed: context.pop,
+                            icon: const Icon(
+                              Icons.cancel,
+                              color: Colors.white,
+                              size: 40,
+                            ),
+                          ),
                         Center(
                           child: Container(
                             width: 80,
@@ -108,8 +122,10 @@ class LivenessDetectionStartPage extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () =>
-                            context.pushNamed(LivenessDetectoinPage.pageName),
+                        onPressed: () => context.pushNamed(
+                          LivenessDetectoinPage.pageName,
+                          extra: extraData,
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: Colors.blue.shade900,
