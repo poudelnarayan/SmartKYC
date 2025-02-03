@@ -12,7 +12,7 @@ class LivenessDetectionStartPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final extraData = GoRouterState.of(context).extra;
     final bool returnToProfile = (extraData is Map<String, dynamic>)
         ? (extraData['returnToProfile'] ?? false)
@@ -158,7 +158,7 @@ class LivenessDetectionStartPage extends StatelessWidget {
   }
 
   Widget _buildRequirementsList(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     final requirements = [
       {

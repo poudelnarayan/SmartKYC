@@ -435,6 +435,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get phone => 'Phone';
 
   @override
+  String get updateEmail => 'Update Email';
+
+  @override
+  String get updateEmailDesc => 'Enter your new email address. A verification link will be sent.';
+
+  @override
+  String get updatePhone => 'Update Phone';
+
+  @override
+  String get updatePhoneDesc => 'Enter your phone number. A verification code will be sent.';
+
+  @override
+  String get phoneLabel => 'Phone Number';
+
+  @override
+  String get fieldRequired => 'This field is required';
+
+  @override
+  String get invalidPhone => 'Please enter a valid phone number';
+
+  @override
+  String get update => 'Update';
+
+  @override
   String get location => 'Location';
 
   @override

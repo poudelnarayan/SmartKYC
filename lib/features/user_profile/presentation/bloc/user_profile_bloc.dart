@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../domain/entities/user.dart';
 import '../../../../domain/usecases/get_user.dart';
 import '../../../../domain/usecases/update_user.dart';
 import '../../../../domain/usecases/delete_user.dart';

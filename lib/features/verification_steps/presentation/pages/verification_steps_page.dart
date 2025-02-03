@@ -3,7 +3,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:smartkyc/config/routes.dart';
-import 'package:smartkyc/features/auth/presentation/pages/singin_page.dart';
 import 'package:smartkyc/features/language/presentation/widgets/language_switcher.dart';
 import 'package:smartkyc/l10n/app_localizations.dart';
 
@@ -14,7 +13,7 @@ class VerificationStepsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       body: Container(
@@ -44,7 +43,7 @@ class VerificationStepsPage extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 30),
                   child: Text(
                     l10n.languageSwitchWarn,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white60,
                     ),
                   )),
@@ -111,28 +110,28 @@ class VerificationStepsPage extends StatelessWidget {
     final steps = [
       {
         'icon': Icons.email_outlined,
-        'title': AppLocalizations.of(context)!.emailVerification,
-        'subtitle': AppLocalizations.of(context)!.emailVerificationDesc,
+        'title': AppLocalizations.of(context).emailVerification,
+        'subtitle': AppLocalizations.of(context).emailVerificationDesc,
       },
       {
         'icon': Icons.document_scanner_outlined,
-        'title': AppLocalizations.of(context)!.documentUpload,
-        'subtitle': AppLocalizations.of(context)!.documentUploadDesc,
+        'title': AppLocalizations.of(context).documentUpload,
+        'subtitle': AppLocalizations.of(context).documentUploadDesc,
       },
       {
         'icon': Icons.face_outlined,
-        'title': AppLocalizations.of(context)!.selfieCapture,
-        'subtitle': AppLocalizations.of(context)!.selfieCaptureDesc,
+        'title': AppLocalizations.of(context).selfieCapture,
+        'subtitle': AppLocalizations.of(context).selfieCaptureDesc,
       },
       {
         'icon': Icons.verified_user_outlined,
-        'title': AppLocalizations.of(context)!.livenessCheck,
-        'subtitle': AppLocalizations.of(context)!.livenessCheckDesc,
+        'title': AppLocalizations.of(context).livenessCheck,
+        'subtitle': AppLocalizations.of(context).livenessCheckDesc,
       },
       {
         'icon': Icons.check_circle_outline,
-        'title': AppLocalizations.of(context)!.verificationComplete,
-        'subtitle': AppLocalizations.of(context)!.verificationCompleteDesc,
+        'title': AppLocalizations.of(context).verificationComplete,
+        'subtitle': AppLocalizations.of(context).verificationCompleteDesc,
       },
     ];
 

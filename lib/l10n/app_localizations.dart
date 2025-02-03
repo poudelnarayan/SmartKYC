@@ -935,6 +935,54 @@ abstract class AppLocalizations {
   /// **'Phone'**
   String get phone;
 
+  /// No description provided for @updateEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Email'**
+  String get updateEmail;
+
+  /// No description provided for @updateEmailDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your new email address. A verification link will be sent.'**
+  String get updateEmailDesc;
+
+  /// No description provided for @updatePhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Phone'**
+  String get updatePhone;
+
+  /// No description provided for @updatePhoneDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your phone number. A verification code will be sent.'**
+  String get updatePhoneDesc;
+
+  /// No description provided for @phoneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone Number'**
+  String get phoneLabel;
+
+  /// No description provided for @fieldRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This field is required'**
+  String get fieldRequired;
+
+  /// No description provided for @invalidPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid phone number'**
+  String get invalidPhone;
+
+  /// No description provided for @update.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get update;
+
   /// No description provided for @location.
   ///
   /// In en, this message translates to:

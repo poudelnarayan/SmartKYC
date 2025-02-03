@@ -435,6 +435,30 @@ class AppLocalizationsNe extends AppLocalizations {
   String get phone => 'फोन';
 
   @override
+  String get updateEmail => 'इमेल अपडेट गर्नुहोस्';
+
+  @override
+  String get updateEmailDesc => 'नयाँ इमेल ठेगाना प्रविष्ट गर्नुहोस्। प्रमाणीकरण लिंक पठाइनेछ।';
+
+  @override
+  String get updatePhone => 'फोन अपडेट गर्नुहोस्';
+
+  @override
+  String get updatePhoneDesc => 'फोन नम्बर प्रविष्ट गर्नुहोस्। प्रमाणीकरण कोड पठाइनेछ।';
+
+  @override
+  String get phoneLabel => 'फोन नम्बर';
+
+  @override
+  String get fieldRequired => 'यो फिल्ड आवश्यक छ';
+
+  @override
+  String get invalidPhone => 'कृपया मान्य फोन नम्बर प्रविष्ट गर्नुहोस्';
+
+  @override
+  String get update => 'अपडेट गर्नुहोस्';
+
+  @override
   String get location => 'स्थान';
 
   @override

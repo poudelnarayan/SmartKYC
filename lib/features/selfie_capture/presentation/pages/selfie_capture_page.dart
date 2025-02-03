@@ -129,7 +129,7 @@ class _SelfieCapturePageState extends State<SelfieCapturePage> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     if (!_cameraController.value.isInitialized) {

@@ -101,7 +101,7 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     print(isLivenessVerified);
     print(isSelfieVerified);
@@ -212,7 +212,7 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
   }
 
   Widget _buildFormSections(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -427,14 +427,14 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
   String? Function(String?) _getDefaultValidator(String fieldName) {
     return (value) {
       if (value == null || value.isEmpty) {
-        return AppLocalizations.of(context)!.pleaseEnter(fieldName);
+        return AppLocalizations.of(context).pleaseEnter(fieldName);
       }
       return null;
     };
   }
 
   Widget _buildBottomBar(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -462,7 +462,6 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
                 address: _formData['address'],
                 uid: auth.FirebaseAuth.instance.currentUser!.uid,
                 isDocumentVerified: true,
-                email: auth.FirebaseAuth.instance.currentUser!.email!,
                 isEmailVerified:
                     auth.FirebaseAuth.instance.currentUser!.emailVerified,
                 isLivenessVerified: isLivenessVerified,

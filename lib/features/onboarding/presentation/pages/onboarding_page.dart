@@ -49,7 +49,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final onboardingData = _getOnboardingData(l10n);
 
     return BlocProvider(

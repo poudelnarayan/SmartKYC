@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartkyc/l10n/app_localizations.dart';
-import 'package:smartkyc/features/liveliness_detection/presentation/pages/liveness_detection_start_page.dart';
 import 'package:smartkyc/features/selfie_capture/presentation/pages/selfie_capture_page.dart';
 
 import '../../../../config/routes.dart';
@@ -36,7 +35,7 @@ class _SelfieStartPageState extends State<SelfieStartPage> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final extraData = GoRouterState.of(context).extra;
     final bool returnToProfile = (extraData is Map<String, dynamic>)
         ? (extraData['returnToProfile'] ?? false)

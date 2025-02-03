@@ -16,7 +16,7 @@ extension BuildContextExtensions on BuildContext {
   Brightness get platformBrightness => mediaQuery.platformBrightness;
 
   // Localization Extensions
-  AppLocalizations get l10n => AppLocalizations.of(this)!;
+  AppLocalizations get l10n => AppLocalizations.of(this);
   bool get isRTL => Directionality.of(this) == TextDirection.rtl;
 
   // Navigation Extensions

@@ -98,8 +98,6 @@ class _VerificationProgressOverlayState
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
     return Material(
       color: Colors.black.withOpacity(0.9),
       child: SafeArea(
@@ -146,26 +144,26 @@ class _VerificationProgressOverlayState
     final steps = [
       {
         'icon': Icons.email_outlined,
-        'title': AppLocalizations.of(context)!.emailVerification,
-        'subtitle': AppLocalizations.of(context)!.emailVerificationDesc,
+        'title': AppLocalizations.of(context).emailVerification,
+        'subtitle': AppLocalizations.of(context).emailVerificationDesc,
         'isCompleted': _verificationStatus['isEmailVerified'] ?? false,
       },
       {
         'icon': Icons.document_scanner_outlined,
-        'title': AppLocalizations.of(context)!.documentUpload,
-        'subtitle': AppLocalizations.of(context)!.documentUploadDesc,
+        'title': AppLocalizations.of(context).documentUpload,
+        'subtitle': AppLocalizations.of(context).documentUploadDesc,
         'isCompleted': _verificationStatus['isDocumentVerified'] ?? false,
       },
       {
         'icon': Icons.face_outlined,
-        'title': AppLocalizations.of(context)!.selfieCapture,
-        'subtitle': AppLocalizations.of(context)!.selfieCaptureDesc,
+        'title': AppLocalizations.of(context).selfieCapture,
+        'subtitle': AppLocalizations.of(context).selfieCaptureDesc,
         'isCompleted': _verificationStatus['isSelfieVerified'] ?? false,
       },
       {
         'icon': Icons.verified_user_outlined,
-        'title': AppLocalizations.of(context)!.livenessCheck,
-        'subtitle': AppLocalizations.of(context)!.livenessCheckDesc,
+        'title': AppLocalizations.of(context).livenessCheck,
+        'subtitle': AppLocalizations.of(context).livenessCheckDesc,
         'isCompleted': _verificationStatus['isLivenessVerified'] ?? false,
       },
     ];

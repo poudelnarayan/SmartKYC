@@ -1,24 +1,24 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smartkyc/l10n/app_localizations.dart';
-
 import 'package:go_router/go_router.dart';
 import 'package:smartkyc/features/auth/presentation/pages/singin_page.dart';
 import 'package:smartkyc/features/liveliness_detection/presentation/pages/liveness_detection_start_page.dart';
 import 'package:smartkyc/features/selfie_capture/presentation/pages/selfie_start_page.dart';
 import 'package:smartkyc/features/upload_document/presentation/pages/upload_document_page.dart';
-import '../../../language/presentation/bloc/language_bloc.dart';
-import '../../../user_detail_form/presentation/bloc/user_detail_form_event.dart';
 import '../bloc/user_profile_bloc.dart';
 import '../bloc/user_profile_event.dart';
 import '../bloc/user_profile_state.dart';
 import '../widgets/delete_account_overlay.dart';
+import '../widgets/edit_contact_bottom_sheet.dart';
 import '../widgets/phone_verification_model.dart';
 import '../widgets/profile_section.dart';
 import '../widgets/quick_action_button.dart';
 import '../widgets/about_bottom_sheet.dart';
 import '../widgets/security_bottom_sheet.dart';
+import '../widgets/settings_bottom_sheet.dart';
 
 class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
@@ -39,20 +39,20 @@ class _UserProfilePageState extends State<UserProfilePage> {
     context.read<UserProfileBloc>().add(LoadUserProfile());
   }
 
-  void _toggleLanguage(BuildContext context) {
-    final currentLocale = Localizations.localeOf(context);
-    final newLocale = currentLocale.languageCode == 'en'
-        ? const Locale('ne')
-        : const Locale('en');
-    context.read<LanguageBloc>().add(ChangeLanguage(newLocale));
-  }
+  // void _toggleLanguage(BuildContext context) {
+  //   final currentLocale = Localizations.localeOf(context);
+  //   final newLocale = currentLocale.languageCode == 'en'
+  //       ? const Locale('ne')
+  //       : const Locale('en');
+  //   context.read<LanguageBloc>().add(ChangeLanguage(newLocale));
+  // }
 
   Future<void> _refreshProfile() async {
     context.read<UserProfileBloc>().add(LoadUserProfile());
   }
 
   void _showLogoutDialog(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -107,7 +107,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return BlocListener<UserProfileBloc, UserProfileState>(
       listener: (context, state) {
@@ -135,11 +135,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     ),
                     actions: [
                       IconButton(
-                        icon: const Icon(Icons.language),
-                        onPressed: () => _toggleLanguage(context),
-                        tooltip: 'Change Language',
-                      ),
-                      IconButton(
                         icon: const Icon(Icons.logout),
                         onPressed: () => _showLogoutDialog(context),
                         tooltip: 'Logout',
@@ -165,7 +160,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                           padding: const EdgeInsets.all(16),
                                           child: Column(
                                             children: [
-                                              _buildQuickActions(context),
+                                              _buildQuickActions(
+                                                  context, state),
                                               const SizedBox(height: 24),
                                               _buildContactInfo(context, state),
                                               const SizedBox(height: 16),
@@ -191,14 +187,26 @@ class _UserProfilePageState extends State<UserProfilePage> {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context) {
+  Widget _buildQuickActions(BuildContext context, UserProfileLoaded state) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         QuickActionButton(
           icon: Icons.edit_note,
           label: 'Edit',
-          onTap: () {},
+          onTap: () => _showEditContactModal(context, state),
+        ),
+        QuickActionButton(
+          icon: Icons.settings_outlined,
+          label: 'Settings',
+          onTap: () {
+            showModalBottomSheet(
+              context: context,
+              builder: (context) => const SettingsBottomSheet(),
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+            );
+          },
         ),
         QuickActionButton(
           icon: Icons.security_outlined,
@@ -226,6 +234,33 @@ class _UserProfilePageState extends State<UserProfilePage> {
         ),
       ],
     ).animate().fadeIn().slideY();
+  }
+
+// Add this new method
+  void _showEditContactModal(BuildContext context, UserProfileLoaded state) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => EditContactBottomSheet(
+        user: state.user,
+        onEmailUpdated: (newEmail) {
+          // TODO
+          // context.read<UserProfileBloc>().add(
+          //       UpdateUserProfile(
+          //         state.user.copyWith(email: newEmail),
+          //       ),
+          //     );
+        },
+        onPhoneUpdated: (newPhone) {
+          context.read<UserProfileBloc>().add(
+                UpdateUserProfile(
+                  state.user.copyWith(phoneNumber: newPhone),
+                ),
+              );
+        },
+      ),
+    );
   }
 
   Widget _buildPersonalInfo(BuildContext context, UserProfileLoaded state) {
@@ -449,7 +484,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  state.user.email,
+                  FirebaseAuth.instance.currentUser!.email!,
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 16,

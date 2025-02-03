@@ -65,7 +65,7 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final extraData = GoRouterState.of(context).extra;
     final bool returnToProfile = (extraData is Map<String, dynamic>)
         ? (extraData['returnToProfile'] ?? false)

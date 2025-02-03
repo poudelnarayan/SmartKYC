@@ -15,7 +15,6 @@ import '../bloc/liveliness_event.dart';
 import '../widgets/oval_face_camera_preview.dart';
 import '../../domain/entities/recording_state.dart';
 import '../../../../core/services/storage_service.dart';
-
 class LivenessDetectoinPage extends StatefulWidget {
   const LivenessDetectoinPage({super.key});
   static const pageName = "livelinessDetection";
@@ -28,6 +27,7 @@ class _LivelinessPageState extends State<LivenessDetectoinPage> {
   CameraController? _controller;
   bool _isCameraInitialized = false;
   bool _isUploading = false;
+  // ignore: unused_field
   XFile? _recordedVideo;
 
   @override
@@ -159,7 +159,6 @@ class _LivelinessPageState extends State<LivenessDetectoinPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
 
     return Scaffold(
       body: BlocConsumer<LivenessBloc, LivenessState>(

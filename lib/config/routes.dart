@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartkyc/core/services/preferences_service.dart';
 import 'package:smartkyc/features/auth/presentation/pages/singin_page.dart';
 import 'package:smartkyc/features/auth/presentation/pages/forgot_password_page.dart';
@@ -29,7 +28,6 @@ bool isLoggedIn() => FirebaseAuth.instance.currentUser != null;
 Future<String> handleKYCNavigation(BuildContext context,
     {String? skipStep}) async {
   final user = FirebaseAuth.instance.currentUser;
-  
 
   final userDoc =
       await FirebaseFirestore.instance.collection('users').doc(user!.uid).get();

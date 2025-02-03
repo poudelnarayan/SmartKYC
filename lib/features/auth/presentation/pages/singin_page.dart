@@ -1,12 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:smartkyc/config/routes.dart';
 import 'package:smartkyc/features/auth/presentation/pages/verify_email_page.dart';
-import 'package:smartkyc/features/language/presentation/widgets/language_switcher.dart';
 import 'package:smartkyc/features/upload_document/presentation/pages/upload_document_page.dart';
 import '../../../verification_steps/presentation/widgets/verification_progress_overlay.dart';
 import '../bloc/auth_bloc.dart';

@@ -5,12 +5,19 @@ class ProfileSection extends StatelessWidget {
   final String title;
   final IconData icon;
   final List<Widget> items;
+  final VoidCallback? onEdit;
+
+  // FIXME:
+  // TODO:
+  // BUG:
+  
 
   const ProfileSection({
     super.key,
     required this.title,
     required this.icon,
     required this.items,
+    this.onEdit,
   });
 
   @override
@@ -53,6 +60,15 @@ class ProfileSection extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                 ),
+                if (onEdit != null) // Add this
+                  IconButton(
+                    onPressed: onEdit,
+                    icon: const Icon(Icons.edit_outlined),
+                    tooltip: 'Edit',
+                    style: IconButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
               ],
             ),
           ),
