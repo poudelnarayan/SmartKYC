@@ -57,7 +57,7 @@ class UploadDocumentBloc
   ) {
     if (event.image.path.isNotEmpty) {
       emit(DocumentPreviewSuccess(event.image));
-    } else {
+    } else { 
       emit(DocumentPreviewFailure('invalid_image_file'));
     }
   }

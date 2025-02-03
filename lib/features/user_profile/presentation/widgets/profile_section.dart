@@ -69,13 +69,15 @@ class ProfileItem extends StatelessWidget {
   final String label;
   final String value;
   final bool isVerified;
+  final VoidCallback? onVerify;
 
   const ProfileItem({
     super.key,
     required this.icon,
     required this.label,
     required this.value,
-    this.isVerified = false,
+    this.isVerified = true,
+    this.onVerify,
   });
 
   @override
@@ -111,38 +113,28 @@ class ProfileItem extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   value,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
+                  style: isVerified
+                      ? Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          )
+                      : const TextStyle(
+                          color: Color.fromARGB(255, 196, 94, 86),
+                          fontSize: 13,
+                        ),
                 ),
               ],
             ),
           ),
-          if (isVerified)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.verified,
-                    size: 16,
-                    color: Colors.green[700],
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Verified',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.green[700],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
+          if (!isVerified && onVerify != null)
+            FilledButton.icon(
+              onPressed: onVerify,
+              icon: const Icon(Icons.verified_user_outlined, size: 16),
+              label: const Text('Verify Now'),
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                textStyle: const TextStyle(fontSize: 12),
               ),
             ),
         ],

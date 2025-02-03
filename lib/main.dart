@@ -15,9 +15,9 @@ import 'package:smartkyc/features/liveliness_detection/presentation/bloc/livelin
 import 'package:smartkyc/features/onboarding/presentation/bloc/onboarding_bloc.dart';
 import 'package:flutter/services.dart';
 import 'package:smartkyc/features/upload_document/presentation/bloc/upload_document_bloc.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:smartkyc/features/user_detail_form/presentation/bloc/user_detail_form_bloc.dart';
+import 'package:smartkyc/l10n/app_localizations.dart';
 import 'domain/repository/user_repository.dart';
 import 'domain/repository/user_repository_impl.dart';
 import 'domain/usecases/delete_user.dart';
@@ -51,9 +51,9 @@ void main() async {
   final authRepository = AuthRepositoryImpl(FirebaseAuth.instance);
   final signInUseCase = SignInUseCase(authRepository);
   final signUpUseCase = SignUpUseCase(authRepository);
-  final userRepository = UserRepositoryImpl();
-  final getUser = GetUser(userRepository);
+  final getUser = GetUser();
   final deleteUser = DeleteUser();
+  final updateUser = UpdateUser();
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
@@ -78,6 +78,7 @@ void main() async {
         ),
         BlocProvider<UserProfileBloc>(
           create: (context) => UserProfileBloc(
+            updateUser: updateUser,
             getUser: getUser,
             deleteUser: deleteUser,
           ),

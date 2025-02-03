@@ -96,7 +96,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     try {
       emit(AuthLoading());
-      await repository.sendEmailVerificationCode(event.email);
+      await repository.sendEmailVerificationLink(event.email);
       emit(EmailVerificationSent(event.email));
     } catch (e) {
       emit(AuthError(e.toString()));

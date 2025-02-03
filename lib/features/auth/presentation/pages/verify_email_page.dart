@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:smartkyc/l10n/app_localizations.dart';
 import 'package:lottie/lottie.dart';
 import 'package:smartkyc/features/verification_steps/presentation/pages/verification_steps_page.dart';
 
@@ -199,7 +199,10 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                             strokeWidth: 2,
                           ),
                         )
-                      : const Icon(Icons.email_outlined),
+                      : const Icon(
+                          Icons.email_outlined,
+                          color: Colors.white,
+                        ),
                   label: Text(
                     _isSendingEmail ? l10n.sending : l10n.resendEmail,
                     style: const TextStyle(color: Colors.white),

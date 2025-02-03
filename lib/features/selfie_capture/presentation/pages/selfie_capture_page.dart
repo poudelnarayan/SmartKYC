@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:camera/camera.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:smartkyc/l10n/app_localizations.dart';
 import 'package:smartkyc/domain/usecases/update_user.dart';
 import 'package:smartkyc/features/liveliness_detection/presentation/pages/liveness_detection_start_page.dart';
 import 'package:smartkyc/features/user_profile/presentation/pages/user_profile_page.dart';

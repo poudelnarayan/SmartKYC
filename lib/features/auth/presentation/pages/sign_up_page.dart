@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:smartkyc/l10n/app_localizations.dart';
 import 'package:smartkyc/features/auth/presentation/pages/sign_up_success.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../bloc/auth_bloc.dart';

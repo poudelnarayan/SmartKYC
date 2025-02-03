@@ -4,9 +4,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:smartkyc/l10n/app_localizations.dart';
+
 import 'package:smartkyc/core/extensions/string_extension.dart';
 import 'package:smartkyc/core/presentation/widgets/upload_overlay.dart';
+import 'package:smartkyc/domain/usecases/get_user.dart';
 import 'package:smartkyc/features/selfie_capture/presentation/pages/selfie_start_page.dart';
 import 'package:smartkyc/features/user_profile/presentation/pages/user_profile_page.dart';
 import '../../../../domain/entities/user.dart';
@@ -65,10 +67,44 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
     }
   }
 
+  bool isSelfieVerified = false;
+  bool isLivenessVerified = false;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserData();
+  }
+
+  Future<void> fetchUserData() async {
+    final getUser = GetUser();
+
+    try {
+      User user = await getUser(auth.FirebaseAuth.instance.currentUser!.uid);
+
+      if (mounted) {
+        setState(() {
+          isSelfieVerified = user.isSelfieVerified;
+          isLivenessVerified = user.isLivenessVerified;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          isSelfieVerified = false;
+          isLivenessVerified = false;
+        });
+      }
+      print("Error fetching user data: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    print(isLivenessVerified);
+    print(isSelfieVerified);
 
     return BlocConsumer<UserBloc, UserState>(listener: (context, state) {
       if (state is UserUpdateError) {
@@ -427,6 +463,10 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
                 uid: auth.FirebaseAuth.instance.currentUser!.uid,
                 isDocumentVerified: true,
                 email: auth.FirebaseAuth.instance.currentUser!.email!,
+                isEmailVerified:
+                    auth.FirebaseAuth.instance.currentUser!.emailVerified,
+                isLivenessVerified: isLivenessVerified,
+                isSelfieVerified: isSelfieVerified,
               );
               context.read<UserBloc>().add(UpdateUserEvent(user));
             }

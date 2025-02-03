@@ -29,6 +29,7 @@ bool isLoggedIn() => FirebaseAuth.instance.currentUser != null;
 Future<String> handleKYCNavigation(BuildContext context,
     {String? skipStep}) async {
   final user = FirebaseAuth.instance.currentUser;
+  
 
   final userDoc =
       await FirebaseFirestore.instance.collection('users').doc(user!.uid).get();
@@ -55,10 +56,6 @@ Future<String> handleKYCNavigation(BuildContext context,
   if (skipStep == 'liveness') {
     return UserProfilePage.pageName;
   }
-
-  print("^^^^^^^^^^^^^^");
-  print(skipStep);
-  print("^^^^^^^^^^^^^^");
 
   if (!isDocumentVerified) return UploadDocumentPage.pageName;
   if (!isSelfieVerified) return SelfieStartPage.pageName;

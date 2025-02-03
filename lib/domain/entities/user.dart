@@ -15,6 +15,7 @@ class User extends Equatable {
   final bool isDocumentVerified;
   final bool isSelfieVerified;
   final bool isLivenessVerified;
+  final bool isPhoneNumberVerified;
 
   const User({
     required this.uid,
@@ -31,6 +32,7 @@ class User extends Equatable {
     this.isDocumentVerified = false,
     this.isSelfieVerified = false,
     this.isLivenessVerified = false,
+    this.isPhoneNumberVerified = false,
   });
 
   // Computed properties
@@ -53,6 +55,7 @@ class User extends Equatable {
         isDocumentVerified,
         isSelfieVerified,
         isLivenessVerified,
+        isPhoneNumberVerified,
       ];
 
   Map<String, dynamic> toJson() {
@@ -71,6 +74,7 @@ class User extends Equatable {
       'isDocumentVerified': isDocumentVerified,
       'isSelfieVerified': isSelfieVerified,
       'isLivenessVerified': isLivenessVerified,
+      'isPhoneNumberVerified': isPhoneNumberVerified,
     };
   }
 
@@ -90,6 +94,7 @@ class User extends Equatable {
       isDocumentVerified: json['isDocumentVerified'] as bool? ?? false,
       isSelfieVerified: json['isSelfieVerified'] as bool? ?? false,
       isLivenessVerified: json['isLivenessVerified'] as bool? ?? false,
+      isPhoneNumberVerified: json['isPhoneNumberVerified'] as bool? ?? false,
     );
   }
 
@@ -108,6 +113,7 @@ class User extends Equatable {
     bool? isDocumentVerified,
     bool? isSelfieVerified,
     bool? isLivenessVerified,
+    bool? isPhoneNumberVerified,
   }) {
     return User(
       uid: uid ?? this.uid,
@@ -124,6 +130,8 @@ class User extends Equatable {
       isDocumentVerified: isDocumentVerified ?? this.isDocumentVerified,
       isSelfieVerified: isSelfieVerified ?? this.isSelfieVerified,
       isLivenessVerified: isLivenessVerified ?? this.isLivenessVerified,
+      isPhoneNumberVerified:
+          isPhoneNumberVerified ?? this.isPhoneNumberVerified,
     );
   }
 }

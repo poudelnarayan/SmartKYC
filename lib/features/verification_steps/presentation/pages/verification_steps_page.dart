@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:smartkyc/config/routes.dart';
 import 'package:smartkyc/features/auth/presentation/pages/singin_page.dart';
 import 'package:smartkyc/features/language/presentation/widgets/language_switcher.dart';
+import 'package:smartkyc/l10n/app_localizations.dart';
 
 class VerificationStepsPage extends StatelessWidget {
   const VerificationStepsPage({super.key});
@@ -74,7 +75,9 @@ class VerificationStepsPage extends StatelessWidget {
                         _buildVerificationSteps(context),
                         const SizedBox(height: 32),
                         FilledButton(
-                          onPressed: () => context.go(SinginPage.pageName),
+                          onPressed: () async => context.go(
+                            await handleKYCNavigation(context),
+                          ),
                           style: FilledButton.styleFrom(
                             backgroundColor: Colors.white,
                             foregroundColor:

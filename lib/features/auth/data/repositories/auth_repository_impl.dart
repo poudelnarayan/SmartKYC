@@ -57,7 +57,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> sendEmailVerificationCode(String email) async {
+  Future<void> sendEmailVerificationLink(String email) async {
     try {
       final currentUser = _firebaseAuth.currentUser;
       if (currentUser != null) {
@@ -87,6 +87,12 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> signOut() async {
     await _firebaseAuth.signOut();
+  }
+
+  @override
+  Future<void> sendPhoneNumberVerificationCode(String email) {
+    // TODO: implement sendPhoneNumberVerificationCode
+    throw UnimplementedError();
   }
 
   Exception _handleFirebaseAuthException(FirebaseAuthException e) {

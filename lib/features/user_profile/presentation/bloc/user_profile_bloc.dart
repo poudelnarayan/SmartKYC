@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../domain/entities/user.dart';
 import '../../../../domain/usecases/get_user.dart';
+import '../../../../domain/usecases/update_user.dart';
 import '../../../../domain/usecases/delete_user.dart';
 import 'user_profile_event.dart';
 import 'user_profile_state.dart';
@@ -8,16 +9,20 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 
 class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
   final GetUser _getUser;
+  final UpdateUser _updateUser;
   final DeleteUser _deleteUser;
   final firebase_auth.FirebaseAuth _auth = firebase_auth.FirebaseAuth.instance;
 
   UserProfileBloc({
     required GetUser getUser,
+    required UpdateUser updateUser,
     required DeleteUser deleteUser,
   })  : _getUser = getUser,
+        _updateUser = updateUser,
         _deleteUser = deleteUser,
         super(UserProfileInitial()) {
     on<LoadUserProfile>(_onLoadUserProfile);
+    on<UpdateUserProfile>(_onUpdateUserProfile);
     on<DeleteUserAccount>(_onDeleteUserAccount);
     on<LogoutUser>(_onLogoutUser);
   }
@@ -43,6 +48,24 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
     }
   }
 
+  Future<void> _onUpdateUserProfile(
+    UpdateUserProfile event,
+    Emitter<UserProfileState> emit,
+  ) async {
+    try {
+      emit(UserProfileLoading());
+
+      // Update user using the injected use case
+      await _updateUser(event.user);
+
+      // Reload user profile
+      add(LoadUserProfile());
+    } catch (e) {
+      print('Error updating user profile: $e');
+      emit(UserProfileError(e.toString()));
+    }
+  }
+
   Future<void> _onDeleteUserAccount(
     DeleteUserAccount event,
     Emitter<UserProfileState> emit,
@@ -52,7 +75,6 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
 
       await _deleteUser();
 
-      // Important: Emit UserAccountDeleted state after successful deletion
       emit(UserAccountDeleted());
     } catch (e) {
       print('Error deleting user account: $e');
@@ -65,7 +87,6 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
     Emitter<UserProfileState> emit,
   ) async {
     try {
-      emit(UserLoggingOut());
       await _auth.signOut();
       emit(UserLoggedOut());
     } catch (e) {

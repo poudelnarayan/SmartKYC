@@ -2,7 +2,8 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:smartkyc/l10n/app_localizations.dart';
+
 import 'package:go_router/go_router.dart';
 import 'package:smartkyc/core/presentation/widgets/skip_button.dart';
 import 'package:smartkyc/features/selfie_capture/presentation/pages/selfie_start_page.dart';

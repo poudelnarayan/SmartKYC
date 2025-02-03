@@ -49,6 +49,7 @@ class AboutBottomSheet extends StatelessWidget {
               if (snapshot.hasData) {
                 return Column(
                   children: [
+                    const Divider(),
                     _buildInfoRow('Version', snapshot.data!.version),
                     _buildInfoRow('Build', snapshot.data!.buildNumber),
                   ],
@@ -57,35 +58,32 @@ class AboutBottomSheet extends StatelessWidget {
               return const CircularProgressIndicator();
             },
           ),
-          const SizedBox(height: 24),
-          const Divider(),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildLink(
-                icon: Icons.privacy_tip_outlined,
-                label: 'Privacy Policy',
-                onTap: () {
-                  // TODO: Open privacy policy
-                },
-              ),
-              _buildLink(
-                icon: Icons.description_outlined,
-                label: 'Terms of Service',
-                onTap: () {
-                  // TODO: Open terms of service
-                },
-              ),
-              _buildLink(
-                icon: Icons.email_outlined,
-                label: 'Contact Us',
-                onTap: () {
-                  // TODO: Open contact form
-                },
-              ),
-            ],
-          ),
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          //   children: [
+          //     _buildLink(
+          //       icon: Icons.privacy_tip_outlined,
+          //       label: 'Privacy Policy',
+          //       onTap: () {
+          //         // TODO: Open privacy policy
+          //       },
+          //     ),
+          //     _buildLink(
+          //       icon: Icons.description_outlined,
+          //       label: 'Terms of Service',
+          //       onTap: () {
+          //         // TODO: Open terms of service
+          //       },
+          //     ),
+          //     _buildLink(
+          //       icon: Icons.email_outlined,
+          //       label: 'Contact Us',
+          //       onTap: () {
+          //         // TODO: Open contact form
+          //       },
+          //     ),
+          //   ],
+          // ),
         ],
       ),
     );
@@ -110,26 +108,27 @@ class AboutBottomSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildLink({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Icon(icon, color: Colors.blue),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.blue,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+//   Widget _buildLink({
+//     required IconData icon,
+//     required String label,
+//     required VoidCallback onTap,
+//   }) {
+//     return InkWell(
+//       onTap: onTap,
+//       child: Column(
+//         children: [
+//           Icon(icon, color: Colors.blue),
+//           const SizedBox(height: 4),
+//           Text(
+//             label,
+//             style: const TextStyle(
+//               fontSize: 12,
+//               color: Colors.blue,
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
 }

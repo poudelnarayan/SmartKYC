@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:smartkyc/l10n/app_localizations.dart';
+
 import 'package:go_router/go_router.dart';
 import 'package:smartkyc/features/auth/presentation/pages/singin_page.dart';
 import 'package:smartkyc/features/liveliness_detection/presentation/pages/liveness_detection_start_page.dart';
 import 'package:smartkyc/features/selfie_capture/presentation/pages/selfie_start_page.dart';
 import 'package:smartkyc/features/upload_document/presentation/pages/upload_document_page.dart';
 import '../../../language/presentation/bloc/language_bloc.dart';
+import '../../../user_detail_form/presentation/bloc/user_detail_form_event.dart';
 import '../bloc/user_profile_bloc.dart';
 import '../bloc/user_profile_event.dart';
 import '../bloc/user_profile_state.dart';
 import '../widgets/delete_account_overlay.dart';
+import '../widgets/phone_verification_model.dart';
 import '../widgets/profile_section.dart';
 import '../widgets/quick_action_button.dart';
 import '../widgets/about_bottom_sheet.dart';
@@ -68,6 +71,36 @@ class _UserProfilePageState extends State<UserProfilePage> {
             child: Text(l10n.logout),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showPhoneVerificationModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: PhoneVerificationModal(
+          onVerificationComplete: (phoneNumber) {
+            // Handle phone verification completion
+            if (mounted) {
+              final currentState = context.read<UserProfileBloc>().state;
+              if (currentState is UserProfileLoaded) {
+                final updatedUser = currentState.user.copyWith(
+                  phoneNumber: phoneNumber,
+                );
+                context.read<UserProfileBloc>().add(
+                      UpdateUserProfile(updatedUser), // Updated event name
+                    );
+              }
+              Navigator.pop(context);
+            }
+          },
+        ),
       ),
     );
   }
@@ -233,8 +266,12 @@ class _UserProfilePageState extends State<UserProfilePage> {
           icon: Icons.phone_outlined,
           label: 'Phone Number',
           value: state.user.phoneNumber.isEmpty
-              ? 'Not provided'
+              ? 'Verification Required'
               : state.user.phoneNumber,
+          isVerified: state.user.phoneNumber.isNotEmpty,
+          onVerify: state.user.phoneNumber.isEmpty
+              ? () => _showPhoneVerificationModal(context)
+              : null,
         ),
         ProfileItem(
           icon: Icons.location_on_outlined,
