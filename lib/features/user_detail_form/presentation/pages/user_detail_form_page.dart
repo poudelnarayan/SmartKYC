@@ -37,7 +37,7 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
     'dob': DateTime(1990, 1, 1),
     'fatherName': 'Jeevlal Poudel',
     'citizenshipNumber': 'CTZ123456',
-    'address': 'Butwal',
+    'address': 'Suddhodhan-5 Butwal',
   };
 
   Future<void> _selectDate(BuildContext context, String field) async {
