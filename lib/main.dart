@@ -8,10 +8,12 @@ import 'package:camera/camera.dart';
 import 'package:get_it/get_it.dart';
 import 'package:smartkyc/core/services/locator.dart';
 import 'package:smartkyc/core/services/preferences_service.dart';
+import 'package:smartkyc/core/theme/app_theme.dart';
 import 'package:smartkyc/features/language/presentation/bloc/language_bloc.dart';
 import 'package:smartkyc/features/liveliness_detection/presentation/bloc/liveliness_bloc.dart';
 import 'package:smartkyc/features/onboarding/presentation/bloc/onboarding_bloc.dart';
 import 'package:flutter/services.dart';
+import 'package:smartkyc/features/theme/presentation/bloc/theme_state.dart';
 import 'package:smartkyc/features/upload_document/presentation/bloc/upload_document_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:smartkyc/features/user_detail_form/presentation/bloc/user_detail_form_bloc.dart';
@@ -99,37 +101,43 @@ class SmartKycApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<LanguageBloc, LanguageState>(
-      builder: (context, state) {
-        return MaterialApp.router(
-          title: 'KYC verification',
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            primarySwatch: Colors.blue,
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF2563EB),
-              secondary: const Color(0xFF3B82F6),
-            ),
-            useMaterial3: true,
-            textTheme: GoogleFonts.interTextTheme(),
-            inputDecorationTheme: InputDecorationTheme(
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+      builder: (context, languageState) {
+        return BlocBuilder<ThemeBloc, ThemeState>(
+          builder: (context, themeState) {
+            return MaterialApp.router(
+              title: 'KYC verification',
+              debugShowCheckedModeBanner: false,
+              theme: ThemeData(
+                primarySwatch: Colors.blue,
+                colorScheme: ColorScheme.fromSeed(
+                  seedColor: const Color(0xFF2563EB),
+                  secondary: const Color(0xFF3B82F6),
+                ),
+                useMaterial3: true,
+                textTheme: GoogleFonts.interTextTheme(),
+                inputDecorationTheme: InputDecorationTheme(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  contentPadding: const EdgeInsets.all(16),
+                ),
               ),
-              contentPadding: const EdgeInsets.all(16),
-            ),
-          ),
-          locale: state.currentLocale,
-          routerConfig: appRouter,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate
-          ],
-          supportedLocales: const [
-            Locale('en'),
-            Locale('ne'),
-          ],
+              darkTheme: AppTheme.dark,
+              themeMode: themeState.themeMode,
+              locale: languageState.currentLocale,
+              routerConfig: appRouter,
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate
+              ],
+              supportedLocales: const [
+                Locale('en'),
+                Locale('ne'),
+              ],
+            );
+          },
         );
       },
     );

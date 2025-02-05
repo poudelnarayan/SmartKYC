@@ -1,34 +1,34 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:smartkyc/core/theme/app_color_scheme.dart';
 
 class ProfileSection extends StatelessWidget {
   final String title;
   final IconData icon;
   final List<Widget> items;
-  final VoidCallback? onEdit;
-
-  // FIXME:
-  // TODO:
-  // BUG:
-  
+  final bool isDark;
 
   const ProfileSection({
     super.key,
     required this.title,
     required this.icon,
     required this.items,
-    this.onEdit,
+    required this.isDark,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColorScheme.getCardBackground(isDark),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColorScheme.getCardBorder(isDark),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: isDark
+                ? Colors.black.withOpacity(0.2)
+                : Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -44,31 +44,29 @@ class ProfileSection extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color:
-                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    color: isDark
+                        ? AppColorScheme.darkPrimary.withOpacity(0.1)
+                        : AppColorScheme.lightPrimary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     icon,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: isDark
+                        ? AppColorScheme.darkPrimary
+                        : AppColorScheme.lightPrimary,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                if (onEdit != null) // Add this
-                  IconButton(
-                    onPressed: onEdit,
-                    icon: const Icon(Icons.edit_outlined),
-                    tooltip: 'Edit',
-                    style: IconButton.styleFrom(
-                      foregroundColor: Theme.of(context).colorScheme.primary,
-                    ),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isDark
+                        ? AppColorScheme.darkText
+                        : AppColorScheme.lightText,
                   ),
+                ),
               ],
             ),
           ),
@@ -76,7 +74,7 @@ class ProfileSection extends StatelessWidget {
           ...items,
         ],
       ),
-    ).animate().fadeIn().slideY();
+    );
   }
 }
 
@@ -86,14 +84,16 @@ class ProfileItem extends StatelessWidget {
   final String value;
   final bool isVerified;
   final VoidCallback? onVerify;
+  final bool isDark;
 
   const ProfileItem({
     super.key,
     required this.icon,
     required this.label,
     required this.value,
-    this.isVerified = true,
+    this.isVerified = false,
     this.onVerify,
+    required this.isDark,
   });
 
   @override
@@ -105,13 +105,17 @@ class ProfileItem extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              color: isDark
+                  ? AppColorScheme.darkPrimary.withOpacity(0.1)
+                  : AppColorScheme.lightPrimary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               icon,
               size: 20,
-              color: Theme.of(context).colorScheme.primary,
+              color: isDark
+                  ? AppColorScheme.darkPrimary
+                  : AppColorScheme.lightPrimary,
             ),
           ),
           const SizedBox(width: 12),
@@ -122,35 +126,61 @@ class ProfileItem extends StatelessWidget {
                 Text(
                   label,
                   style: TextStyle(
-                    color: Colors.grey[600],
+                    color: isDark
+                        ? AppColorScheme.darkTextSecondary
+                        : AppColorScheme.lightTextSecondary,
                     fontSize: 12,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   value,
-                  style: isVerified
-                      ? Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          )
-                      : const TextStyle(
-                          color: Color.fromARGB(255, 196, 94, 86),
-                          fontSize: 13,
-                        ),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: isDark
+                        ? AppColorScheme.darkText
+                        : AppColorScheme.lightText,
+                  ),
                 ),
               ],
             ),
           ),
-          if (!isVerified && onVerify != null)
-            FilledButton.icon(
+          if (onVerify != null)
+            TextButton(
               onPressed: onVerify,
-              icon: const Icon(Icons.verified_user_outlined, size: 16),
-              label: const Text('Verify Now'),
-              style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                textStyle: const TextStyle(fontSize: 12),
+              style: TextButton.styleFrom(
+                foregroundColor: isDark
+                    ? AppColorScheme.darkPrimary
+                    : AppColorScheme.lightPrimary,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+              ),
+              child: const Text('Verify'),
+            ),
+          if (isVerified)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColorScheme.success.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.verified,
+                    size: 16,
+                    color: AppColorScheme.success,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Verified',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColorScheme.success,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ),
         ],

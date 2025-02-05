@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:smartkyc/core/theme/app_color_scheme.dart';
+import 'package:smartkyc/domain/usecases/get_user.dart';
 import 'package:smartkyc/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartkyc/features/auth/presentation/pages/singin_page.dart';
@@ -35,17 +37,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
   @override
   void initState() {
     super.initState();
-    // Load user profile when page initializes
     context.read<UserProfileBloc>().add(LoadUserProfile());
   }
-
-  // void _toggleLanguage(BuildContext context) {
-  //   final currentLocale = Localizations.localeOf(context);
-  //   final newLocale = currentLocale.languageCode == 'en'
-  //       ? const Locale('ne')
-  //       : const Locale('en');
-  //   context.read<LanguageBloc>().add(ChangeLanguage(newLocale));
-  // }
 
   Future<void> _refreshProfile() async {
     context.read<UserProfileBloc>().add(LoadUserProfile());
@@ -53,21 +46,52 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   void _showLogoutDialog(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.logoutConfirmation),
-        content: Text(l10n.logoutConfirmationDesc),
+        backgroundColor: AppColorScheme.getCardBackground(isDark),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: AppColorScheme.getCardBorder(isDark),
+          ),
+        ),
+        title: Text(
+          l10n.logoutConfirmation,
+          style: TextStyle(
+            color: isDark ? AppColorScheme.darkText : AppColorScheme.lightText,
+          ),
+        ),
+        content: Text(
+          l10n.logoutConfirmationDesc,
+          style: TextStyle(
+            color: isDark
+                ? AppColorScheme.darkTextSecondary
+                : AppColorScheme.lightTextSecondary,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
+            child: Text(
+              l10n.cancel,
+              style: TextStyle(
+                color: isDark
+                    ? AppColorScheme.darkSecondary
+                    : AppColorScheme.lightSecondary,
+              ),
+            ),
           ),
           FilledButton(
             onPressed: () {
               context.read<UserProfileBloc>().add(LogoutUser());
             },
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColorScheme.lightError,
+              foregroundColor: Colors.white,
+            ),
             child: Text(l10n.logout),
           ),
         ],
@@ -86,7 +110,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
         ),
         child: PhoneVerificationModal(
           onVerificationComplete: (phoneNumber) {
-            // Handle phone verification completion
             if (mounted) {
               final currentState = context.read<UserProfileBloc>().state;
               if (currentState is UserProfileLoaded) {
@@ -94,7 +117,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   phoneNumber: phoneNumber,
                 );
                 context.read<UserProfileBloc>().add(
-                      UpdateUserProfile(updatedUser), // Updated event name
+                      UpdateUserProfile(updatedUser),
                     );
               }
               Navigator.pop(context);
@@ -108,6 +131,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final gradientColors = AppColorScheme.getGradientColors(isDark);
 
     return BlocListener<UserProfileBloc, UserProfileState>(
       listener: (context, state) {
@@ -117,7 +142,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
-              backgroundColor: Colors.red,
+              backgroundColor: AppColorScheme.lightError,
             ),
           );
         }
@@ -127,59 +152,57 @@ class _UserProfilePageState extends State<UserProfilePage> {
           return state is UserAccountDeleting
               ? DeleteAccountOverlay()
               : Scaffold(
-                  backgroundColor: Colors.grey[100],
-                  appBar: AppBar(
-                    title: Text(
-                      l10n.profile,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    actions: [
-                      IconButton(
-                        icon: const Icon(Icons.logout),
-                        onPressed: () => _showLogoutDialog(context),
-                        tooltip: 'Logout',
+                  body: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          gradientColors[0],
+                          gradientColors[0],
+                          gradientColors[1],
+                          gradientColors[1],
+                        ],
+                        stops: const [0.0, 0.3, 0.3, 1.0],
                       ),
-                    ],
-                  ),
-                  body: RefreshIndicator(
-                    key: _refreshKey,
-                    onRefresh: _refreshProfile,
-                    child: state is UserProfileLoading ||
-                            state is UserLoggingOut
-                        ? const Center(child: CircularProgressIndicator())
-                        : state is UserProfileError
-                            ? _buildErrorState(context, state)
-                            : state is UserProfileLoaded
-                                ? SingleChildScrollView(
-                                    physics:
-                                        const AlwaysScrollableScrollPhysics(),
-                                    child: Column(
-                                      children: [
-                                        _buildHeader(context, state),
-                                        Padding(
-                                          padding: const EdgeInsets.all(16),
-                                          child: Column(
-                                            children: [
-                                              _buildQuickActions(
-                                                  context, state),
-                                              const SizedBox(height: 24),
-                                              _buildContactInfo(context, state),
-                                              const SizedBox(height: 16),
-                                              _buildPersonalInfo(
-                                                  context, state),
-                                              const SizedBox(height: 16),
-                                              _buildVerificationStatus(
-                                                  context, state),
-                                              const SizedBox(height: 32),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                : const Center(
-                                    child: Text('Failed to load profile'),
-                                  ),
+                    ),
+                    child: SafeArea(
+                      child: Column(
+                        children: [
+                          _buildAppBar(context, isDark),
+                          Expanded(
+                            child: RefreshIndicator(
+                              key: _refreshKey,
+                              onRefresh: _refreshProfile,
+                              child: state is UserProfileLoading ||
+                                      state is UserLoggingOut
+                                  ? Center(
+                                      child: CircularProgressIndicator(
+                                        color: isDark
+                                            ? AppColorScheme.darkText
+                                            : Colors.white,
+                                      ),
+                                    )
+                                  : state is UserProfileError
+                                      ? _buildErrorState(context, state, isDark)
+                                      : state is UserProfileLoaded
+                                          ? _buildContent(
+                                              context, state, isDark)
+                                          : Center(
+                                              child: Text(
+                                                'Failed to load profile',
+                                                style: TextStyle(
+                                                  color: isDark
+                                                      ? AppColorScheme.darkText
+                                                      : Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 );
         },
@@ -187,56 +210,271 @@ class _UserProfilePageState extends State<UserProfilePage> {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context, UserProfileLoaded state) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        QuickActionButton(
-          icon: Icons.edit_note,
-          label: 'Edit',
-          onTap: () => _showEditContactModal(context, state),
+  Widget _buildAppBar(BuildContext context, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            AppLocalizations.of(context).profile,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: isDark ? AppColorScheme.darkText : Colors.white,
+            ),
+          ),
+          _buildLogoutButton(context, isDark),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLogoutButton(BuildContext context, bool isDark) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _showLogoutDialog(context),
+        borderRadius: BorderRadius.circular(30),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 10,
+          ),
+          decoration: BoxDecoration(
+            color: isDark
+                ? AppColorScheme.darkSurface.withOpacity(0.3)
+                : Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(
+              color: isDark
+                  ? AppColorScheme.darkCardBorder.withOpacity(0.2)
+                  : Colors.white.withOpacity(0.3),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.logout_rounded,
+                size: 20,
+                color: isDark ? AppColorScheme.darkText : Colors.white,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Logout',
+                style: TextStyle(
+                  color: isDark ? AppColorScheme.darkText : Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
         ),
-        QuickActionButton(
-          icon: Icons.settings_outlined,
-          label: 'Settings',
-          onTap: () {
-            showModalBottomSheet(
-              context: context,
-              builder: (context) => const SettingsBottomSheet(),
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-            );
-          },
+      ),
+    ).animate().fadeIn(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+  }
+
+  Widget _buildContent(
+      BuildContext context, UserProfileLoaded state, bool isDark) {
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: Column(
+        children: [
+          _buildHeader(context, state, isDark),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                _buildQuickActions(context, state, isDark),
+                const SizedBox(height: 24),
+                _buildContactInfo(context, state, isDark),
+                const SizedBox(height: 16),
+                _buildPersonalInfo(context, state, isDark),
+                const SizedBox(height: 16),
+                _buildVerificationStatus(context, state, isDark),
+                const SizedBox(height: 32),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(
+      BuildContext context, UserProfileLoaded state, bool isDark) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColorScheme.getCardBackground(isDark),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColorScheme.getCardBorder(isDark),
+          width: 1,
         ),
-        QuickActionButton(
-          icon: Icons.security_outlined,
-          label: 'Security',
-          onTap: () {
-            showModalBottomSheet(
-              context: context,
-              builder: (context) => const SecurityBottomSheet(),
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-            );
-          },
-        ),
-        QuickActionButton(
-          icon: Icons.info_outline,
-          label: 'About',
-          onTap: () {
-            showModalBottomSheet(
-              context: context,
-              builder: (context) => const AboutBottomSheet(),
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-            );
-          },
-        ),
-      ],
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withOpacity(0.2)
+                : Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 40,
+            backgroundColor: isDark
+                ? AppColorScheme.darkPrimary
+                : AppColorScheme.lightPrimary,
+            child: Text(
+              state.user.initials,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  state.user.fullName,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: isDark
+                        ? AppColorScheme.darkText
+                        : AppColorScheme.lightText,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                StreamBuilder<User?>(
+                  stream: FirebaseAuth.instance.authStateChanges(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: isDark
+                              ? AppColorScheme.darkSecondary
+                              : AppColorScheme.lightSecondary,
+                        ),
+                      );
+                    }
+
+                    if (!snapshot.hasData || snapshot.data == null) {
+                      return Text(
+                        "No user signed in",
+                        style: TextStyle(
+                          color: isDark
+                              ? AppColorScheme.darkTextSecondary
+                              : AppColorScheme.lightTextSecondary,
+                          fontSize: 14,
+                        ),
+                      );
+                    }
+
+                    return Text(
+                      "${snapshot.data!.email}",
+                      style: TextStyle(
+                        color: isDark
+                            ? AppColorScheme.darkTextSecondary
+                            : AppColorScheme.lightTextSecondary,
+                        fontSize: 12,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     ).animate().fadeIn().slideY();
   }
 
-// Add this new method
+  Widget _buildQuickActions(
+      BuildContext context, UserProfileLoaded state, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColorScheme.getCardBackground(isDark),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColorScheme.getCardBorder(isDark),
+        ),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal, // 🔹 Enables horizontal scrolling
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            QuickActionButton(
+              icon: Icons.edit_note,
+              label: 'Edit',
+              onTap: () => _showEditContactModal(context, state),
+              isDark: isDark,
+            ),
+            QuickActionButton(
+              icon: Icons.settings_outlined,
+              label: 'Settings',
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  builder: (context) => const SettingsBottomSheet(),
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                );
+              },
+              isDark: isDark,
+            ),
+            QuickActionButton(
+              icon: Icons.security_outlined,
+              label: 'Security',
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  builder: (context) => const SecurityBottomSheet(),
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                );
+              },
+              isDark: isDark,
+            ),
+            QuickActionButton(
+              icon: Icons.info_outline,
+              label: 'About',
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  builder: (context) => const AboutBottomSheet(),
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                );
+              },
+              isDark: isDark,
+            ),
+            // 🔹 Add more actions here if needed
+          ],
+        ),
+      ),
+    ).animate().fadeIn().slideY();
+  }
+
   void _showEditContactModal(BuildContext context, UserProfileLoaded state) {
     showModalBottomSheet(
       context: context,
@@ -245,12 +483,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
       builder: (context) => EditContactBottomSheet(
         user: state.user,
         onEmailUpdated: (newEmail) {
-          // TODO
-          // context.read<UserProfileBloc>().add(
-          //       UpdateUserProfile(
-          //         state.user.copyWith(email: newEmail),
-          //       ),
-          //     );
+          context.read<UserProfileBloc>().add(LoadUserProfile());
         },
         onPhoneUpdated: (newPhone) {
           context.read<UserProfileBloc>().add(
@@ -263,39 +496,47 @@ class _UserProfilePageState extends State<UserProfilePage> {
     );
   }
 
-  Widget _buildPersonalInfo(BuildContext context, UserProfileLoaded state) {
+  Widget _buildPersonalInfo(
+      BuildContext context, UserProfileLoaded state, bool isDark) {
     return ProfileSection(
       title: 'Personal Information',
       icon: Icons.person_outline,
+      isDark: isDark,
       items: [
         ProfileItem(
           icon: Icons.badge_outlined,
           label: 'License Number',
           value: state.user.licenseNumber,
+          isDark: isDark,
         ),
         ProfileItem(
           icon: Icons.assignment_ind_outlined,
           label: 'Citizenship Number',
           value: state.user.citizenshipNumber,
+          isDark: isDark,
         ),
         ProfileItem(
           icon: Icons.calendar_today_outlined,
           label: 'Date of Birth',
           value: state.user.dob.toString().split(' ')[0],
+          isDark: isDark,
         ),
         ProfileItem(
           icon: Icons.family_restroom_outlined,
           label: "Father's Name",
           value: state.user.fatherName,
+          isDark: isDark,
         ),
       ],
     );
   }
 
-  Widget _buildContactInfo(BuildContext context, UserProfileLoaded state) {
+  Widget _buildContactInfo(
+      BuildContext context, UserProfileLoaded state, bool isDark) {
     return ProfileSection(
       title: 'Contact Information',
       icon: Icons.contact_phone_outlined,
+      isDark: isDark,
       items: [
         ProfileItem(
           icon: Icons.phone_outlined,
@@ -307,22 +548,25 @@ class _UserProfilePageState extends State<UserProfilePage> {
           onVerify: state.user.phoneNumber.isEmpty
               ? () => _showPhoneVerificationModal(context)
               : null,
+          isDark: isDark,
         ),
         ProfileItem(
           icon: Icons.location_on_outlined,
           label: 'Address',
           value:
               state.user.address.isEmpty ? 'Not provided' : state.user.address,
+          isDark: isDark,
         ),
       ],
     );
   }
 
   Widget _buildVerificationStatus(
-      BuildContext context, UserProfileLoaded state) {
+      BuildContext context, UserProfileLoaded state, bool isDark) {
     return ProfileSection(
       title: 'Verification Status',
       icon: Icons.verified_user_outlined,
+      isDark: isDark,
       items: [
         _buildVerificationItem(
           context,
@@ -330,6 +574,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
           label: 'Document Verification',
           isVerified: state.user.isDocumentVerified,
           verificationScreenPath: UploadDocumentPage.pageName,
+          isDark: isDark,
         ),
         _buildVerificationItem(
           context,
@@ -337,6 +582,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
           label: 'Selfie Verification',
           isVerified: state.user.isSelfieVerified,
           verificationScreenPath: SelfieStartPage.pageName,
+          isDark: isDark,
         ),
         _buildVerificationItem(
           context,
@@ -344,6 +590,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
           label: 'Liveness Check',
           isVerified: state.user.isLivenessVerified,
           verificationScreenPath: LivenessDetectionStartPage.pageName,
+          isDark: isDark,
         ),
       ],
     );
@@ -355,6 +602,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     required String label,
     required bool isVerified,
     required String verificationScreenPath,
+    required bool isDark,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -363,13 +611,17 @@ class _UserProfilePageState extends State<UserProfilePage> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              color: isDark
+                  ? AppColorScheme.darkPrimary.withOpacity(0.1)
+                  : AppColorScheme.lightPrimary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               icon,
               size: 20,
-              color: Theme.of(context).colorScheme.primary,
+              color: isDark
+                  ? AppColorScheme.darkPrimary
+                  : AppColorScheme.lightPrimary,
             ),
           ),
           const SizedBox(width: 12),
@@ -380,16 +632,21 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 Text(
                   label,
                   style: TextStyle(
-                    color: Colors.grey[600],
+                    color: isDark
+                        ? AppColorScheme.darkTextSecondary
+                        : AppColorScheme.lightTextSecondary,
                     fontSize: 12,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   isVerified ? 'Verified' : 'Not Verified',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: isDark
+                        ? AppColorScheme.darkText
+                        : AppColorScheme.lightText,
+                  ),
                 ),
               ],
             ),
@@ -398,7 +655,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: AppColorScheme.success.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Row(
@@ -407,14 +664,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   Icon(
                     Icons.verified,
                     size: 16,
-                    color: Colors.green[700],
+                    color: AppColorScheme.success,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     'Verified',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.green[700],
+                      color: AppColorScheme.success,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -432,7 +689,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
               icon: const Icon(Icons.verified_user_outlined, size: 16),
               label: const Text('Verify Now'),
               style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
+                backgroundColor: isDark
+                    ? AppColorScheme.darkPrimary
+                    : AppColorScheme.lightPrimary,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 textStyle: const TextStyle(fontSize: 12),
@@ -443,79 +702,37 @@ class _UserProfilePageState extends State<UserProfilePage> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, UserProfileLoaded state) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 40,
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            child: Text(
-              state.user.initials,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  state.user.fullName,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  FirebaseAuth.instance.currentUser!.email!,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn().slideY();
-  }
-
-  Widget _buildErrorState(BuildContext context, UserProfileError state) {
+  Widget _buildErrorState(
+      BuildContext context, UserProfileError state, bool isDark) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
+          Icon(
             Icons.error_outline,
             size: 48,
-            color: Colors.red,
+            color: AppColorScheme.lightError,
           ),
           const SizedBox(height: 16),
-          Text(state.message),
+          Text(
+            state.message,
+            style: TextStyle(
+              color:
+                  isDark ? AppColorScheme.darkText : AppColorScheme.lightText,
+            ),
+          ),
           const SizedBox(height: 16),
-          ElevatedButton(
+          FilledButton.icon(
             onPressed: () {
               context.read<UserProfileBloc>().add(LoadUserProfile());
             },
-            child: const Text('Retry'),
+            icon: const Icon(Icons.refresh),
+            label: const Text('Retry'),
+            style: FilledButton.styleFrom(
+              backgroundColor: isDark
+                  ? AppColorScheme.darkPrimary
+                  : AppColorScheme.lightPrimary,
+            ),
           ),
         ],
       ),

@@ -37,3 +37,5 @@ class UserProfileError extends UserProfileState {
   @override
   List<Object?> get props => [message];
 }
+
+

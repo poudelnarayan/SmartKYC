@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
+import 'package:smartkyc/core/theme/app_color_scheme.dart';
 import '../../../language/presentation/bloc/language_bloc.dart';
 import '../../../theme/presentation/bloc/theme_bloc.dart';
 import '../../../theme/presentation/bloc/theme_event.dart';
@@ -11,11 +11,13 @@ class SettingsBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: AppColorScheme.getCardBackground(isDark),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -25,32 +27,48 @@ class SettingsBottomSheet extends StatelessWidget {
             height: 4,
             margin: const EdgeInsets.only(bottom: 24),
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: isDark
+                  ? AppColorScheme.darkCardBorder
+                  : AppColorScheme.lightCardBorder,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const CircleAvatar(
+          CircleAvatar(
             radius: 40,
-            backgroundColor: Colors.blue,
-            child: Icon(Icons.settings_outlined, size: 40, color: Colors.white),
+            backgroundColor: isDark
+                ? AppColorScheme.darkPrimary
+                : AppColorScheme.lightPrimary,
+            child: Icon(
+              Icons.settings_outlined,
+              size: 40,
+              color: AppColorScheme.getCardBackground(isDark),
+            ),
           ),
           const SizedBox(height: 24),
           Text(
             'Settings',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: isDark
+                      ? AppColorScheme.darkText
+                      : AppColorScheme.lightText,
                 ),
           ),
           const SizedBox(height: 32),
-          _buildThemeSection(context),
-          const Divider(height: 32),
-          _buildLanguageSection(context),
+          _buildThemeSection(context, isDark),
+          Divider(
+            height: 32,
+            color: isDark
+                ? AppColorScheme.darkCardBorder
+                : AppColorScheme.lightCardBorder,
+          ),
+          _buildLanguageSection(context, isDark),
         ],
       ),
     );
   }
 
-  Widget _buildThemeSection(BuildContext context) {
+  Widget _buildThemeSection(BuildContext context, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -58,14 +76,15 @@ class SettingsBottomSheet extends StatelessWidget {
           context,
           icon: Icons.palette_outlined,
           title: 'Theme',
+          isDark: isDark,
         ),
         const SizedBox(height: 16),
-        _buildThemeOptions(context),
+        _buildThemeOptions(context, isDark),
       ],
     );
   }
 
-  Widget _buildLanguageSection(BuildContext context) {
+  Widget _buildLanguageSection(BuildContext context, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -73,9 +92,10 @@ class SettingsBottomSheet extends StatelessWidget {
           context,
           icon: Icons.language_outlined,
           title: 'Language',
+          isDark: isDark,
         ),
         const SizedBox(height: 16),
-        _buildLanguageOptions(context),
+        _buildLanguageOptions(context, isDark),
       ],
     );
   }
@@ -84,38 +104,47 @@ class SettingsBottomSheet extends StatelessWidget {
     BuildContext context, {
     required IconData icon,
     required String title,
+    required bool isDark,
   }) {
     return Row(
       children: [
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            color: isDark
+                ? AppColorScheme.darkPrimary.withOpacity(0.1)
+                : AppColorScheme.lightPrimary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
             icon,
-            color: Theme.of(context).colorScheme.primary,
+            color: isDark
+                ? AppColorScheme.darkPrimary
+                : AppColorScheme.lightPrimary,
           ),
         ),
         const SizedBox(width: 12),
         Text(
           title,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: isDark ? AppColorScheme.darkText : AppColorScheme.lightText,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildThemeOptions(BuildContext context) {
+  Widget _buildThemeOptions(BuildContext context, bool isDark) {
     return BlocBuilder<ThemeBloc, ThemeState>(
       builder: (context, state) {
         return Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: Colors.grey[100],
+            color: isDark
+                ? AppColorScheme.darkBackground
+                : AppColorScheme.lightBackground,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -129,7 +158,11 @@ class SettingsBottomSheet extends StatelessWidget {
                   onTap: () {
                     context.read<ThemeBloc>().add(ChangeTheme(ThemeMode.light));
                   },
+                  isDark: isDark,
                 ),
+              ),
+              SizedBox(
+                width: 10,
               ),
               Expanded(
                 child: _buildThemeOption(
@@ -140,7 +173,11 @@ class SettingsBottomSheet extends StatelessWidget {
                   onTap: () {
                     context.read<ThemeBloc>().add(ChangeTheme(ThemeMode.dark));
                   },
+                  isDark: isDark,
                 ),
+              ),
+              SizedBox(
+                width: 10,
               ),
               Expanded(
                 child: _buildThemeOption(
@@ -153,6 +190,7 @@ class SettingsBottomSheet extends StatelessWidget {
                         .read<ThemeBloc>()
                         .add(ChangeTheme(ThemeMode.system));
                   },
+                  isDark: isDark,
                 ),
               ),
             ],
@@ -162,7 +200,7 @@ class SettingsBottomSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildLanguageOptions(BuildContext context) {
+  Widget _buildLanguageOptions(BuildContext context, bool isDark) {
     return BlocBuilder<LanguageBloc, LanguageState>(
       builder: (context, state) {
         final currentLocale = state.currentLocale.languageCode;
@@ -170,7 +208,9 @@ class SettingsBottomSheet extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: Colors.grey[100],
+            color: isDark
+                ? AppColorScheme.darkBackground
+                : AppColorScheme.lightBackground,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -181,6 +221,7 @@ class SettingsBottomSheet extends StatelessWidget {
                   label: 'English',
                   locale: const Locale('en'),
                   isSelected: currentLocale == 'en',
+                  isDark: isDark,
                 ),
               ),
               Expanded(
@@ -189,6 +230,7 @@ class SettingsBottomSheet extends StatelessWidget {
                   label: 'नेपाली',
                   locale: const Locale('ne'),
                   isSelected: currentLocale == 'ne',
+                  isDark: isDark,
                 ),
               ),
             ],
@@ -204,51 +246,64 @@ class SettingsBottomSheet extends StatelessWidget {
     required String label,
     required bool isSelected,
     required VoidCallback onTap,
+    required bool isDark,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 8,
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? isDark
+                  ? AppColorScheme.darkPrimary.withOpacity(0.1)
+                  : AppColorScheme.lightPrimary.withOpacity(0.1)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? isDark
+                    ? AppColorScheme.darkPrimary
+                    : AppColorScheme.lightPrimary
+                : isDark
+                    ? AppColorScheme.darkCardBorder
+                    : AppColorScheme.lightCardBorder,
+            width: 2,
           ),
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Column(
-            children: [
-              Icon(
-                icon,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: isSelected
+                  ? isDark
+                      ? AppColorScheme.darkPrimary
+                      : AppColorScheme.lightPrimary
+                  : isDark
+                      ? AppColorScheme.darkTextSecondary
+                      : AppColorScheme.lightTextSecondary,
+              size: 24,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 color: isSelected
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.grey,
+                    ? isDark
+                        ? AppColorScheme.darkPrimary
+                        : AppColorScheme.lightPrimary
+                    : isDark
+                        ? AppColorScheme.darkTextSecondary
+                        : AppColorScheme.lightTextSecondary,
               ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected
-                      ? Theme.of(context).colorScheme.primary
-                      : Colors.grey,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -259,6 +314,7 @@ class SettingsBottomSheet extends StatelessWidget {
     required String label,
     required Locale locale,
     required bool isSelected,
+    required bool isDark,
   }) {
     return Material(
       color: Colors.transparent,
@@ -273,12 +329,16 @@ class SettingsBottomSheet extends StatelessWidget {
             vertical: 12,
           ),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
+            color: isSelected
+                ? AppColorScheme.getCardBackground(isDark)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: isDark
+                          ? Colors.black.withOpacity(0.2)
+                          : Colors.black.withOpacity(0.1),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -292,8 +352,12 @@ class SettingsBottomSheet extends StatelessWidget {
               fontSize: 14,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               color: isSelected
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.grey,
+                  ? isDark
+                      ? AppColorScheme.darkPrimary
+                      : AppColorScheme.lightPrimary
+                  : isDark
+                      ? AppColorScheme.darkTextSecondary
+                      : AppColorScheme.lightTextSecondary,
             ),
           ),
         ),

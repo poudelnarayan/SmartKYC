@@ -55,6 +55,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         await UpdateUser().call(
           User(
             uid: userCredential.user!.uid,
+            email: userCredential.user!.email!,
             licenseNumber: "N/A",
             firstName: "User",
             lastName: "Profile",
@@ -82,7 +83,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     try {
       emit(AuthLoading());
-      await signUp(event.email, event.password);
+      final user = await signUp(event.email, event.password);
       emit(SignUpSuccess(event.email));
     } catch (e) {
       emit(AuthError(e.toString()));

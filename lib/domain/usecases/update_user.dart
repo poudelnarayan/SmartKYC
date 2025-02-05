@@ -54,6 +54,22 @@ class UpdateUser {
     }
   }
 
+   Future<void> updateEmail(
+    String userId,
+    String field,
+    dynamic value,
+  ) async {
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        field: value,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print('Error updating document verification: $e');
+      throw Exception('Failed to update document verification: $e');
+    }
+  }
+
   Future<void> verifySelfie(
     String userId,
     String field,

@@ -456,6 +456,7 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
                 licenseNumber: _formData['licenseNumber'],
                 citizenshipNumber: _formData['citizenshipNumber'],
                 dob: _formData['dob'],
+                email: auth.FirebaseAuth.instance.currentUser!.email!,
                 fatherName: _formData['fatherName'],
                 firstName: _formData['firstName'],
                 lastName: _formData['lastName'],

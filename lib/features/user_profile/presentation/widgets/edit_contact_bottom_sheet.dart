@@ -1,8 +1,14 @@
+import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:smartkyc/domain/usecases/get_user.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:smartkyc/core/theme/app_color_scheme.dart';
+import 'package:smartkyc/features/user_profile/presentation/widgets/phone_verification_model.dart';
 import '../../../../domain/entities/user.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../bloc/user_profile_bloc.dart';
+import '../bloc/user_profile_event.dart';
+import '../bloc/user_profile_state.dart';
 import 'contact_verification_modal.dart';
 import 'password_change_modal.dart';
 
@@ -28,10 +34,48 @@ class EditContactBottomSheet extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => ContactVerificationModal(
-        type: type,
-        currentValue: currentValue,
-        onVerified: onVerified,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: ContactVerificationModal(
+          type: type,
+          currentValue: currentValue,
+          onVerified: onVerified,
+        ),
+      ),
+    );
+  }
+
+  void _showPhoneNumberChangeModal(
+    BuildContext context,
+    String previousNumber,
+  ) {
+    final numberWithoutCountryCode = previousNumber.substring(4);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: PhoneVerificationModal(
+          previousNumber: numberWithoutCountryCode,
+          isEditing: true,
+          onVerificationComplete: (phoneNumber) {
+            final currentState = context.read<UserProfileBloc>().state;
+            if (currentState is UserProfileLoaded) {
+              final updatedUser = currentState.user.copyWith(
+                phoneNumber: phoneNumber,
+              );
+              context.read<UserProfileBloc>().add(
+                    UpdateUserProfile(updatedUser),
+                  );
+            }
+            Navigator.pop(context);
+          },
+        ),
       ),
     );
   }
@@ -41,7 +85,12 @@ class EditContactBottomSheet extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const PasswordChangeModal(),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: const PasswordChangeModal(),
+      ),
     );
   }
 
@@ -49,59 +98,66 @@ class EditContactBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final getUser = GetUser();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: AppColorScheme.getCardBackground(isDark),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Handle
           Container(
             width: 40,
             height: 4,
             margin: const EdgeInsets.only(bottom: 24),
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: isDark
+                  ? AppColorScheme.darkCardBorder
+                  : AppColorScheme.lightCardBorder,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-
-          // Title
           Text(
             l10n.editProfile,
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
+              color:
+                  isDark ? AppColorScheme.darkText : AppColorScheme.lightText,
             ),
           ),
           const SizedBox(height: 24),
-
-          // Email Option
           _buildContactOption(
             context,
             icon: Icons.email_outlined,
             title: 'Email',
-            value: getUser.userEmail!,
+            value: auth.FirebaseAuth.instance.currentUser!.email!,
             onEdit: () {
               Navigator.pop(context);
               _showVerificationModal(
                 context,
                 type: 'email',
-                currentValue: getUser.userEmail!,
+                currentValue: auth.FirebaseAuth.instance.currentUser!.email!,
                 onVerified: onEmailUpdated,
               );
             },
+            isDark: isDark,
           ),
-
-          const Divider(height: 32),
-          _buildPasswordSection(context),
-          const Divider(height: 32),
-
-          // Phone Option
+          Divider(
+            height: 32,
+            color: isDark
+                ? AppColorScheme.darkCardBorder
+                : AppColorScheme.lightCardBorder,
+          ),
+          _buildPasswordSection(context, isDark),
+          Divider(
+            height: 32,
+            color: isDark
+                ? AppColorScheme.darkCardBorder
+                : AppColorScheme.lightCardBorder,
+          ),
           _buildContactOption(
             context,
             icon: Icons.phone_outlined,
@@ -109,28 +165,28 @@ class EditContactBottomSheet extends StatelessWidget {
             value: user.phoneNumber.isEmpty ? 'Not provided' : user.phoneNumber,
             onEdit: () {
               Navigator.pop(context);
-              _showVerificationModal(
-                context,
-                type: 'phone',
-                currentValue: user.phoneNumber,
-                onVerified: onPhoneUpdated,
-              );
+              _showPhoneNumberChangeModal(context, user.phoneNumber);
             },
+            isDark: isDark,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPasswordSection(BuildContext context) {
-    final theme = Theme.of(context);
-
+  Widget _buildPasswordSection(BuildContext context, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: isDark
+            ? AppColorScheme.darkBackground
+            : AppColorScheme.lightBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(
+          color: isDark
+              ? AppColorScheme.darkCardBorder
+              : AppColorScheme.lightCardBorder,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,13 +195,18 @@ class EditContactBottomSheet extends StatelessWidget {
             children: [
               Icon(
                 Icons.lock_outline,
-                color: theme.colorScheme.primary,
+                color: isDark
+                    ? AppColorScheme.darkPrimary
+                    : AppColorScheme.lightPrimary,
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Password',
                 style: TextStyle(
                   fontWeight: FontWeight.w500,
+                  color: isDark
+                      ? AppColorScheme.darkText
+                      : AppColorScheme.lightText,
                 ),
               ),
             ],
@@ -160,9 +221,15 @@ class EditContactBottomSheet extends StatelessWidget {
                 vertical: 8,
               ),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDark
+                    ? AppColorScheme.darkSurface
+                    : AppColorScheme.lightSurface,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[300]!),
+                border: Border.all(
+                  color: isDark
+                      ? AppColorScheme.darkCardBorder
+                      : AppColorScheme.lightCardBorder,
+                ),
               ),
               child: Row(
                 children: [
@@ -172,14 +239,18 @@ class EditContactBottomSheet extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 20,
                         letterSpacing: 2,
-                        color: Colors.grey[600],
+                        color: isDark
+                            ? AppColorScheme.darkTextSecondary
+                            : AppColorScheme.lightTextSecondary,
                       ),
                     ),
                   ),
                   Icon(
                     Icons.edit_outlined,
                     size: 20,
-                    color: theme.colorScheme.primary,
+                    color: isDark
+                        ? AppColorScheme.darkPrimary
+                        : AppColorScheme.lightPrimary,
                   ),
                 ],
               ),
@@ -197,6 +268,7 @@ Widget _buildContactOption(
   required String title,
   required String value,
   required VoidCallback onEdit,
+  required bool isDark,
 }) {
   return Material(
     color: Colors.transparent,
@@ -213,12 +285,16 @@ Widget _buildContactOption(
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                color: isDark
+                    ? AppColorScheme.darkPrimary.withOpacity(0.1)
+                    : AppColorScheme.lightPrimary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 icon,
-                color: Theme.of(context).colorScheme.primary,
+                color: isDark
+                    ? AppColorScheme.darkPrimary
+                    : AppColorScheme.lightPrimary,
               ),
             ),
             const SizedBox(width: 16),
@@ -228,16 +304,21 @@ Widget _buildContactOption(
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w500,
                       fontSize: 16,
+                      color: isDark
+                          ? AppColorScheme.darkText
+                          : AppColorScheme.lightText,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     value,
                     style: TextStyle(
-                      color: Colors.grey[600],
+                      color: isDark
+                          ? AppColorScheme.darkTextSecondary
+                          : AppColorScheme.lightTextSecondary,
                       fontSize: 14,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -245,16 +326,16 @@ Widget _buildContactOption(
                 ],
               ),
             ),
-            const SizedBox(
-              width: 15,
-            ),
+            const SizedBox(width: 15),
             Container(
               padding: const EdgeInsets.symmetric(
                 horizontal: 12,
                 vertical: 6,
               ),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                color: isDark
+                    ? AppColorScheme.darkPrimary.withOpacity(0.1)
+                    : AppColorScheme.lightPrimary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Row(
@@ -263,14 +344,18 @@ Widget _buildContactOption(
                   Icon(
                     Icons.edit_outlined,
                     size: 16,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: isDark
+                        ? AppColorScheme.darkPrimary
+                        : AppColorScheme.lightPrimary,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     'Edit',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: isDark
+                          ? AppColorScheme.darkPrimary
+                          : AppColorScheme.lightPrimary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),

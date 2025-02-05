@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:smartkyc/core/theme/app_color_scheme.dart';
 
 class PasswordChangeModal extends StatefulWidget {
   const PasswordChangeModal({super.key});
@@ -30,12 +31,18 @@ class _PasswordChangeModalState extends State<PasswordChangeModal> {
   }
 
   void _showSuccessDialog() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
+        backgroundColor: AppColorScheme.getCardBackground(isDark),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
+          side: BorderSide(
+            color: AppColorScheme.getCardBorder(isDark),
+          ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -43,21 +50,23 @@ class _PasswordChangeModalState extends State<PasswordChangeModal> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: AppColorScheme.success.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.check_circle_outline,
-                color: Colors.green,
+                color: AppColorScheme.success,
                 size: 48,
               ),
             ).animate().scale(),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'Password Changed!',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
+                color:
+                    isDark ? AppColorScheme.darkText : AppColorScheme.lightText,
               ),
               textAlign: TextAlign.center,
             ).animate().fadeIn().slideY(),
@@ -65,7 +74,9 @@ class _PasswordChangeModalState extends State<PasswordChangeModal> {
             Text(
               'Your password has been updated successfully. Please use your new password the next time you sign in.',
               style: TextStyle(
-                color: Colors.grey[600],
+                color: isDark
+                    ? AppColorScheme.darkTextSecondary
+                    : AppColorScheme.lightTextSecondary,
                 fontSize: 14,
                 height: 1.5,
               ),
@@ -80,6 +91,11 @@ class _PasswordChangeModalState extends State<PasswordChangeModal> {
                   Navigator.pop(context); // Close modal
                 },
                 style: FilledButton.styleFrom(
+                  backgroundColor: isDark
+                      ? AppColorScheme.darkPrimary
+                      : AppColorScheme.lightPrimary,
+                  foregroundColor:
+                      isDark ? AppColorScheme.darkSurface : Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -124,8 +140,7 @@ class _PasswordChangeModalState extends State<PasswordChangeModal> {
 
       if (mounted) {
         context.pop();
-
-        _showSuccessDialog(); // Show success dialog instead of snackbar
+        _showSuccessDialog();
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
@@ -152,14 +167,15 @@ class _PasswordChangeModalState extends State<PasswordChangeModal> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
+        bottom: 20,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: AppColorScheme.getCardBackground(isDark),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SafeArea(
         child: Padding(
@@ -170,31 +186,34 @@ class _PasswordChangeModalState extends State<PasswordChangeModal> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Handle
                 Center(
                   child: Container(
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey[300],
+                      color: isDark
+                          ? AppColorScheme.darkCardBorder
+                          : AppColorScheme.lightCardBorder,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // Title and Icon
                 Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withOpacity(0.1),
+                        color: isDark
+                            ? AppColorScheme.darkPrimary.withOpacity(0.1)
+                            : AppColorScheme.lightPrimary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
                         Icons.lock_outline,
-                        color: theme.colorScheme.primary,
+                        color: isDark
+                            ? AppColorScheme.darkPrimary
+                            : AppColorScheme.lightPrimary,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -206,12 +225,17 @@ class _PasswordChangeModalState extends State<PasswordChangeModal> {
                             'Change Password',
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
+                              color: isDark
+                                  ? AppColorScheme.darkText
+                                  : AppColorScheme.lightText,
                             ),
                           ),
                           Text(
                             'Enter your current password to continue',
                             style: TextStyle(
-                              color: Colors.grey[600],
+                              color: isDark
+                                  ? AppColorScheme.darkTextSecondary
+                                  : AppColorScheme.lightTextSecondary,
                               fontSize: 14,
                             ),
                           ),
@@ -221,28 +245,32 @@ class _PasswordChangeModalState extends State<PasswordChangeModal> {
                   ],
                 ).animate().fadeIn().slideX(),
                 const SizedBox(height: 32),
-
-                // Current Password
                 TextFormField(
                   controller: _currentPasswordController,
                   obscureText: !_showCurrentPassword,
-                  decoration: InputDecoration(
+                  style: TextStyle(
+                    color: isDark
+                        ? AppColorScheme.darkText
+                        : AppColorScheme.lightText,
+                  ),
+                  decoration: _getInputDecoration(
+                    isDark: isDark,
                     labelText: 'Current Password',
-                    prefixIcon: const Icon(Icons.lock_outline),
+                    prefixIcon: Icons.lock_outline,
                     suffixIcon: IconButton(
                       icon: Icon(
                         _showCurrentPassword
                             ? Icons.visibility_outlined
                             : Icons.visibility_off_outlined,
+                        color: isDark
+                            ? AppColorScheme.darkTextSecondary
+                            : AppColorScheme.lightTextSecondary,
                       ),
                       onPressed: () {
                         setState(() {
                           _showCurrentPassword = !_showCurrentPassword;
                         });
                       },
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
                   validator: (value) {
@@ -253,28 +281,32 @@ class _PasswordChangeModalState extends State<PasswordChangeModal> {
                   },
                 ).animate().fadeIn().slideX(),
                 const SizedBox(height: 16),
-
-                // New Password
                 TextFormField(
                   controller: _newPasswordController,
                   obscureText: !_showNewPassword,
-                  decoration: InputDecoration(
+                  style: TextStyle(
+                    color: isDark
+                        ? AppColorScheme.darkText
+                        : AppColorScheme.lightText,
+                  ),
+                  decoration: _getInputDecoration(
+                    isDark: isDark,
                     labelText: 'New Password',
-                    prefixIcon: const Icon(Icons.lock_outline),
+                    prefixIcon: Icons.lock_outline,
                     suffixIcon: IconButton(
                       icon: Icon(
                         _showNewPassword
                             ? Icons.visibility_outlined
                             : Icons.visibility_off_outlined,
+                        color: isDark
+                            ? AppColorScheme.darkTextSecondary
+                            : AppColorScheme.lightTextSecondary,
                       ),
                       onPressed: () {
                         setState(() {
                           _showNewPassword = !_showNewPassword;
                         });
                       },
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
                   validator: (value) {
@@ -294,28 +326,32 @@ class _PasswordChangeModalState extends State<PasswordChangeModal> {
                   },
                 ).animate().fadeIn().slideX(),
                 const SizedBox(height: 16),
-
-                // Confirm Password
                 TextFormField(
                   controller: _confirmPasswordController,
                   obscureText: !_showConfirmPassword,
-                  decoration: InputDecoration(
+                  style: TextStyle(
+                    color: isDark
+                        ? AppColorScheme.darkText
+                        : AppColorScheme.lightText,
+                  ),
+                  decoration: _getInputDecoration(
+                    isDark: isDark,
                     labelText: 'Confirm New Password',
-                    prefixIcon: const Icon(Icons.lock_outline),
+                    prefixIcon: Icons.lock_outline,
                     suffixIcon: IconButton(
                       icon: Icon(
                         _showConfirmPassword
                             ? Icons.visibility_outlined
                             : Icons.visibility_off_outlined,
+                        color: isDark
+                            ? AppColorScheme.darkTextSecondary
+                            : AppColorScheme.lightTextSecondary,
                       ),
                       onPressed: () {
                         setState(() {
                           _showConfirmPassword = !_showConfirmPassword;
                         });
                       },
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
                   validator: (value) {
@@ -329,27 +365,25 @@ class _PasswordChangeModalState extends State<PasswordChangeModal> {
                   },
                 ).animate().fadeIn().slideX(),
                 const SizedBox(height: 24),
-
-                // Error Message
                 if (_errorMessage != null)
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
+                      color: AppColorScheme.lightError.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       children: [
                         Icon(
                           Icons.error_outline,
-                          color: Colors.red[700],
+                          color: AppColorScheme.lightError,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             _errorMessage!,
                             style: TextStyle(
-                              color: Colors.red[700],
+                              color: AppColorScheme.lightError,
                               fontSize: 14,
                             ),
                           ),
@@ -357,28 +391,33 @@ class _PasswordChangeModalState extends State<PasswordChangeModal> {
                       ],
                     ),
                   ).animate().fadeIn().shake(),
-
                 const SizedBox(height: 24),
-
-                // Submit Button
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
                     onPressed: _isLoading ? null : _changePassword,
                     style: FilledButton.styleFrom(
+                      backgroundColor: isDark
+                          ? AppColorScheme.darkPrimary
+                          : AppColorScheme.lightPrimary,
+                      foregroundColor:
+                          isDark ? AppColorScheme.darkSurface : Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
                     child: _isLoading
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 24,
                             height: 24,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                isDark
+                                    ? AppColorScheme.darkSurface
+                                    : Colors.white,
+                              ),
                             ),
                           )
                         : const Text(
@@ -395,6 +434,56 @@ class _PasswordChangeModalState extends State<PasswordChangeModal> {
           ),
         ),
       ),
+    );
+  }
+
+  InputDecoration _getInputDecoration({
+    required bool isDark,
+    required String labelText,
+    required IconData prefixIcon,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      labelText: labelText,
+      labelStyle: TextStyle(
+        color: isDark
+            ? AppColorScheme.darkTextSecondary
+            : AppColorScheme.lightTextSecondary,
+      ),
+      prefixIcon: Icon(
+        prefixIcon,
+        color: isDark
+            ? AppColorScheme.darkTextSecondary
+            : AppColorScheme.lightTextSecondary,
+      ),
+      suffixIcon: suffixIcon,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(
+          color: isDark
+              ? AppColorScheme.darkCardBorder
+              : AppColorScheme.lightCardBorder,
+        ),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(
+          color: isDark
+              ? AppColorScheme.darkCardBorder
+              : AppColorScheme.lightCardBorder,
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(
+          color:
+              isDark ? AppColorScheme.darkPrimary : AppColorScheme.lightPrimary,
+          width: 2,
+        ),
+      ),
+      filled: true,
+      fillColor:
+          isDark ? AppColorScheme.darkSurface : AppColorScheme.lightSurface,
     );
   }
 }

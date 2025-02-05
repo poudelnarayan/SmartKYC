@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:smartkyc/core/theme/app_color_scheme.dart';
 import 'package:smartkyc/features/auth/presentation/pages/singin_page.dart';
 import '../bloc/user_profile_bloc.dart';
 import '../bloc/user_profile_event.dart';
@@ -11,6 +12,8 @@ class SecurityBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return BlocListener<UserProfileBloc, UserProfileState>(
       listener: (context, state) {
         if (state is UserAccountDeleted) {
@@ -19,16 +22,16 @@ class SecurityBottomSheet extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
-              backgroundColor: Colors.red,
+              backgroundColor: AppColorScheme.lightError,
             ),
           );
         }
       },
       child: Container(
         padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        decoration: BoxDecoration(
+          color: AppColorScheme.getCardBackground(isDark),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -38,7 +41,9 @@ class SecurityBottomSheet extends StatelessWidget {
               height: 4,
               margin: const EdgeInsets.only(bottom: 24),
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: isDark
+                    ? AppColorScheme.darkCardBorder
+                    : AppColorScheme.lightCardBorder,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -46,17 +51,22 @@ class SecurityBottomSheet extends StatelessWidget {
               'Security Settings',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
+                    color: isDark
+                        ? AppColorScheme.darkText
+                        : AppColorScheme.lightText,
                   ),
             ),
             const SizedBox(height: 24),
             ListTile(
-              leading:
-                  const Icon(Icons.delete_forever_outlined, color: Colors.red),
-              title: const Text(
-                'Delete Account',
-                style: TextStyle(color: Colors.red),
+              leading: Icon(
+                Icons.delete_forever_outlined,
+                color: AppColorScheme.darkError,
               ),
-              onTap: () => _showDeleteConfirmation(context),
+              title: Text(
+                'Delete Account',
+                style: TextStyle(color: AppColorScheme.lightError),
+              ),
+              onTap: () => _showDeleteConfirmation(context, isDark),
             ),
           ],
         ),
@@ -64,26 +74,49 @@ class SecurityBottomSheet extends StatelessWidget {
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context) {
+  void _showDeleteConfirmation(BuildContext context, bool isDark) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Account'),
-        content: const Column(
+        backgroundColor: AppColorScheme.getCardBackground(isDark),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: AppColorScheme.getCardBorder(isDark),
+          ),
+        ),
+        title: Text(
+          'Delete Account',
+          style: TextStyle(
+            color: isDark ? AppColorScheme.darkText : AppColorScheme.lightText,
+          ),
+        ),
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Are you sure you want to delete your account? ',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color:
+                    isDark ? AppColorScheme.darkText : AppColorScheme.lightText,
+              ),
             ),
-            SizedBox(height: 4),
-            Text('This action:', style: TextStyle(fontWeight: FontWeight.bold)),
-            SizedBox(height: 16),
-            Text('• Cannot be undone'),
-            Text('• Will delete all your data'),
-            Text('• Will remove your verification status'),
-            Text('• Will terminate your account access'),
+            const SizedBox(height: 4),
+            Text(
+              'This action:',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color:
+                    isDark ? AppColorScheme.darkText : AppColorScheme.lightText,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildBulletPoint('Cannot be undone', isDark),
+            _buildBulletPoint('Will delete all your data', isDark),
+            _buildBulletPoint('Will remove your verification status', isDark),
+            _buildBulletPoint('Will terminate your account access', isDark),
           ],
         ),
         actions: [
@@ -92,6 +125,11 @@ class SecurityBottomSheet extends StatelessWidget {
               Navigator.pop(context);
               Navigator.pop(context);
             },
+            style: TextButton.styleFrom(
+              foregroundColor: isDark
+                  ? AppColorScheme.darkSecondary
+                  : AppColorScheme.lightSecondary,
+            ),
             child: const Text('Cancel'),
           ),
           FilledButton(
@@ -104,9 +142,37 @@ class SecurityBottomSheet extends StatelessWidget {
               Navigator.pop(context); // Close bottom sheet
             },
             style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: AppColorScheme.lightError,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             child: const Text('Delete Account'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBulletPoint(String text, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Text(
+            '• ',
+            style: TextStyle(
+              color:
+                  isDark ? AppColorScheme.darkText : AppColorScheme.lightText,
+            ),
+          ),
+          Text(
+            text,
+            style: TextStyle(
+              color:
+                  isDark ? AppColorScheme.darkText : AppColorScheme.lightText,
+            ),
           ),
         ],
       ),

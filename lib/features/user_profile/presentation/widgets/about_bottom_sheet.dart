@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:smartkyc/core/theme/app_color_scheme.dart';
 
 class AboutBottomSheet extends StatelessWidget {
   const AboutBottomSheet({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: AppColorScheme.getCardBackground(isDark),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -20,27 +23,43 @@ class AboutBottomSheet extends StatelessWidget {
             height: 4,
             margin: const EdgeInsets.only(bottom: 24),
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: isDark
+                  ? AppColorScheme.darkCardBorder
+                  : AppColorScheme.lightCardBorder,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const CircleAvatar(
+          CircleAvatar(
             radius: 40,
-            backgroundColor: Colors.blue,
-            child: Icon(Icons.info_outline, size: 40, color: Colors.white),
+            backgroundColor: isDark
+                ? AppColorScheme.darkPrimary
+                : AppColorScheme.lightPrimary,
+            child: Icon(
+              Icons.info_outline,
+              size: 40,
+              color: AppColorScheme.getCardBackground(isDark),
+            ),
           ),
           const SizedBox(height: 24),
           Text(
             'About SmartKYC',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: isDark
+                      ? AppColorScheme.darkText
+                      : AppColorScheme.lightText,
                 ),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'SmartKYC is a secure and efficient Know Your Customer (KYC) solution that uses advanced technology for identity verification.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16),
+            style: TextStyle(
+              fontSize: 16,
+              color: isDark
+                  ? AppColorScheme.darkTextSecondary
+                  : AppColorScheme.lightTextSecondary,
+            ),
           ),
           const SizedBox(height: 24),
           FutureBuilder<PackageInfo>(
@@ -49,47 +68,29 @@ class AboutBottomSheet extends StatelessWidget {
               if (snapshot.hasData) {
                 return Column(
                   children: [
-                    const Divider(),
-                    _buildInfoRow('Version', snapshot.data!.version),
-                    _buildInfoRow('Build', snapshot.data!.buildNumber),
+                    Divider(
+                      color: isDark
+                          ? AppColorScheme.darkCardBorder
+                          : AppColorScheme.lightCardBorder,
+                    ),
+                    _buildInfoRow('Version', snapshot.data!.version, isDark),
+                    _buildInfoRow('Build', snapshot.data!.buildNumber, isDark),
                   ],
                 );
               }
-              return const CircularProgressIndicator();
+              return CircularProgressIndicator(
+                color: isDark
+                    ? AppColorScheme.darkPrimary
+                    : AppColorScheme.lightPrimary,
+              );
             },
           ),
-          // Row(
-          //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          //   children: [
-          //     _buildLink(
-          //       icon: Icons.privacy_tip_outlined,
-          //       label: 'Privacy Policy',
-          //       onTap: () {
-          //         // TODO: Open privacy policy
-          //       },
-          //     ),
-          //     _buildLink(
-          //       icon: Icons.description_outlined,
-          //       label: 'Terms of Service',
-          //       onTap: () {
-          //         // TODO: Open terms of service
-          //       },
-          //     ),
-          //     _buildLink(
-          //       icon: Icons.email_outlined,
-          //       label: 'Contact Us',
-          //       onTap: () {
-          //         // TODO: Open contact form
-          //       },
-          //     ),
-          //   ],
-          // ),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildInfoRow(String label, String value, bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -97,38 +98,22 @@ class AboutBottomSheet extends StatelessWidget {
         children: [
           Text(
             '$label: ',
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: Colors.grey,
+              color: isDark
+                  ? AppColorScheme.darkTextSecondary
+                  : AppColorScheme.lightTextSecondary,
             ),
           ),
-          Text(value),
+          Text(
+            value,
+            style: TextStyle(
+              color:
+                  isDark ? AppColorScheme.darkText : AppColorScheme.lightText,
+            ),
+          ),
         ],
       ),
     );
   }
-
-//   Widget _buildLink({
-//     required IconData icon,
-//     required String label,
-//     required VoidCallback onTap,
-//   }) {
-//     return InkWell(
-//       onTap: onTap,
-//       child: Column(
-//         children: [
-//           Icon(icon, color: Colors.blue),
-//           const SizedBox(height: 4),
-//           Text(
-//             label,
-//             style: const TextStyle(
-//               fontSize: 12,
-//               color: Colors.blue,
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
 }

@@ -1,16 +1,20 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pinput/pinput.dart';
+import 'package:smartkyc/core/theme/app_color_scheme.dart';
 
 class PhoneVerificationModal extends StatefulWidget {
   final Function(String) onVerificationComplete;
+  final bool isEditing;
+  final String? previousNumber;
 
   const PhoneVerificationModal({
     super.key,
     required this.onVerificationComplete,
+    this.isEditing = false,
+    this.previousNumber = '',
   });
 
   @override
@@ -18,7 +22,7 @@ class PhoneVerificationModal extends StatefulWidget {
 }
 
 class _PhoneVerificationModalState extends State<PhoneVerificationModal> {
-  final _phoneController = TextEditingController();
+  late TextEditingController _phoneController;
   final _auth = FirebaseAuth.instance;
   String? _verificationId;
   bool _isLoading = false;
@@ -29,6 +33,15 @@ class _PhoneVerificationModalState extends State<PhoneVerificationModal> {
   Timer? _resendTimer;
   int _resendCountdown = 0;
   static const int _resendDelay = 60; // 60 seconds delay
+
+  @override
+  void initState() {
+    _phoneController = TextEditingController(
+      text: widget.previousNumber ?? "", // ✅ Corrected initialization
+    );
+
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -108,10 +121,6 @@ class _PhoneVerificationModalState extends State<PhoneVerificationModal> {
 
   Future<void> _verifyWithCredential(PhoneAuthCredential credential) async {
     try {
-      // // Only verify the phone number without signing in
-      // await _auth.signInWithCredential(credential);
-      // await _auth.signOut(); // Immediately sign out
-
       if (mounted) {
         widget
             .onVerificationComplete(_formatPhoneNumber(_phoneController.text));
@@ -151,16 +160,18 @@ class _PhoneVerificationModalState extends State<PhoneVerificationModal> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: EdgeInsets.only(
         left: 24,
         right: 24,
         top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        bottom: 20,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: AppColorScheme.getCardBackground(isDark),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -171,18 +182,23 @@ class _PhoneVerificationModalState extends State<PhoneVerificationModal> {
               height: 4,
               margin: const EdgeInsets.only(bottom: 24),
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: isDark
+                    ? AppColorScheme.darkCardBorder
+                    : AppColorScheme.lightCardBorder,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            if (!_isVerifyingOTP) _buildPhoneInput() else _buildOTPInput(),
+            if (!_isVerifyingOTP)
+              _buildPhoneInput(isDark)
+            else
+              _buildOTPInput(isDark),
             if (_errorMessage != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
                   _errorMessage!,
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.error,
+                    color: AppColorScheme.lightError,
                     fontSize: 12,
                   ),
                 ),
@@ -192,18 +208,25 @@ class _PhoneVerificationModalState extends State<PhoneVerificationModal> {
               onPressed:
                   _isLoading ? null : (_isVerifyingOTP ? _verifyOTP : _sendOTP),
               style: FilledButton.styleFrom(
+                backgroundColor: isDark
+                    ? AppColorScheme.darkPrimary
+                    : AppColorScheme.lightPrimary,
+                foregroundColor:
+                    isDark ? AppColorScheme.darkSurface : Colors.white,
                 minimumSize: const Size(double.infinity, 56),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
               child: _isLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 24,
                       height: 24,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          isDark ? AppColorScheme.darkSurface : Colors.white,
+                        ),
                       ),
                     )
                   : Text(
@@ -222,8 +245,12 @@ class _PhoneVerificationModalState extends State<PhoneVerificationModal> {
                   Icons.refresh,
                   size: 18,
                   color: _resendCountdown > 0
-                      ? Colors.grey
-                      : Theme.of(context).colorScheme.primary,
+                      ? isDark
+                          ? AppColorScheme.darkTextSecondary
+                          : AppColorScheme.lightTextSecondary
+                      : isDark
+                          ? AppColorScheme.darkPrimary
+                          : AppColorScheme.lightPrimary,
                 ),
                 label: Text(
                   _resendCountdown > 0
@@ -231,8 +258,12 @@ class _PhoneVerificationModalState extends State<PhoneVerificationModal> {
                       : 'Resend OTP',
                   style: TextStyle(
                     color: _resendCountdown > 0
-                        ? Colors.grey
-                        : Theme.of(context).colorScheme.primary,
+                        ? isDark
+                            ? AppColorScheme.darkTextSecondary
+                            : AppColorScheme.lightTextSecondary
+                        : isDark
+                            ? AppColorScheme.darkPrimary
+                            : AppColorScheme.lightPrimary,
                   ),
                 ),
               ),
@@ -242,22 +273,27 @@ class _PhoneVerificationModalState extends State<PhoneVerificationModal> {
     );
   }
 
-  Widget _buildPhoneInput() {
+  Widget _buildPhoneInput(bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Verify Phone Number',
+        Text(
+          widget.isEditing ? 'Edit your number' : 'Verify Phone Number',
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
+            color: isDark ? AppColorScheme.darkText : AppColorScheme.lightText,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'Enter your phone number to verify',
+          widget.isEditing
+              ? 'Enter your phone number to edit'
+              : 'Enter your phone number to verify',
           style: TextStyle(
-            color: Colors.grey[600],
+            color: isDark
+                ? AppColorScheme.darkTextSecondary
+                : AppColorScheme.lightTextSecondary,
             fontSize: 14,
           ),
         ),
@@ -268,20 +304,41 @@ class _PhoneVerificationModalState extends State<PhoneVerificationModal> {
               controller: _phoneController,
               keyboardType: TextInputType.phone,
               enabled: !_isLoading,
+              style: TextStyle(
+                color:
+                    isDark ? AppColorScheme.darkText : AppColorScheme.lightText,
+              ),
               decoration: InputDecoration(
                 labelText: 'Phone Number',
+                labelStyle: TextStyle(
+                  color: isDark
+                      ? AppColorScheme.darkTextSecondary
+                      : AppColorScheme.lightTextSecondary,
+                ),
                 hintText: '98XXXXXXXX',
+                hintStyle: TextStyle(
+                  color: isDark
+                      ? AppColorScheme.darkTextSecondary.withOpacity(0.5)
+                      : AppColorScheme.lightTextSecondary.withOpacity(0.5),
+                ),
                 prefixIcon: Padding(
                   padding: const EdgeInsets.only(left: 16, right: 8),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.phone_outlined),
+                      Icon(
+                        Icons.phone_outlined,
+                        color: isDark
+                            ? AppColorScheme.darkTextSecondary
+                            : AppColorScheme.lightTextSecondary,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         '+977',
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
+                          color: isDark
+                              ? AppColorScheme.darkPrimary
+                              : AppColorScheme.lightPrimary,
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
@@ -290,7 +347,9 @@ class _PhoneVerificationModalState extends State<PhoneVerificationModal> {
                         height: 24,
                         width: 1,
                         margin: const EdgeInsets.symmetric(horizontal: 8),
-                        color: Colors.grey[300],
+                        color: isDark
+                            ? AppColorScheme.darkCardBorder
+                            : AppColorScheme.lightCardBorder,
                       ),
                     ],
                   ),
@@ -305,9 +364,33 @@ class _PhoneVerificationModalState extends State<PhoneVerificationModal> {
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: isDark
+                        ? AppColorScheme.darkCardBorder
+                        : AppColorScheme.lightCardBorder,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: isDark
+                        ? AppColorScheme.darkCardBorder
+                        : AppColorScheme.lightCardBorder,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: isDark
+                        ? AppColorScheme.darkPrimary
+                        : AppColorScheme.lightPrimary,
+                    width: 2,
+                  ),
                 ),
                 filled: true,
-                fillColor: Colors.grey[50],
+                fillColor: isDark
+                    ? AppColorScheme.darkSurface
+                    : AppColorScheme.lightSurface,
               ),
             ),
           ],
@@ -316,36 +399,45 @@ class _PhoneVerificationModalState extends State<PhoneVerificationModal> {
     ).animate().fadeIn().slideY();
   }
 
-  Widget _buildOTPInput() {
+  Widget _buildOTPInput(bool isDark) {
     final defaultPinTheme = PinTheme(
       width: 56,
       height: 56,
-      textStyle: const TextStyle(
+      textStyle: TextStyle(
         fontSize: 24,
         fontWeight: FontWeight.w600,
+        color: isDark ? AppColorScheme.darkText : AppColorScheme.lightText,
       ),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color:
+            isDark ? AppColorScheme.darkSurface : AppColorScheme.lightSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!),
+        border: Border.all(
+          color: isDark
+              ? AppColorScheme.darkCardBorder
+              : AppColorScheme.lightCardBorder,
+        ),
       ),
     );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Enter OTP',
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
+            color: isDark ? AppColorScheme.darkText : AppColorScheme.lightText,
           ),
         ),
         const SizedBox(height: 8),
         Text(
           'Enter the verification code sent to ${_phoneController.text}',
           style: TextStyle(
-            color: Colors.grey[600],
+            color: isDark
+                ? AppColorScheme.darkTextSecondary
+                : AppColorScheme.lightTextSecondary,
             fontSize: 14,
           ),
         ),
@@ -356,12 +448,18 @@ class _PhoneVerificationModalState extends State<PhoneVerificationModal> {
             defaultPinTheme: defaultPinTheme,
             focusedPinTheme: defaultPinTheme.copyWith(
               decoration: defaultPinTheme.decoration!.copyWith(
-                border:
-                    Border.all(color: Theme.of(context).colorScheme.primary),
+                border: Border.all(
+                  color: isDark
+                      ? AppColorScheme.darkPrimary
+                      : AppColorScheme.lightPrimary,
+                  width: 2,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color:
-                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    color: (isDark
+                            ? AppColorScheme.darkPrimary
+                            : AppColorScheme.lightPrimary)
+                        .withOpacity(0.1),
                     blurRadius: 8,
                     spreadRadius: 2,
                   ),
