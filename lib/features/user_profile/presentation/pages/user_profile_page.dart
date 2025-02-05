@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smartkyc/core/theme/app_color_scheme.dart';
-import 'package:smartkyc/domain/usecases/get_user.dart';
 import 'package:smartkyc/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartkyc/features/auth/presentation/pages/singin_page.dart';
@@ -130,7 +129,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final gradientColors = AppColorScheme.getGradientColors(isDark);
 

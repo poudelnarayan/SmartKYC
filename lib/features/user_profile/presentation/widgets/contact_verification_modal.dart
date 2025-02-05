@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:smartkyc/core/theme/app_color_scheme.dart';
 import 'package:smartkyc/features/user_profile/presentation/bloc/user_profile_bloc.dart';
 import 'package:smartkyc/features/user_profile/presentation/bloc/user_profile_event.dart';
