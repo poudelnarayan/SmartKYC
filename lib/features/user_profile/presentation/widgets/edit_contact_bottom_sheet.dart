@@ -39,7 +39,6 @@ class EditContactBottomSheet extends StatelessWidget {
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
         child: ContactVerificationModal(
-          type: type,
           currentValue: currentValue,
           onVerified: onVerified,
         ),

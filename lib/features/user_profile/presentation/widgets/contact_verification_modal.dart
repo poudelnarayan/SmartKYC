@@ -4,21 +4,16 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartkyc/core/theme/app_color_scheme.dart';
-import 'package:smartkyc/domain/usecases/update_user.dart';
-import 'package:smartkyc/features/user_detail_form/presentation/bloc/user_detail_form_event.dart';
 import 'package:smartkyc/features/user_profile/presentation/bloc/user_profile_bloc.dart';
 import 'package:smartkyc/features/user_profile/presentation/bloc/user_profile_event.dart';
-
 import '../../../../l10n/app_localizations.dart';
 
 class ContactVerificationModal extends StatefulWidget {
-  final String type; // 'email' or 'phone'
   final String currentValue;
   final Function(String) onVerified;
 
   const ContactVerificationModal({
     super.key,
-    required this.type,
     required this.currentValue,
     required this.onVerified,
   });
@@ -34,11 +29,6 @@ class _ContactVerificationModalState extends State<ContactVerificationModal> {
   final _auth = FirebaseAuth.instance;
   bool _isLoading = false;
   String? _errorMessage;
-  String? _verificationId;
-  int? _resendToken;
-  bool _isVerifyingOTP = false;
-
-  final _otpController = TextEditingController();
 
   @override
   void initState() {
@@ -49,11 +39,10 @@ class _ContactVerificationModalState extends State<ContactVerificationModal> {
   @override
   void dispose() {
     _controller.dispose();
-    _otpController.dispose();
     super.dispose();
   }
 
-  Future<void> _verifyContact() async {
+  Future<void> _verifyEmail() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -62,29 +51,14 @@ class _ContactVerificationModalState extends State<ContactVerificationModal> {
     });
 
     try {
-      if (widget.type == 'email') {
-        await _verifyEmail();
-      } else {
-        await _verifyPhone();
-      }
-    } catch (e) {
-      setState(() => _errorMessage = e.toString());
-    } finally {
-      if (mounted) {
+      final user = _auth.currentUser;
+      if (user == null) throw Exception('No user signed in');
+
+      String? password = await _showPasswordVerification();
+      if (password == null || password.isEmpty) {
         setState(() => _isLoading = false);
+        return;
       }
-    }
-  }
-
-  Future<void> _verifyEmail() async {
-    final user = _auth.currentUser;
-    if (user == null) throw Exception('No user signed in');
-
-    String? password = await _showPasswordVerification();
-    if (password == null || password.isEmpty) return;
-
-    try {
-      setState(() => _isLoading = true);
 
       await user.verifyBeforeUpdateEmail(_controller.text);
 
@@ -95,9 +69,10 @@ class _ContactVerificationModalState extends State<ContactVerificationModal> {
         _showSuccessAnimation();
       }
     } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+      });
     }
   }
 
@@ -180,7 +155,7 @@ class _ContactVerificationModalState extends State<ContactVerificationModal> {
                         .shimmer(duration: const Duration(milliseconds: 1200)),
                     const SizedBox(height: 24),
                     Text(
-                      'Verify Your Password',
+                      'Verify Your Identity',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: isDark
@@ -476,79 +451,6 @@ class _ContactVerificationModalState extends State<ContactVerificationModal> {
     );
   }
 
-  Future<void> _verifyPhone() async {
-    await _auth.verifyPhoneNumber(
-      phoneNumber: _controller.text,
-      verificationCompleted: (PhoneAuthCredential credential) async {
-        await _updatePhoneNumber(credential);
-      },
-      verificationFailed: (FirebaseAuthException e) {
-        setState(() => _errorMessage = e.message);
-      },
-      codeSent: (String verificationId, int? resendToken) {
-        setState(() {
-          _verificationId = verificationId;
-          _resendToken = resendToken;
-          _isVerifyingOTP = true;
-          _isLoading = false;
-        });
-      },
-      codeAutoRetrievalTimeout: (String verificationId) {
-        setState(() => _verificationId = verificationId);
-      },
-      forceResendingToken: _resendToken,
-    );
-  }
-
-  Future<void> _verifyOTP() async {
-    if (_verificationId == null) return;
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final credential = PhoneAuthProvider.credential(
-        verificationId: _verificationId!,
-        smsCode: _otpController.text,
-      );
-
-      await _updatePhoneNumber(credential);
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Invalid OTP';
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _updatePhoneNumber(PhoneAuthCredential credential) async {
-    try {
-      final user = _auth.currentUser;
-      if (user == null) throw Exception('No user signed in');
-
-      await user.updatePhoneNumber(credential);
-
-      if (mounted) {
-        widget.onVerified(_controller.text);
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Phone number updated successfully'),
-            backgroundColor: AppColorScheme.success,
-          ),
-        );
-      }
-    } catch (e) {
-      setState(() => _errorMessage = e.toString());
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -571,11 +473,7 @@ class _ContactVerificationModalState extends State<ContactVerificationModal> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _isVerifyingOTP
-                      ? 'Enter Verification Code'
-                      : widget.type == 'email'
-                          ? l10n.updateEmail
-                          : l10n.updatePhone,
+                  l10n.updateEmail,
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: isDark
@@ -585,11 +483,7 @@ class _ContactVerificationModalState extends State<ContactVerificationModal> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  _isVerifyingOTP
-                      ? 'Enter the code sent to ${_controller.text}'
-                      : widget.type == 'email'
-                          ? l10n.updateEmailDesc
-                          : l10n.updatePhoneDesc,
+                  l10n.updateEmailDesc,
                   style: TextStyle(
                     color: isDark
                         ? AppColorScheme.darkTextSecondary
@@ -598,153 +492,77 @@ class _ContactVerificationModalState extends State<ContactVerificationModal> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                if (_isVerifyingOTP)
-                  TextFormField(
-                    controller: _otpController,
-                    keyboardType: TextInputType.number,
-                    style: TextStyle(
-                      color: isDark
-                          ? AppColorScheme.darkText
-                          : AppColorScheme.lightText,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: 'Verification Code',
-                      labelStyle: TextStyle(
-                        color: isDark
-                            ? AppColorScheme.darkTextSecondary
-                            : AppColorScheme.lightTextSecondary,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.lock_outline,
-                        color: isDark
-                            ? AppColorScheme.darkTextSecondary
-                            : AppColorScheme.lightTextSecondary,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(
-                          color: isDark
-                              ? AppColorScheme.darkCardBorder
-                              : AppColorScheme.lightCardBorder,
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(
-                          color: isDark
-                              ? AppColorScheme.darkCardBorder
-                              : AppColorScheme.lightCardBorder,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(
-                          color: isDark
-                              ? AppColorScheme.darkPrimary
-                              : AppColorScheme.lightPrimary,
-                          width: 2,
-                        ),
-                      ),
-                      filled: true,
-                      fillColor: isDark
-                          ? AppColorScheme.darkSurface
-                          : AppColorScheme.lightSurface,
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter the verification code';
-                      }
-                      return null;
-                    },
-                  )
-                else
-                  TextFormField(
-                    controller: _controller,
-                    keyboardType: widget.type == 'email'
-                        ? TextInputType.emailAddress
-                        : TextInputType.phone,
-                    style: TextStyle(
-                      color: isDark
-                          ? AppColorScheme.darkText
-                          : AppColorScheme.lightText,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: widget.type == 'email'
-                          ? l10n.emailLabel
-                          : l10n.phoneLabel,
-                      labelStyle: TextStyle(
-                        color: isDark
-                            ? AppColorScheme.darkTextSecondary
-                            : AppColorScheme.lightTextSecondary,
-                      ),
-                      prefixIcon: Icon(
-                        widget.type == 'email'
-                            ? Icons.email_outlined
-                            : Icons.phone_outlined,
-                        color: isDark
-                            ? AppColorScheme.darkTextSecondary
-                            : AppColorScheme.lightTextSecondary,
-                      ),
-                      errorText: _errorMessage,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(
-                          color: isDark
-                              ? AppColorScheme.darkCardBorder
-                              : AppColorScheme.lightCardBorder,
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(
-                          color: isDark
-                              ? AppColorScheme.darkCardBorder
-                              : AppColorScheme.lightCardBorder,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(
-                          color: isDark
-                              ? AppColorScheme.darkPrimary
-                              : AppColorScheme.lightPrimary,
-                          width: 2,
-                        ),
-                      ),
-                      filled: true,
-                      fillColor: isDark
-                          ? AppColorScheme.darkSurface
-                          : AppColorScheme.lightSurface,
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return l10n.fieldRequired;
-                      }
-                      if (widget.type == 'email') {
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                            .hasMatch(value)) {
-                          return l10n.invalidEmail;
-                        }
-                        if (_controller.text == widget.currentValue) {
-                          return "Please enter new email to change. ";
-                        }
-                      } else {
-                        if (!RegExp(r'^\+?[\d\s-]{10,}$').hasMatch(value)) {
-                          return l10n.invalidPhone;
-                        }
-                      }
-                      return null;
-                    },
+                TextFormField(
+                  controller: _controller,
+                  keyboardType: TextInputType.emailAddress,
+                  style: TextStyle(
+                    color: isDark
+                        ? AppColorScheme.darkText
+                        : AppColorScheme.lightText,
                   ),
+                  decoration: InputDecoration(
+                    labelText: l10n.emailLabel,
+                    labelStyle: TextStyle(
+                      color: isDark
+                          ? AppColorScheme.darkTextSecondary
+                          : AppColorScheme.lightTextSecondary,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.email_outlined,
+                      color: isDark
+                          ? AppColorScheme.darkTextSecondary
+                          : AppColorScheme.lightTextSecondary,
+                    ),
+                    errorText: _errorMessage,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: isDark
+                            ? AppColorScheme.darkCardBorder
+                            : AppColorScheme.lightCardBorder,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: isDark
+                            ? AppColorScheme.darkCardBorder
+                            : AppColorScheme.lightCardBorder,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: isDark
+                            ? AppColorScheme.darkPrimary
+                            : AppColorScheme.lightPrimary,
+                        width: 2,
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: isDark
+                        ? AppColorScheme.darkSurface
+                        : AppColorScheme.lightSurface,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return l10n.fieldRequired;
+                    }
+                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                        .hasMatch(value)) {
+                      return l10n.invalidEmail;
+                    }
+                    if (_controller.text == widget.currentValue) {
+                      return "Please enter new email to change. ";
+                    }
+                    return null;
+                  },
+                ),
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
-                    onPressed: _isLoading
-                        ? null
-                        : _isVerifyingOTP
-                            ? _verifyOTP
-                            : _verifyContact,
+                    onPressed: _isLoading ? null : _verifyEmail,
                     style: FilledButton.styleFrom(
                       backgroundColor: isDark
                           ? AppColorScheme.darkPrimary
@@ -765,7 +583,7 @@ class _ContactVerificationModalState extends State<ContactVerificationModal> {
                               ),
                             ),
                           )
-                        : Text(_isVerifyingOTP ? 'Verify Code' : l10n.update),
+                        : Text(l10n.update),
                   ),
                 ),
               ],
