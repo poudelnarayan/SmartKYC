@@ -1156,6 +1156,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Step {current} of {total}'**
   String step(int current, int total);
+
+  /// No description provided for @failToLoadProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load profile'**
+  String get failToLoadProfile;
+
+  /// No description provided for @noUserSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'No user signed in'**
+  String get noUserSignedIn;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// No description provided for @contactInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Information'**
+  String get contactInformation;
+
+  /// No description provided for @verificationRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification Required'**
+  String get verificationRequired;
+
+  /// No description provided for @address.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get address;
+
+  /// No description provided for @notProvided.
+  ///
+  /// In en, this message translates to:
+  /// **'Not Provided'**
+  String get notProvided;
+
+  /// No description provided for @documentVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Document Verification'**
+  String get documentVerification;
+
+  /// No description provided for @selfieVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Selfie Verification'**
+  String get selfieVerification;
+
+  /// No description provided for @livenessVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Liveness Verification'**
+  String get livenessVerification;
+
+  /// No description provided for @notVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Not Verified'**
+  String get notVerified;
+
+  /// No description provided for @verifyNowTxt.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify Now'**
+  String get verifyNowTxt;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

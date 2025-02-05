@@ -1,15 +1,23 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartkyc/core/theme/app_color_scheme.dart';
 import 'package:smartkyc/features/auth/presentation/pages/singin_page.dart';
+import '../../../../core/services/biometric_services.dart';
+import '../../../auth/presentation/widgets/biometric_prompt_dialog.dart';
 import '../bloc/user_profile_bloc.dart';
 import '../bloc/user_profile_event.dart';
 import '../bloc/user_profile_state.dart';
 
-class SecurityBottomSheet extends StatelessWidget {
+class SecurityBottomSheet extends StatefulWidget {
   const SecurityBottomSheet({super.key});
 
+  @override
+  State<SecurityBottomSheet> createState() => _SecurityBottomSheetState();
+}
+
+class _SecurityBottomSheetState extends State<SecurityBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -17,7 +25,7 @@ class SecurityBottomSheet extends StatelessWidget {
     return BlocListener<UserProfileBloc, UserProfileState>(
       listener: (context, state) {
         if (state is UserAccountDeleted) {
-          context.pushReplacement(SinginPage.pageName);
+          context.pushReplacement(SigninPage.pageName);
         } else if (state is UserProfileError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -57,6 +65,8 @@ class SecurityBottomSheet extends StatelessWidget {
                   ),
             ),
             const SizedBox(height: 24),
+            _buildBiometricOption(context, isDark),
+            const Divider(height: 1),
             ListTile(
               leading: Icon(
                 Icons.delete_forever_outlined,
@@ -132,6 +142,8 @@ class SecurityBottomSheet extends StatelessWidget {
             ),
             child: const Text('Cancel'),
           ),
+          _buildBiometricOption(context, isDark),
+          const Divider(height: 1),
           FilledButton(
             onPressed: () {
               // Dispatch delete account event
@@ -152,6 +164,99 @@ class SecurityBottomSheet extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBiometricOption(BuildContext context, bool isDark) {
+    return FutureBuilder<bool>(
+      future: BiometricService.isBiometricEnabled(),
+      builder: (context, snapshot) {
+        final isEnabled = snapshot.data ?? false;
+
+        return SwitchListTile(
+          title: Text(
+            'Biometric Login',
+            style: TextStyle(
+              color:
+                  isDark ? AppColorScheme.darkText : AppColorScheme.lightText,
+            ),
+          ),
+          subtitle: Text(
+            isEnabled ? 'Enabled' : 'Disabled',
+            style: TextStyle(
+              color: isDark
+                  ? AppColorScheme.darkTextSecondary
+                  : AppColorScheme.lightTextSecondary,
+            ),
+          ),
+          secondary: Icon(
+            Icons.fingerprint,
+            color: isEnabled
+                ? isDark
+                    ? AppColorScheme.darkPrimary
+                    : AppColorScheme.lightPrimary
+                : isDark
+                    ? AppColorScheme.darkTextSecondary
+                    : AppColorScheme.lightTextSecondary,
+          ),
+          value: isEnabled,
+          onChanged: (value) async {
+            if (value) {
+              final isAvailable =
+                  await BiometricService.isBiometricsAvailable();
+              if (!isAvailable) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content:
+                          Text('Biometric login not available on this device'),
+                    ),
+                  );
+                }
+                return;
+              }
+
+              // Re-authenticate to enable biometrics
+              if (context.mounted) {
+                final result = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => BiometricPromptDialog(
+                    email: FirebaseAuth.instance.currentUser!.email!,
+                    password: '', // You'll need to get this securely
+                  ),
+                );
+
+                if (result ?? false) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Biometric login enabled'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                }
+              }
+            } else {
+              await BiometricService.disableBiometric();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Biometric login disabled'),
+                  ),
+                );
+              }
+            }
+
+            // Refresh the UI
+            if (context.mounted) {
+              setState(() {});
+            }
+          },
+          activeColor:
+              isDark ? AppColorScheme.darkPrimary : AppColorScheme.lightPrimary,
+        );
+      },
     );
   }
 

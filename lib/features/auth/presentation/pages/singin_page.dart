@@ -1,25 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:smartkyc/config/routes.dart';
 import 'package:smartkyc/features/auth/presentation/pages/verify_email_page.dart';
-import 'package:smartkyc/features/upload_document/presentation/pages/upload_document_page.dart';
+import 'package:smartkyc/features/language/presentation/widgets/language_switcher.dart';
+import '../../../../config/routes.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../verification_steps/presentation/widgets/verification_progress_overlay.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_state.dart';
-import '../widgets/email_input.dart';
+import '../widgets/login_form.dart';
 
-class SinginPage extends StatefulWidget {
-  const SinginPage({super.key});
+class SigninPage extends StatefulWidget {
+  const SigninPage({super.key});
 
   static const pageName = '/signin';
 
   @override
-  State<SinginPage> createState() => _SinginPageState();
+  State<SigninPage> createState() => _SigninPageState();
 }
 
-class _SinginPageState extends State<SinginPage> {
-  String nextRoute = UploadDocumentPage.pageName;
+class _SigninPageState extends State<SigninPage> {
+  String nextRoute = '/upload-document';
 
   Future<void> _checkNavigation() async {
     final route = await handleKYCNavigation(context);
@@ -31,7 +33,7 @@ class _SinginPageState extends State<SinginPage> {
   }
 
   void _showErrorSnackBar(String error) {
-    final errorDetails = _getErrorDetails(error);
+    final errorDetails = _getErrorDetails(error, context);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -104,78 +106,6 @@ class _SinginPageState extends State<SinginPage> {
     );
   }
 
-  ErrorDetails _getErrorDetails(String error) {
-    // Authentication Errors
-    if (error.contains('user-not-found')) {
-      return ErrorDetails(
-        title: 'Account Not Found',
-        message: 'Create a new account or try a different email',
-        icon: Icons.person_off_outlined,
-        color: const Color(0xFF323232),
-        action: () => context.go('/signup'),
-        actionLabel: 'Sign Up',
-      );
-    }
-
-    if (error.contains('credential is incorrect')) {
-      return ErrorDetails(
-        title: 'Incorrect Email or  Password',
-        message: 'Please check your email or password and try again',
-        icon: Icons.lock_outlined,
-        color: const Color(0xFF323232),
-      );
-    }
-
-    if (error.contains('invalid-email')) {
-      return ErrorDetails(
-        title: 'Invalid Email',
-        message: 'Please enter a valid email address',
-        icon: Icons.alternate_email,
-        color: const Color(0xFF323232),
-      );
-    }
-
-    if (error.contains('user-disabled')) {
-      return ErrorDetails(
-        title: 'Account Disabled',
-        message: 'Contact support for assistance',
-        icon: Icons.block_outlined,
-        color: const Color(0xFF323232),
-      );
-    }
-
-    if (error.contains('too-many-requests')) {
-      return ErrorDetails(
-        title: 'Too Many Attempts',
-        message: 'Please try again after some time',
-        icon: Icons.timer_outlined,
-        color: const Color(0xFF323232),
-      );
-    }
-
-    if (error.contains('network-request-failed')) {
-      return ErrorDetails(
-        title: 'Connection Error',
-        message: 'Check your internet connection',
-        icon: Icons.wifi_off_outlined,
-        color: const Color(0xFF323232),
-        action: () => _retryConnection(),
-        actionLabel: 'Retry',
-      );
-    }
-
-    return ErrorDetails(
-      title: 'Something Went Wrong',
-      message: 'Please try again later',
-      icon: Icons.error_outline,
-      color: const Color(0xFF323232),
-    );
-  }
-
-  void _retryConnection() {
-    // Add retry logic here
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<AuthBloc, AuthState>(
@@ -214,12 +144,71 @@ class _SinginPageState extends State<SinginPage> {
                 ],
               ),
             ),
-            child: const SafeArea(
-              child: EmailInput(),
+            child: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    // const LanguageSwitcher(),
+                    const SizedBox(height: 48),
+                    _buildLogo(context),
+                    const SizedBox(height: 32),
+                    _buildWelcomeText(context),
+                    const SizedBox(height: 48),
+                    const LoginForm(),
+                  ],
+                ),
+              ),
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildLogo(BuildContext context) {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.15),
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: Colors.white.withOpacity(0.3),
+            width: 2,
+          ),
+        ),
+        child: Icon(
+          Icons.lock_outline_rounded,
+          size: 48,
+          color: Colors.white.withOpacity(0.9),
+        ),
+      ),
+    ).animate().scale();
+  }
+
+  Widget _buildWelcomeText(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      children: [
+        Text(
+          l10n.welcomeTitle,
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+          textAlign: TextAlign.center,
+        ).animate().fadeIn().slideY(),
+        const SizedBox(height: 8),
+        Text(
+          l10n.welcomeSubtitle,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.9),
+          ),
+          textAlign: TextAlign.center,
+        ).animate().fadeIn().slideY(),
+      ],
     );
   }
 }
@@ -240,4 +229,35 @@ class ErrorDetails {
     this.action,
     this.actionLabel,
   });
+}
+
+ErrorDetails _getErrorDetails(String error, context) {
+  if (error.contains('user-not-found')) {
+    return ErrorDetails(
+      title: 'Account Not Found',
+      message: 'Create a new account or try a different email',
+      icon: Icons.person_off_outlined,
+      color: const Color(0xFF323232),
+      action: () => context.go('/signup'),
+      actionLabel: 'Sign Up',
+    );
+  }
+
+  if (error.contains('credential is incorrect')) {
+    return ErrorDetails(
+      title: 'Incorrect Email or Password',
+      message: 'Please check your email or password and try again',
+      icon: Icons.lock_outlined,
+      color: const Color(0xFF323232),
+    );
+  }
+
+  // Add other error cases...
+
+  return ErrorDetails(
+    title: 'Something Went Wrong',
+    message: 'Please try again later',
+    icon: Icons.error_outline,
+    color: const Color(0xFF323232),
+  );
 }

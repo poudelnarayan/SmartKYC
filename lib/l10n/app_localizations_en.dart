@@ -548,4 +548,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String step(int current, int total) {
     return 'Step $current of $total';
   }
+
+  @override
+  String get failToLoadProfile => 'Failed to load profile';
+
+  @override
+  String get noUserSignedIn => 'No user signed in';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String get contactInformation => 'Contact Information';
+
+  @override
+  String get verificationRequired => 'Verification Required';
+
+  @override
+  String get address => 'Address';
+
+  @override
+  String get notProvided => 'Not Provided';
+
+  @override
+  String get documentVerification => 'Document Verification';
+
+  @override
+  String get selfieVerification => 'Selfie Verification';
+
+  @override
+  String get livenessVerification => 'Liveness Verification';
+
+  @override
+  String get notVerified => 'Not Verified';
+
+  @override
+  String get verifyNowTxt => 'Verify Now';
+
+  @override
+  String get retry => 'Retry';
 }

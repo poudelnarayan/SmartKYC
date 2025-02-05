@@ -61,7 +61,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         actions: [
           FilledButton(
             onPressed: () {
-              context.go(SinginPage.pageName);
+              context.go(SigninPage.pageName);
             },
             style: FilledButton.styleFrom(
               minimumSize: const Size(double.infinity, AppDimensions.s48),

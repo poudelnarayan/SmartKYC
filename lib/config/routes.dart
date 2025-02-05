@@ -64,7 +64,7 @@ Future<String> handleKYCNavigation(BuildContext context,
 
 final appRouter = GoRouter(
   initialLocation: onboardingService.hasSeenOnboarding
-      ? SinginPage.pageName
+      ? SigninPage.pageName
       : OnboardingPage.pageName,
   routes: [
     GoRoute(
@@ -79,9 +79,9 @@ final appRouter = GoRouter(
       builder: (context, state) => OnboardingPage(),
     ),
     GoRoute(
-      name: SinginPage.pageName,
-      path: SinginPage.pageName,
-      builder: (context, state) => const SinginPage(),
+      name: SigninPage.pageName,
+      path: SigninPage.pageName,
+      builder: (context, state) => const SigninPage(),
     ),
     GoRoute(
       name: SignUpPage.pageName,
@@ -166,7 +166,7 @@ final appRouter = GoRouter(
         protectedRoutes.contains(state.matchedLocation);
 
     if (!isAuthenticated && isTryingToAccessProtectedRoute) {
-      return SinginPage.pageName;
+      return SigninPage.pageName;
     }
 
     return null;

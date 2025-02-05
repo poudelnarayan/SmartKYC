@@ -131,11 +131,12 @@ class _UserProfilePageState extends State<UserProfilePage> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final gradientColors = AppColorScheme.getGradientColors(isDark);
+    final l10n = AppLocalizations.of(context);
 
     return BlocListener<UserProfileBloc, UserProfileState>(
       listener: (context, state) {
         if (state is UserAccountDeleted || state is UserLoggedOut) {
-          context.pushReplacement(SinginPage.pageName);
+          context.pushReplacement(SigninPage.pageName);
         } else if (state is UserProfileError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -188,7 +189,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                               context, state, isDark)
                                           : Center(
                                               child: Text(
-                                                'Failed to load profile',
+                                                l10n.failToLoadProfile,
                                                 style: TextStyle(
                                                   color: isDark
                                                       ? AppColorScheme.darkText
@@ -229,6 +230,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   Widget _buildLogoutButton(BuildContext context, bool isDark) {
+    final l10n = AppLocalizations.of(context);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -260,7 +263,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
               ),
               const SizedBox(width: 8),
               Text(
-                'Logout',
+                l10n.logout,
                 style: TextStyle(
                   color: isDark ? AppColorScheme.darkText : Colors.white,
                   fontSize: 15,
@@ -306,6 +309,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   Widget _buildHeader(
       BuildContext context, UserProfileLoaded state, bool isDark) {
+    final l10n = AppLocalizations.of(context);
+
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(24),
@@ -376,7 +381,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
                     if (!snapshot.hasData || snapshot.data == null) {
                       return Text(
-                        "No user signed in",
+                        l10n.noUserSignedIn,
                         style: TextStyle(
                           color: isDark
                               ? AppColorScheme.darkTextSecondary
@@ -407,6 +412,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   Widget _buildQuickActions(
       BuildContext context, UserProfileLoaded state, bool isDark) {
+    final l10n = AppLocalizations.of(context);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -423,13 +430,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
           children: [
             QuickActionButton(
               icon: Icons.edit_note,
-              label: 'Edit',
+              label: l10n.edit,
               onTap: () => _showEditContactModal(context, state),
               isDark: isDark,
             ),
             QuickActionButton(
               icon: Icons.settings_outlined,
-              label: 'Settings',
+              label: l10n.settings,
               onTap: () {
                 showModalBottomSheet(
                   context: context,
@@ -442,7 +449,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
             ),
             QuickActionButton(
               icon: Icons.security_outlined,
-              label: 'Security',
+              label: l10n.security,
               onTap: () {
                 showModalBottomSheet(
                   context: context,
@@ -455,7 +462,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
             ),
             QuickActionButton(
               icon: Icons.info_outline,
-              label: 'About',
+              label: l10n.about,
               onTap: () {
                 showModalBottomSheet(
                   context: context,
@@ -496,32 +503,34 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   Widget _buildPersonalInfo(
       BuildContext context, UserProfileLoaded state, bool isDark) {
+    final l10n = AppLocalizations.of(context);
+
     return ProfileSection(
-      title: 'Personal Information',
+      title: l10n.personalInformation,
       icon: Icons.person_outline,
       isDark: isDark,
       items: [
         ProfileItem(
           icon: Icons.badge_outlined,
-          label: 'License Number',
+          label: l10n.licenseNumber,
           value: state.user.licenseNumber,
           isDark: isDark,
         ),
         ProfileItem(
           icon: Icons.assignment_ind_outlined,
-          label: 'Citizenship Number',
+          label: l10n.citizenshipNumber,
           value: state.user.citizenshipNumber,
           isDark: isDark,
         ),
         ProfileItem(
           icon: Icons.calendar_today_outlined,
-          label: 'Date of Birth',
+          label: l10n.dateOfBirth,
           value: state.user.dob.toString().split(' ')[0],
           isDark: isDark,
         ),
         ProfileItem(
           icon: Icons.family_restroom_outlined,
-          label: "Father's Name",
+          label: l10n.fatherName,
           value: state.user.fatherName,
           isDark: isDark,
         ),
@@ -531,16 +540,18 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   Widget _buildContactInfo(
       BuildContext context, UserProfileLoaded state, bool isDark) {
+    final l10n = AppLocalizations.of(context);
+
     return ProfileSection(
-      title: 'Contact Information',
+      title: l10n.contactInformation,
       icon: Icons.contact_phone_outlined,
       isDark: isDark,
       items: [
         ProfileItem(
           icon: Icons.phone_outlined,
-          label: 'Phone Number',
+          label: l10n.phoneLabel,
           value: state.user.phoneNumber.isEmpty
-              ? 'Verification Required'
+              ? l10n.verificationRequired
               : state.user.phoneNumber,
           isVerified: state.user.phoneNumber.isNotEmpty,
           onVerify: state.user.phoneNumber.isEmpty
@@ -550,9 +561,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
         ),
         ProfileItem(
           icon: Icons.location_on_outlined,
-          label: 'Address',
-          value:
-              state.user.address.isEmpty ? 'Not provided' : state.user.address,
+          label: l10n.address,
+          value: state.user.address.isEmpty
+              ? l10n.notProvided
+              : state.user.address,
           isDark: isDark,
         ),
       ],
@@ -561,15 +573,17 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   Widget _buildVerificationStatus(
       BuildContext context, UserProfileLoaded state, bool isDark) {
+    final l10n = AppLocalizations.of(context);
+
     return ProfileSection(
-      title: 'Verification Status',
+      title: l10n.verificationStatus,
       icon: Icons.verified_user_outlined,
       isDark: isDark,
       items: [
         _buildVerificationItem(
           context,
           icon: Icons.document_scanner_outlined,
-          label: 'Document Verification',
+          label: l10n.documentVerification,
           isVerified: state.user.isDocumentVerified,
           verificationScreenPath: UploadDocumentPage.pageName,
           isDark: isDark,
@@ -577,7 +591,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
         _buildVerificationItem(
           context,
           icon: Icons.face_outlined,
-          label: 'Selfie Verification',
+          label: l10n.selfieVerification,
           isVerified: state.user.isSelfieVerified,
           verificationScreenPath: SelfieStartPage.pageName,
           isDark: isDark,
@@ -585,7 +599,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
         _buildVerificationItem(
           context,
           icon: Icons.security_outlined,
-          label: 'Liveness Check',
+          label: l10n.livenessVerification,
           isVerified: state.user.isLivenessVerified,
           verificationScreenPath: LivenessDetectionStartPage.pageName,
           isDark: isDark,
@@ -602,6 +616,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
     required String verificationScreenPath,
     required bool isDark,
   }) {
+    final l10n = AppLocalizations.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -638,7 +654,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  isVerified ? 'Verified' : 'Not Verified',
+                  isVerified ? l10n.verified : l10n.notVerified,
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     color: isDark
@@ -666,7 +682,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    'Verified',
+                    l10n.verified,
                     style: TextStyle(
                       fontSize: 12,
                       color: AppColorScheme.success,
@@ -685,7 +701,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 );
               },
               icon: const Icon(Icons.verified_user_outlined, size: 16),
-              label: const Text('Verify Now'),
+              label: Text(l10n.verifyNowTxt),
               style: FilledButton.styleFrom(
                 backgroundColor: isDark
                     ? AppColorScheme.darkPrimary
@@ -702,6 +718,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   Widget _buildErrorState(
       BuildContext context, UserProfileError state, bool isDark) {
+    final l10n = AppLocalizations.of(context);
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -725,7 +743,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
               context.read<UserProfileBloc>().add(LoadUserProfile());
             },
             icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
+            label: Text(l10n.retry),
             style: FilledButton.styleFrom(
               backgroundColor: isDark
                   ? AppColorScheme.darkPrimary

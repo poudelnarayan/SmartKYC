@@ -548,4 +548,43 @@ class AppLocalizationsNe extends AppLocalizations {
   String step(int current, int total) {
     return '$total मध्ये $current चरण';
   }
+
+  @override
+  String get failToLoadProfile => 'प्रोफाइल लोड गर्न असफल';
+
+  @override
+  String get noUserSignedIn => 'कुनै प्रयोगकर्ता साइन इन भएको छैन';
+
+  @override
+  String get edit => 'सम्पादन';
+
+  @override
+  String get contactInformation => 'सम्पर्क जानकारी';
+
+  @override
+  String get verificationRequired => 'प्रमाणिकरण आवश्यक छ';
+
+  @override
+  String get address => 'ठेगाना';
+
+  @override
+  String get notProvided => 'प्रदान गरिएको छैन';
+
+  @override
+  String get documentVerification => 'कागजात प्रमाणीकरण';
+
+  @override
+  String get selfieVerification => 'सेल्फी प्रमाणीकरण';
+
+  @override
+  String get livenessVerification => 'लाइभनेस प्रमाणीकरण';
+
+  @override
+  String get notVerified => 'प्रमाणित गरिएको छैन';
+
+  @override
+  String get verifyNowTxt => 'प्रमाणित गर्नुहोस्';
+
+  @override
+  String get retry => 'पुन: प्रयास गर्नुहोस्';
 }

@@ -93,7 +93,7 @@ class SignUpSuccessPage extends StatelessWidget {
 
                 // Continue to sign in button
                 FilledButton.icon(
-                  onPressed: () => context.go(SinginPage.pageName),
+                  onPressed: () => context.go(SigninPage.pageName),
                   icon: const Icon(Icons.login_rounded),
                   label: Text(
                     l10n.continueToSignIn,

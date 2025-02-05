@@ -214,5 +214,18 @@
         "type": "int"
       }
     }
-  }
+  },
+  "failToLoadProfile": "Failed to load profile",
+  "noUserSignedIn": "No user signed in",
+  "edit": "Edit",
+  "contactInformation": "Contact Information",
+  "verificationRequired": "Verification Required",
+  "address": "Address",
+  "notProvided": "Not Provided",
+  "documentVerification": "Document Verification",
+  "selfieVerification": "Selfie Verification",
+  "livenessVerification": "Liveness Verification",
+  "notVerified":"Not Verified",
+  "verifyNowTxt":"Verify Now",
+  "retry":"Retry"
 }
