@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-
+import 'package:smartkyc/core/theme/app_color_scheme.dart';
 import 'package:smartkyc/config/routes.dart';
 import 'package:smartkyc/features/language/presentation/widgets/language_switcher.dart';
 import 'package:smartkyc/l10n/app_localizations.dart';
@@ -14,6 +14,7 @@ class VerificationStepsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: Container(
@@ -21,10 +22,7 @@ class VerificationStepsPage extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Theme.of(context).colorScheme.primary,
-              Theme.of(context).colorScheme.secondary,
-            ],
+            colors: AppColorScheme.getGradientColors(isDark),
           ),
         ),
         child: SafeArea(
@@ -40,13 +38,15 @@ class VerificationStepsPage extends StatelessWidget {
                 child: LanguageSwitcher(),
               ),
               Padding(
-                  padding: const EdgeInsets.only(left: 30),
-                  child: Text(
-                    l10n.languageSwitchWarn,
-                    style: const TextStyle(
-                      color: Colors.white60,
-                    ),
-                  )),
+                padding: const EdgeInsets.only(left: 30),
+                child: Text(
+                  l10n.languageSwitchWarn,
+                  style: TextStyle(
+                    color: (isDark ? AppColorScheme.darkText : Colors.white)
+                        .withOpacity(0.6),
+                  ),
+                ),
+              ),
               Expanded(
                 child: SingleChildScrollView(
                   child: Padding(
@@ -56,10 +56,11 @@ class VerificationStepsPage extends StatelessWidget {
                       children: [
                         Text(
                           l10n.verificationSteps,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color:
+                                isDark ? AppColorScheme.darkText : Colors.white,
                           ),
                         ).animate().fadeIn().slideX(),
                         const SizedBox(height: 8),
@@ -67,18 +68,22 @@ class VerificationStepsPage extends StatelessWidget {
                           l10n.verificationStepsDesc,
                           style: TextStyle(
                             fontSize: 16,
-                            color: Colors.white.withOpacity(0.8),
+                            color: (isDark
+                                    ? AppColorScheme.darkText
+                                    : Colors.white)
+                                .withOpacity(0.8),
                           ),
                         ).animate().fadeIn().slideX(),
                         const SizedBox(height: 48),
-                        _buildVerificationSteps(context),
+                        _buildVerificationSteps(context, isDark),
                         const SizedBox(height: 32),
                         FilledButton(
                           onPressed: () async => context.go(
                             await handleKYCNavigation(context),
                           ),
                           style: FilledButton.styleFrom(
-                            backgroundColor: Colors.white,
+                            backgroundColor:
+                                isDark ? AppColorScheme.darkText : Colors.white,
                             foregroundColor:
                                 Theme.of(context).colorScheme.primary,
                             minimumSize: const Size(double.infinity, 56),
@@ -106,7 +111,7 @@ class VerificationStepsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildVerificationSteps(BuildContext context) {
+  Widget _buildVerificationSteps(BuildContext context, bool isDark) {
     final steps = [
       {
         'icon': Icons.email_outlined,
@@ -148,13 +153,14 @@ class VerificationStepsPage extends StatelessWidget {
                 Container(
                   width: 48,
                   height: 48,
-                  decoration: const BoxDecoration(
-                    color: Colors.white38,
+                  decoration: BoxDecoration(
+                    color: (isDark ? AppColorScheme.darkText : Colors.white)
+                        .withOpacity(0.38),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     step["icon"] as IconData,
-                    color: Colors.white,
+                    color: isDark ? AppColorScheme.darkText : Colors.white,
                     size: 24,
                   ),
                 ),
@@ -165,10 +171,11 @@ class VerificationStepsPage extends StatelessWidget {
                     children: [
                       Text(
                         step['title'] as String,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color:
+                              isDark ? AppColorScheme.darkText : Colors.white,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -176,7 +183,9 @@ class VerificationStepsPage extends StatelessWidget {
                         step['subtitle'] as String,
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.white.withOpacity(0.8),
+                          color:
+                              (isDark ? AppColorScheme.darkText : Colors.white)
+                                  .withOpacity(0.8),
                         ),
                       ),
                     ],
@@ -190,7 +199,8 @@ class VerificationStepsPage extends StatelessWidget {
                 child: Container(
                   width: 2,
                   height: 40,
-                  color: Colors.white.withOpacity(0.2),
+                  color: (isDark ? AppColorScheme.darkText : Colors.white)
+                      .withOpacity(0.2),
                 ).animate().fadeIn().scale(),
               ),
           ],

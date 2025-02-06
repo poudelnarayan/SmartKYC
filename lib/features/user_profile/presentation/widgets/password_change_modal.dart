@@ -2,7 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:smartkyc/core/theme/app_color_scheme.dart';
+
+import '../../../../core/theme/app_color_scheme.dart';
 
 class PasswordChangeModal extends StatefulWidget {
   const PasswordChangeModal({super.key});
@@ -369,21 +370,21 @@ class _PasswordChangeModalState extends State<PasswordChangeModal> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColorScheme.lightError.withOpacity(0.1),
+                      color: AppColorScheme.error.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       children: [
                         Icon(
                           Icons.error_outline,
-                          color: AppColorScheme.lightError,
+                          color: AppColorScheme.error,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             _errorMessage!,
                             style: TextStyle(
-                              color: AppColorScheme.lightError,
+                              color: AppColorScheme.error,
                               fontSize: 14,
                             ),
                           ),

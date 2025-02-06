@@ -198,7 +198,7 @@ class _PhoneVerificationModalState extends State<PhoneVerificationModal> {
                 child: Text(
                   _errorMessage!,
                   style: TextStyle(
-                    color: AppColorScheme.lightError,
+                    color: AppColorScheme.error,
                     fontSize: 12,
                   ),
                 ),

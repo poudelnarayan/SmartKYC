@@ -17,6 +17,7 @@ class LivenessDetectionStartPage extends StatelessWidget {
     final bool returnToProfile = (extraData is Map<String, dynamic>)
         ? (extraData['returnToProfile'] ?? false)
         : false;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: Container(
@@ -25,10 +26,15 @@ class LivenessDetectionStartPage extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Theme.of(context).colorScheme.primary,
-              Theme.of(context).colorScheme.secondary,
-            ],
+            colors: isDark
+                ? [
+                    Colors.grey[900]!,
+                    Colors.grey[850]!,
+                  ]
+                : [
+                    Theme.of(context).colorScheme.primary,
+                    Theme.of(context).colorScheme.secondary,
+                  ],
           ),
         ),
         child: SafeArea(
@@ -41,12 +47,17 @@ class LivenessDetectionStartPage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        SizedBox(
+                          height: 20,
+                        ),
                         if (!returnToProfile)
                           SkipButton(
                             onSkip: () {
                               context.go(UserProfilePage.pageName);
                             },
                             textColor: Colors.white,
+                            backgroundColor:
+                                isDark ? Colors.white.withOpacity(0.1) : null,
                           ),
                         if (returnToProfile)
                           IconButton(
@@ -62,7 +73,9 @@ class LivenessDetectionStartPage extends StatelessWidget {
                             width: 80,
                             height: 80,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
+                              color: isDark
+                                  ? Colors.white.withOpacity(0.05)
+                                  : Colors.white.withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -73,27 +86,31 @@ class LivenessDetectionStartPage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 32),
-                        Text(
-                          l10n.faceVerification,
-                          style: const TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                        Center(
+                          child: Text(
+                            l10n.faceVerification,
+                            style: const TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                          textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 16),
                         Text(
                           l10n.faceVerificationDesc,
                           style: TextStyle(
                             fontSize: 16,
-                            color: Colors.white.withOpacity(0.8),
+                            color: isDark
+                                ? Colors.grey[300]
+                                : Colors.white.withOpacity(0.8),
                             height: 1.5,
                           ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 48),
-                        _buildRequirementsList(context),
+                        _buildRequirementsList(context, isDark),
                         const SizedBox(height: 48),
                       ],
                     ),
@@ -103,7 +120,9 @@ class LivenessDetectionStartPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: isDark
+                      ? Colors.white.withOpacity(0.05)
+                      : Colors.white.withOpacity(0.1),
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(32),
                   ),
@@ -114,7 +133,9 @@ class LivenessDetectionStartPage extends StatelessWidget {
                     Text(
                       l10n.verificationTimeEstimate,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
+                        color: isDark
+                            ? Colors.grey[300]
+                            : Colors.white.withOpacity(0.8),
                         fontSize: 14,
                       ),
                     ),
@@ -128,7 +149,8 @@ class LivenessDetectionStartPage extends StatelessWidget {
                         ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
-                          foregroundColor: Colors.blue.shade900,
+                          foregroundColor:
+                              isDark ? Colors.grey[900] : Colors.blue.shade900,
                           padding: const EdgeInsets.symmetric(
                             vertical: 16,
                             horizontal: 24,
@@ -157,7 +179,7 @@ class LivenessDetectionStartPage extends StatelessWidget {
     );
   }
 
-  Widget _buildRequirementsList(BuildContext context) {
+  Widget _buildRequirementsList(BuildContext context, bool isDark) {
     final l10n = AppLocalizations.of(context);
 
     final requirements = [
@@ -187,7 +209,9 @@ class LivenessDetectionStartPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: isDark
+                      ? Colors.white.withOpacity(0.05)
+                      : Colors.white.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -213,7 +237,9 @@ class LivenessDetectionStartPage extends StatelessWidget {
                     Text(
                       requirement['description'] as String,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
+                        color: isDark
+                            ? Colors.grey[300]
+                            : Colors.white.withOpacity(0.8),
                         fontSize: 14,
                       ),
                     ),

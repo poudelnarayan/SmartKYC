@@ -30,7 +30,7 @@ class _SecurityBottomSheetState extends State<SecurityBottomSheet> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
-              backgroundColor: AppColorScheme.lightError,
+              backgroundColor: AppColorScheme.error,
             ),
           );
         }
@@ -70,11 +70,11 @@ class _SecurityBottomSheetState extends State<SecurityBottomSheet> {
             ListTile(
               leading: Icon(
                 Icons.delete_forever_outlined,
-                color: AppColorScheme.darkError,
+                color: AppColorScheme.error,
               ),
               title: Text(
                 'Delete Account',
-                style: TextStyle(color: AppColorScheme.lightError),
+                style: TextStyle(color: AppColorScheme.error),
               ),
               onTap: () => _showDeleteConfirmation(context, isDark),
             ),
@@ -154,7 +154,7 @@ class _SecurityBottomSheetState extends State<SecurityBottomSheet> {
               Navigator.pop(context); // Close bottom sheet
             },
             style: FilledButton.styleFrom(
-              backgroundColor: AppColorScheme.lightError,
+              backgroundColor: AppColorScheme.error,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -218,34 +218,16 @@ class _SecurityBottomSheetState extends State<SecurityBottomSheet> {
 
               // Re-authenticate to enable biometrics
               if (context.mounted) {
-                final result = await showDialog<bool>(
+                await showDialog<bool>(
                   context: context,
                   builder: (context) => BiometricPromptDialog(
                     email: FirebaseAuth.instance.currentUser!.email!,
                     password: '', // You'll need to get this securely
                   ),
                 );
-
-                if (result ?? false) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Biometric login enabled'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  }
-                }
               }
             } else {
               await BiometricService.disableBiometric();
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Biometric login disabled'),
-                  ),
-                );
-              }
             }
 
             // Refresh the UI

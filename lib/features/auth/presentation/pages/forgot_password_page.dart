@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:smartkyc/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartkyc/core/constants/app_dimensions.dart';
+import 'package:smartkyc/core/theme/app_color_scheme.dart';
 import 'package:smartkyc/features/auth/presentation/pages/singin_page.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
@@ -30,13 +31,18 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   void _showResetSuccessDialog(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
+        backgroundColor: AppColorScheme.getCardBackground(isDark),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: AppColorScheme.getCardBorder(isDark),
+          ),
         ),
         icon: Container(
           padding: const EdgeInsets.all(16),
@@ -53,10 +59,18 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         title: Text(
           l10n.resetLinkSent,
           textAlign: TextAlign.center,
+          style: TextStyle(
+            color: isDark ? AppColorScheme.darkText : AppColorScheme.lightText,
+          ),
         ),
         content: Text(
           l10n.resetLinkSentDesc,
           textAlign: TextAlign.center,
+          style: TextStyle(
+            color: isDark
+                ? AppColorScheme.darkTextSecondary
+                : AppColorScheme.lightTextSecondary,
+          ),
         ),
         actions: [
           FilledButton(
@@ -64,6 +78,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               context.go(SigninPage.pageName);
             },
             style: FilledButton.styleFrom(
+              backgroundColor: isDark
+                  ? AppColorScheme.darkPrimary
+                  : AppColorScheme.lightPrimary,
+              foregroundColor:
+                  isDark ? AppColorScheme.darkSurface : Colors.white,
               minimumSize: const Size(double.infinity, AppDimensions.s48),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -82,26 +101,16 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: theme.colorScheme.primary,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
       body: Container(
         height: MediaQuery.of(context).size.height,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              theme.colorScheme.primary,
-              theme.colorScheme.secondary,
-            ],
+            colors: AppColorScheme.getGradientColors(isDark),
           ),
         ),
         child: SafeArea(
@@ -110,40 +119,50 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             child: Form(
               key: _formKey,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  IconButton(
+                      onPressed: () {
+                        context.pop();
+                      },
+                      icon: Icon(Icons.arrow_back)),
                   const SizedBox(height: AppDimensions.s48),
                   // Icon
                   Center(
                     child: Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: (isDark ? AppColorScheme.darkText : Colors.white)
+                            .withOpacity(0.15),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         Icons.lock_reset_outlined,
                         size: AppDimensions.s48,
-                        color: Colors.white.withOpacity(0.9),
+                        color: (isDark ? AppColorScheme.darkText : Colors.white)
+                            .withOpacity(0.9),
                       ),
                     ),
                   ).animate().scale(),
                   const SizedBox(height: AppDimensions.h32),
                   // Title
-                  Text(
-                    l10n.forgotPassword,
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ).animate().fadeIn().slideY(),
+                  Center(
+                    child: Text(
+                      l10n.forgotPassword,
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        color: isDark ? AppColorScheme.darkText : Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ).animate().fadeIn().slideY(),
+                  ),
                   const SizedBox(height: AppDimensions.h12),
                   // Description
                   Text(
                     l10n.forgotPasswordDesc,
                     style: theme.textTheme.bodyLarge?.copyWith(
-                      color: Colors.white.withOpacity(0.9),
+                      color: (isDark ? AppColorScheme.darkText : Colors.white)
+                          .withOpacity(0.9),
                     ),
                     textAlign: TextAlign.center,
                   ).animate().fadeIn().slideY(),
@@ -152,33 +171,47 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(
+                      color: isDark ? AppColorScheme.darkText : Colors.white,
+                    ),
                     decoration: InputDecoration(
                       labelText: l10n.emailLabel,
-                      labelStyle:
-                          TextStyle(color: Colors.white.withOpacity(0.9)),
+                      labelStyle: TextStyle(
+                        color: (isDark ? AppColorScheme.darkText : Colors.white)
+                            .withOpacity(0.9),
+                      ),
                       prefixIcon: Icon(
                         Icons.email_outlined,
-                        color: Colors.white.withOpacity(0.7),
+                        color: (isDark ? AppColorScheme.darkText : Colors.white)
+                            .withOpacity(0.7),
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide(
-                          color: Colors.white.withOpacity(0.3),
+                          color:
+                              (isDark ? AppColorScheme.darkText : Colors.white)
+                                  .withOpacity(0.3),
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide(
-                          color: Colors.white.withOpacity(0.3),
+                          color:
+                              (isDark ? AppColorScheme.darkText : Colors.white)
+                                  .withOpacity(0.3),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(color: Colors.white),
+                        borderSide: BorderSide(
+                          color:
+                              isDark ? AppColorScheme.darkText : Colors.white,
+                        ),
                       ),
                       filled: true,
-                      fillColor: Colors.white.withOpacity(0.1),
+                      fillColor:
+                          (isDark ? AppColorScheme.darkText : Colors.white)
+                              .withOpacity(0.1),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -225,8 +258,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                 width: 24,
                                 height: 24,
                                 padding: const EdgeInsets.all(2),
-                                child: const CircularProgressIndicator(
-                                  color: Colors.white,
+                                child: CircularProgressIndicator(
+                                  color: isDark
+                                      ? AppColorScheme.darkSurface
+                                      : Colors.white,
                                   strokeWidth: 3,
                                 ),
                               )
@@ -239,7 +274,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           ),
                         ),
                         style: FilledButton.styleFrom(
-                          backgroundColor: Colors.white,
+                          backgroundColor:
+                              isDark ? AppColorScheme.darkText : Colors.white,
                           foregroundColor: theme.colorScheme.primary,
                           minimumSize:
                               const Size(double.infinity, AppDimensions.s56),

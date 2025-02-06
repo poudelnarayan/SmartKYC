@@ -1,11 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:smartkyc/domain/entities/user.dart';
-
 import 'user_repository.dart';
 
 class UserRepositoryImpl implements UserRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore;
+  final FirebaseStorage _storage;
+
+  UserRepositoryImpl({
+    FirebaseFirestore? firestore,
+    FirebaseStorage? storage,
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _storage = storage ?? FirebaseStorage.instance;
 
   @override
   Future<User> getUser(String uid) async {
@@ -19,18 +25,17 @@ class UserRepositoryImpl implements UserRepository {
 
   @override
   Future<void> updateUser(User user) async {
-    await _firestore.collection('users').doc(user.uid).set(
-        user.toJson(),
-        SetOptions(
-          merge: true,
-        ));
+    await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .set(user.toJson(), SetOptions(merge: true));
   }
 
   @override
   Future<void> updateUserLivenessVerification(
       String userId, String field, dynamic value) async {
     try {
-      await FirebaseFirestore.instance.collection('users').doc(userId).update({
+      await _firestore.collection('users').doc(userId).update({
         field: value,
       });
       print("User field updated successfully.");
@@ -43,7 +48,7 @@ class UserRepositoryImpl implements UserRepository {
   Future<void> updateUserSelfieVerification(
       String userId, String field, dynamic value) async {
     try {
-      await FirebaseFirestore.instance.collection('users').doc(userId).update({
+      await _firestore.collection('users').doc(userId).update({
         field: value,
       });
       print("User field updated successfully.");
@@ -63,13 +68,12 @@ class UserRepositoryImpl implements UserRepository {
 
       if (userData.exists) {
         // Delete user's files from Storage if they exist
-        final storage = FirebaseStorage.instance;
         final userStoragePath = 'users/$uid';
 
         try {
           // List all files in user's storage directory
           final ListResult result =
-              await storage.ref(userStoragePath).listAll();
+              await _storage.ref(userStoragePath).listAll();
 
           // Delete each file
           for (var item in result.items) {

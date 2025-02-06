@@ -195,7 +195,7 @@ class _ContactVerificationModalState extends State<ContactVerificationModal> {
                         prefixIcon: Icon(
                           Icons.password_rounded,
                           color: errorText != null
-                              ? AppColorScheme.lightError
+                              ? AppColorScheme.error
                               : isDark
                                   ? AppColorScheme.darkTextSecondary
                                   : AppColorScheme.lightTextSecondary,
@@ -206,7 +206,7 @@ class _ContactVerificationModalState extends State<ContactVerificationModal> {
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined,
                             color: errorText != null
-                                ? AppColorScheme.lightError
+                                ? AppColorScheme.error
                                 : isDark
                                     ? AppColorScheme.darkTextSecondary
                                     : AppColorScheme.lightTextSecondary,
@@ -242,18 +242,18 @@ class _ContactVerificationModalState extends State<ContactVerificationModal> {
                         errorBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide(
-                            color: AppColorScheme.lightError,
+                            color: AppColorScheme.error,
                           ),
                         ),
                         focusedErrorBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide(
-                            color: AppColorScheme.lightError,
+                            color: AppColorScheme.error,
                             width: 2,
                           ),
                         ),
                         errorStyle: TextStyle(
-                          color: AppColorScheme.lightError,
+                          color: AppColorScheme.error,
                         ),
                         filled: true,
                         fillColor: isDark

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:smartkyc/core/theme/app_color_scheme.dart';
 import 'package:smartkyc/l10n/app_localizations.dart';
 import 'package:smartkyc/features/auth/presentation/pages/sign_up_success.dart';
 import '../../../../core/constants/app_dimensions.dart';
@@ -38,6 +39,7 @@ class _SignUpPageState extends State<SignUpPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
@@ -59,10 +61,7 @@ class _SignUpPageState extends State<SignUpPage> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                theme.colorScheme.primary,
-                theme.colorScheme.secondary,
-              ],
+              colors: AppColorScheme.getGradientColors(isDark),
             ),
           ),
           child: SafeArea(
@@ -79,17 +78,24 @@ class _SignUpPageState extends State<SignUpPage> {
                       child: Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
+                          color:
+                              (isDark ? AppColorScheme.darkText : Colors.white)
+                                  .withOpacity(0.15),
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
+                            color: (isDark
+                                    ? AppColorScheme.darkText
+                                    : Colors.white)
+                                .withOpacity(0.3),
                             width: 2,
                           ),
                         ),
                         child: Icon(
                           Icons.person_add_outlined,
                           size: AppDimensions.s48,
-                          color: Colors.white.withOpacity(0.9),
+                          color:
+                              (isDark ? AppColorScheme.darkText : Colors.white)
+                                  .withOpacity(0.9),
                         ),
                       ),
                     ).animate().scale(),
@@ -98,7 +104,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     Text(
                       l10n.createAccount,
                       style: theme.textTheme.headlineMedium?.copyWith(
-                        color: Colors.white,
+                        color: isDark ? AppColorScheme.darkText : Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.center,
@@ -108,7 +114,8 @@ class _SignUpPageState extends State<SignUpPage> {
                     Text(
                       l10n.createAccountDesc,
                       style: theme.textTheme.bodyLarge?.copyWith(
-                        color: Colors.white.withOpacity(0.9),
+                        color: (isDark ? AppColorScheme.darkText : Colors.white)
+                            .withOpacity(0.9),
                       ),
                       textAlign: TextAlign.center,
                     ).animate().fadeIn().slideY(),
@@ -117,10 +124,13 @@ class _SignUpPageState extends State<SignUpPage> {
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(
+                        color: isDark ? AppColorScheme.darkText : Colors.white,
+                      ),
                       decoration: _getInputDecoration(
                         label: l10n.emailLabel,
                         icon: Icons.email_outlined,
+                        isDark: isDark,
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -138,16 +148,22 @@ class _SignUpPageState extends State<SignUpPage> {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: !_isPasswordVisible,
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(
+                        color: isDark ? AppColorScheme.darkText : Colors.white,
+                      ),
                       decoration: _getInputDecoration(
                         label: l10n.passwordLabel,
                         icon: Icons.lock_outline_rounded,
+                        isDark: isDark,
                         suffixIcon: IconButton(
                           icon: Icon(
                             _isPasswordVisible
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined,
-                            color: Colors.white.withOpacity(0.7),
+                            color: (isDark
+                                    ? AppColorScheme.darkText
+                                    : Colors.white)
+                                .withOpacity(0.7),
                           ),
                           onPressed: () {
                             setState(() {
@@ -171,16 +187,22 @@ class _SignUpPageState extends State<SignUpPage> {
                     TextFormField(
                       controller: _confirmPasswordController,
                       obscureText: !_isConfirmPasswordVisible,
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(
+                        color: isDark ? AppColorScheme.darkText : Colors.white,
+                      ),
                       decoration: _getInputDecoration(
                         label: l10n.confirmPassword,
                         icon: Icons.lock_outline_rounded,
+                        isDark: isDark,
                         suffixIcon: IconButton(
                           icon: Icon(
                             _isConfirmPasswordVisible
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined,
-                            color: Colors.white.withOpacity(0.7),
+                            color: (isDark
+                                    ? AppColorScheme.darkText
+                                    : Colors.white)
+                                .withOpacity(0.7),
                           ),
                           onPressed: () {
                             setState(() {
@@ -223,8 +245,10 @@ class _SignUpPageState extends State<SignUpPage> {
                                   width: 24,
                                   height: 24,
                                   padding: const EdgeInsets.all(2),
-                                  child: const CircularProgressIndicator(
-                                    color: Colors.white,
+                                  child: CircularProgressIndicator(
+                                    color: isDark
+                                        ? AppColorScheme.darkSurface
+                                        : Colors.white,
                                     strokeWidth: 3,
                                   ),
                                 )
@@ -237,7 +261,8 @@ class _SignUpPageState extends State<SignUpPage> {
                             ),
                           ),
                           style: FilledButton.styleFrom(
-                            backgroundColor: Colors.white,
+                            backgroundColor:
+                                isDark ? AppColorScheme.darkText : Colors.white,
                             foregroundColor: theme.colorScheme.primary,
                             minimumSize: const Size(double.infinity, 56),
                             shape: RoundedRectangleBorder(
@@ -255,15 +280,20 @@ class _SignUpPageState extends State<SignUpPage> {
                         Text(
                           l10n.alreadyHaveAccount,
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
+                            color: (isDark
+                                    ? AppColorScheme.darkText
+                                    : Colors.white)
+                                .withOpacity(0.9),
                           ),
                         ),
                         TextButton(
                           onPressed: () => context.pop(),
                           child: Text(
                             l10n.signIn,
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: isDark
+                                  ? AppColorScheme.darkText
+                                  : Colors.white,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -283,34 +313,37 @@ class _SignUpPageState extends State<SignUpPage> {
   InputDecoration _getInputDecoration({
     required String label,
     required IconData icon,
+    required bool isDark,
     Widget? suffixIcon,
   }) {
+    final textColor = isDark ? AppColorScheme.darkText : Colors.white;
+
     return InputDecoration(
       labelText: label,
-      labelStyle: TextStyle(color: Colors.white.withOpacity(0.9)),
+      labelStyle: TextStyle(color: textColor.withOpacity(0.9)),
       prefixIcon: Icon(
         icon,
-        color: Colors.white.withOpacity(0.7),
+        color: textColor.withOpacity(0.7),
       ),
       suffixIcon: suffixIcon,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide(
-          color: Colors.white.withOpacity(0.3),
+          color: textColor.withOpacity(0.3),
         ),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide(
-          color: Colors.white.withOpacity(0.3),
+          color: textColor.withOpacity(0.3),
         ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Colors.white),
+        borderSide: BorderSide(color: textColor),
       ),
       filled: true,
-      fillColor: Colors.white.withOpacity(0.1),
+      fillColor: textColor.withOpacity(0.1),
     );
   }
 }

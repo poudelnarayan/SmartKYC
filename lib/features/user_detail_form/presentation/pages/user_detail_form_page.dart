@@ -41,6 +41,7 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
   };
 
   Future<void> _selectDate(BuildContext context, String field) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _formData[field] ?? DateTime.now(),
@@ -52,8 +53,8 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
             colorScheme: Theme.of(context).colorScheme.copyWith(
                   primary: Theme.of(context).colorScheme.primary,
                   onPrimary: Colors.white,
-                  surface: Colors.white,
-                  onSurface: Colors.black,
+                  surface: isDark ? Colors.grey[850] : Colors.white,
+                  onSurface: isDark ? Colors.white : Colors.black,
                 ),
           ),
           child: child!,
@@ -80,7 +81,7 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
     final getUser = GetUser();
 
     try {
-      User user = await getUser(auth.FirebaseAuth.instance.currentUser!.uid);
+      User user = await getUser();
 
       if (mounted) {
         setState(() {
@@ -103,112 +104,124 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     print(isLivenessVerified);
     print(isSelfieVerified);
 
-    return BlocConsumer<UserBloc, UserState>(listener: (context, state) {
-      if (state is UserUpdateError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(state.message),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-      if (state is UserUpdated) {
-        final extraData = GoRouterState.of(context).extra;
-        final returnToProfile = (extraData is Map<String, dynamic>)
-            ? extraData['returnToProfile'] ?? false
-            : false;
-
-        if (returnToProfile) {
-          context.go(UserProfilePage.pageName);
-        }
-
-        Navigator.push(
-          context,
-          PageRouteBuilder(
-            opaque: false,
-            pageBuilder: (context, _, __) => const VerificationProgressOverlay(
-              completedStep: 1,
-              nextRoute: SelfieStartPage.pageName,
+    return BlocConsumer<UserBloc, UserState>(
+      listener: (context, state) {
+        if (state is UserUpdateError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
             ),
-          ),
-        );
-      }
-    }, builder: (context, state) {
-      return state is UserUpdating
-          ? UploadOverlay(
-              title: "Uploading Details",
-              message: 'Please wait while we process your details...',
-              lottieUrl:
-                  'https://lottie.host/7a5f681f-48d9-4af3-9413-a0c09368d996/s3byanoCZ1.json',
-              onCancel: () {
-                UploadOverlay.hide(context);
-              },
-            )
-          : Scaffold(
-              backgroundColor: Colors.grey[100],
-              appBar: AppBar(
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => context.pop(),
-                ),
-                title: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.assignment_ind,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      l10n.licenseDetails,
-                      style: const TextStyle(fontSize: 20),
-                    ),
-                  ],
-                ),
-                centerTitle: false,
-                elevation: 0,
-                backgroundColor: Colors.transparent,
+          );
+        }
+        if (state is UserUpdated) {
+          final extraData = GoRouterState.of(context).extra;
+          final returnToProfile = (extraData is Map<String, dynamic>)
+              ? extraData['returnToProfile'] ?? false
+              : false;
+
+          if (returnToProfile) {
+            context.go(UserProfilePage.pageName);
+          }
+
+          Navigator.push(
+            context,
+            PageRouteBuilder(
+              opaque: false,
+              pageBuilder: (context, _, __) =>
+                  const VerificationProgressOverlay(
+                completedStep: 1,
+                nextRoute: SelfieStartPage.pageName,
               ),
-              body: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: FocusScope.of(context).unfocus,
-                        child: SingleChildScrollView(
-                          child: Column(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildFormSections(context),
-                                  ],
+            ),
+          );
+        }
+      },
+      builder: (context, state) {
+        return state is UserUpdating
+            ? UploadOverlay(
+                title: "Uploading Details",
+                message: 'Please wait while we process your details...',
+                lottieUrl:
+                    'https://lottie.host/7a5f681f-48d9-4af3-9413-a0c09368d996/s3byanoCZ1.json',
+                onCancel: () {
+                  UploadOverlay.hide(context);
+                },
+              )
+            : Scaffold(
+                backgroundColor: isDark ? Colors.grey[900] : Colors.grey[100],
+                appBar: AppBar(
+                  leading: IconButton(
+                    icon: Icon(
+                      Icons.arrow_back,
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                    onPressed: () => context.pop(),
+                  ),
+                  title: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.assignment_ind,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        l10n.licenseDetails,
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                  centerTitle: false,
+                  elevation: 0,
+                  backgroundColor: Colors.transparent,
+                ),
+                body: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: FocusScope.of(context).unfocus,
+                          child: SingleChildScrollView(
+                            child: Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      _buildFormSections(context),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    _buildBottomBar(context),
-                  ],
+                      _buildBottomBar(context),
+                    ],
+                  ),
                 ),
-              ),
-            );
-    });
+              );
+      },
+    );
   }
 
   Widget _buildFormSections(BuildContext context) {
@@ -316,14 +329,17 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
     required List<Widget> children,
   }) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? Colors.grey[850] : Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: isDark
+                ? Colors.black.withOpacity(0.3)
+                : Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -352,12 +368,16 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
                   title,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : null,
                   ),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1),
+          Divider(
+            height: 1,
+            color: isDark ? Colors.grey[700] : null,
+          ),
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(children: children),
@@ -375,10 +395,15 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
     required IconData prefixIcon,
     String? Function(String?)? validator,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return TextFormField(
       initialValue: value,
       onChanged: onChanged,
       keyboardType: keyboardType,
+      style: TextStyle(
+        color: isDark ? Colors.white : Colors.black,
+      ),
       decoration: _getInputDecoration(label, prefixIcon),
       validator: validator ?? _getDefaultValidator(label),
     );
@@ -390,9 +415,14 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
     required VoidCallback onTap,
     IconData? prefixIcon,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return TextFormField(
       readOnly: true,
       onTap: onTap,
+      style: TextStyle(
+        color: isDark ? Colors.white : Colors.black,
+      ),
       decoration: _getInputDecoration(
         label,
         prefixIcon,
@@ -408,15 +438,46 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
     IconData? prefixIcon, {
     IconData? suffixIcon,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return InputDecoration(
       labelText: label,
-      prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
-      suffixIcon: suffixIcon != null ? Icon(suffixIcon) : null,
+      labelStyle: TextStyle(
+        color: isDark ? Colors.grey[300] : null,
+      ),
+      prefixIcon: prefixIcon != null
+          ? Icon(
+              prefixIcon,
+              color: isDark ? Colors.grey[400] : Colors.grey[600],
+            )
+          : null,
+      suffixIcon: suffixIcon != null
+          ? Icon(
+              suffixIcon,
+              color: isDark ? Colors.grey[400] : Colors.grey[600],
+            )
+          : null,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+        ),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: Theme.of(context).colorScheme.primary,
+          width: 2,
+        ),
       ),
       filled: true,
-      fillColor: Colors.grey[50],
+      fillColor: isDark ? Colors.grey[800] : Colors.grey[50],
       contentPadding: const EdgeInsets.symmetric(
         horizontal: 16,
         vertical: 16,
@@ -435,14 +496,17 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
 
   Widget _buildBottomBar(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? Colors.grey[850] : Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: isDark
+                ? Colors.black.withOpacity(0.3)
+                : Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),

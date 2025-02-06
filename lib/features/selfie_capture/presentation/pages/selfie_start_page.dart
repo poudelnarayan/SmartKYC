@@ -21,7 +21,7 @@ class _SelfieStartPageState extends State<SelfieStartPage> {
   @override
   void initState() {
     super.initState();
-    _checkNavigation(); // Call the async function separately
+    _checkNavigation();
   }
 
   Future<void> _checkNavigation() async {
@@ -40,19 +40,31 @@ class _SelfieStartPageState extends State<SelfieStartPage> {
     final bool returnToProfile = (extraData is Map<String, dynamic>)
         ? (extraData['returnToProfile'] ?? false)
         : false;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: isDark ? Colors.grey[900] : Colors.white,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
         actions: [
           if (!returnToProfile)
-            SkipButton(onSkip: () {
-              context.go(nextRoute);
-            }),
-          SizedBox(
-            width: 25,
-          )
+            Column(
+              children: [
+                const SizedBox(
+                  height: 14,
+                ),
+                SkipButton(
+                  onSkip: () {
+                    context.go(nextRoute);
+                  },
+                  backgroundColor:
+                      isDark ? Colors.white.withOpacity(0.1) : null,
+                  textColor: isDark ? Colors.white : null,
+                ),
+              ],
+            ),
+          const SizedBox(width: 25),
         ],
       ),
       body: SafeArea(
@@ -76,7 +88,7 @@ class _SelfieStartPageState extends State<SelfieStartPage> {
                 Text(
                   l10n.selfieCaptureDesc,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.grey[600],
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
                       ),
                 ),
                 const SizedBox(height: 20),
@@ -110,11 +122,13 @@ class _SelfieStartPageState extends State<SelfieStartPage> {
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: isDark ? Colors.grey[850] : Colors.white,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: isDark
+                            ? Colors.black.withOpacity(0.3)
+                            : Colors.black.withOpacity(0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -172,14 +186,14 @@ class _SelfieStartPageState extends State<SelfieStartPage> {
                       Icon(
                         Icons.info_outline,
                         size: 20,
-                        color: Colors.grey[600],
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           l10n.lightingTip,
                           style: TextStyle(
-                            color: Colors.grey[600],
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
                             fontSize: 14,
                           ),
                         ),
@@ -201,6 +215,8 @@ class _SelfieStartPageState extends State<SelfieStartPage> {
     required String title,
     required String description,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Row(
       children: [
         Container(
@@ -224,13 +240,14 @@ class _SelfieStartPageState extends State<SelfieStartPage> {
                 title,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : null,
                     ),
               ),
               const SizedBox(height: 4),
               Text(
                 description,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
                     ),
               ),
             ],

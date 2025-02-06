@@ -78,6 +78,6 @@ class BiometricLoginText extends StatelessWidget {
           ),
         );
       },
-    );
+    ).animate().fadeIn().slideX();
   }
 }

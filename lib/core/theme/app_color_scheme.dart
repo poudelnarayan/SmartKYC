@@ -2,22 +2,28 @@ import 'package:flutter/material.dart';
 
 class AppColorScheme {
   // Light Theme Colors
-  static const lightPrimary = Color(0xFF2563EB); // Blue
-  static const lightSecondary = Color(0xFF3B82F6); // Lighter Blue
-  static const lightBackground = Color(0xFFF8FAFC); // Very Light Gray
-  static const lightSurface = Color(0xFFFFFFFF); // White
-  static const lightError = Color(0xFFDC2626); // Red
-  static const lightText = Color(0xFF1F2937); // Dark Gray
-  static const lightTextSecondary = Color(0xFF6B7280); // Medium Gray
+  static const Color lightPrimary = Color(0xFF1A73E8);
+  static const Color lightSecondary = Color(0xFF5F6368);
+  static const Color lightBackground = Color(0xFFF8F9FA);
+  static const Color lightSurface = Colors.white;
+  static const Color lightText = Color(0xFF202124);
+  static const Color lightTextSecondary = Color(0xFF5F6368);
+  static const Color lightCardBorder = Color(0xFFE8EAED);
 
   // Dark Theme Colors
-  static const darkPrimary = Color(0xFF3B82F6); // Blue
-  static const darkSecondary = Color(0xFF60A5FA); // Lighter Blue
-  static const darkBackground = Color(0xFF1F2937); // Dark Blue Gray
-  static const darkSurface = Color(0xFF111827); // Darker Blue Gray
-  static const darkError = Color(0xFFEF4444); // Red
-  static const darkText = Color(0xFFF9FAFB); // Off White
-  static const darkTextSecondary = Color(0xFFD1D5DB); // Light Gray
+  static const Color darkPrimary = Color(0xFF8AB4F8);
+  static const Color darkSecondary = Color(0xFFBDC1C6);
+  static const Color darkBackground = Color(0xFF202124);
+  static const Color darkSurface = Color(0xFF303134);
+  static const Color darkText = Color(0xFFE8EAED);
+  static const Color darkTextSecondary = Color(0xFFBDC1C6);
+  static const Color darkCardBorder = Color(0xFF3C4043);
+
+  // Status Colors
+  static const Color success = Color(0xFF34A853);
+  static const Color error = Color(0xFFEA4335);
+  static const Color warning = Color(0xFFFBBC04);
+  static const Color info = Color(0xFF4285F4);
 
   // Gradient Colors - Light Theme
   static const lightGradientStart = Color(0xFF2563EB); // Primary Blue
@@ -27,19 +33,6 @@ class AppColorScheme {
   static const darkGradientStart = Color(0xFF1E3A8A); // Dark Blue
   static const darkGradientEnd = Color(0xFF1F2937); // Dark Gray Blue
 
-  // Common Colors
-  static const success = Color(0xFF22C55E); // Green
-  static const warning = Color(0xFFF59E0B); // Orange
-  static const info = Color(0xFF3B82F6); // Blue
-
-  // Card Colors - Light Theme
-  static const lightCardBackground = Color(0xFFFFFFFF);
-  static const lightCardBorder = Color(0xFFE5E7EB);
-
-  // Card Colors - Dark Theme
-  static const darkCardBackground = Color(0xFF1F2937);
-  static const darkCardBorder = Color(0xFF374151);
-
   // Get gradient colors based on theme mode
   static List<Color> getGradientColors(bool isDark) {
     return isDark
@@ -47,9 +40,9 @@ class AppColorScheme {
         : [lightGradientStart, lightGradientEnd];
   }
 
-  // Get card colors based on theme mode
+  // Helper methods
   static Color getCardBackground(bool isDark) {
-    return isDark ? darkCardBackground : lightCardBackground;
+    return isDark ? darkSurface : lightSurface;
   }
 
   static Color getCardBorder(bool isDark) {

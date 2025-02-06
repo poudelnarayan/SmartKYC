@@ -88,7 +88,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
               context.read<UserProfileBloc>().add(LogoutUser());
             },
             style: FilledButton.styleFrom(
-              backgroundColor: AppColorScheme.lightError,
+              backgroundColor: AppColorScheme.error,
               foregroundColor: Colors.white,
             ),
             child: Text(l10n.logout),
@@ -141,7 +141,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
-              backgroundColor: AppColorScheme.lightError,
+              backgroundColor: AppColorScheme.error,
             ),
           );
         }
@@ -727,7 +727,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
           Icon(
             Icons.error_outline,
             size: 48,
-            color: AppColorScheme.lightError,
+            color: AppColorScheme.error,
           ),
           const SizedBox(height: 16),
           Text(

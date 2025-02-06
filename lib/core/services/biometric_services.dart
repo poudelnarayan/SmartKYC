@@ -47,6 +47,7 @@ class BiometricService {
   }
 
   // Save biometric preferences
+
   static Future<void> saveBiometricCredentials({
     required String email,
     required String password,
@@ -58,6 +59,16 @@ class BiometricService {
       await prefs.setString(_biometricPasswordKey, password);
     } catch (e) {
       print('Error saving biometric credentials: $e');
+    }
+  }
+
+  static Future<String?> get email async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(_biometricEmailKey);
+    } catch (e) {
+      print('Error getting email from preferences: $e');
+      return null;
     }
   }
 

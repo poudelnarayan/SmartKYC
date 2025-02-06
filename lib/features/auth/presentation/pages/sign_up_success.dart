@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
+import 'package:smartkyc/core/theme/app_color_scheme.dart';
 import 'package:smartkyc/l10n/app_localizations.dart';
 import 'package:smartkyc/features/auth/presentation/pages/singin_page.dart';
 
@@ -19,6 +20,7 @@ class SignUpSuccessPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: Container(
@@ -27,10 +29,7 @@ class SignUpSuccessPage extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              theme.colorScheme.primary,
-              theme.colorScheme.secondary,
-            ],
+            colors: AppColorScheme.getGradientColors(isDark),
           ),
         ),
         child: SafeArea(
@@ -44,7 +43,8 @@ class SignUpSuccessPage extends StatelessWidget {
                   width: 200,
                   height: 200,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
+                    color: (isDark ? AppColorScheme.darkText : Colors.white)
+                        .withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Lottie.network(
@@ -58,10 +58,10 @@ class SignUpSuccessPage extends StatelessWidget {
                 // Success message
                 Text(
                   l10n.signUpSuccessTitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: isDark ? AppColorScheme.darkText : Colors.white,
                   ),
                   textAlign: TextAlign.center,
                 ).animate().fadeIn().slideY(),
@@ -72,7 +72,8 @@ class SignUpSuccessPage extends StatelessWidget {
                   l10n.signUpSuccessMessage,
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.white.withOpacity(0.9),
+                    color: (isDark ? AppColorScheme.darkText : Colors.white)
+                        .withOpacity(0.9),
                   ),
                   textAlign: TextAlign.center,
                 ).animate().fadeIn().slideY(),
@@ -81,10 +82,10 @@ class SignUpSuccessPage extends StatelessWidget {
 
                 Text(
                   email,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: isDark ? AppColorScheme.darkText : Colors.white,
                   ),
                   textAlign: TextAlign.center,
                 ).animate().fadeIn().slideY(),
@@ -103,7 +104,8 @@ class SignUpSuccessPage extends StatelessWidget {
                     ),
                   ),
                   style: FilledButton.styleFrom(
-                    backgroundColor: Colors.white,
+                    backgroundColor:
+                        isDark ? AppColorScheme.darkText : Colors.white,
                     foregroundColor: theme.colorScheme.primary,
                     minimumSize: const Size(double.infinity, 56),
                     shape: RoundedRectangleBorder(

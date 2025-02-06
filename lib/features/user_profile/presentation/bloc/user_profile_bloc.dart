@@ -33,13 +33,14 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
     try {
       emit(UserProfileLoading());
 
+      await _auth.currentUser!.reload();
       final currentUser = _auth.currentUser;
       if (currentUser == null) {
         emit(const UserProfileError('No authenticated user found'));
         return;
       }
 
-      final user = await _getUser(currentUser.uid);
+      final user = await _getUser();
       emit(UserProfileLoaded(user));
     } catch (e) {
       print('Error loading user profile: $e');

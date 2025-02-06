@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:smartkyc/core/services/biometric_services.dart';
 import 'package:smartkyc/features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:smartkyc/features/auth/presentation/pages/sign_up_page.dart';
+import 'package:smartkyc/features/auth/presentation/widgets/biometric_prompt_dialog.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
@@ -11,7 +13,9 @@ import '../bloc/auth_state.dart';
 import 'biometric_login_text.dart';
 
 class LoginForm extends StatefulWidget {
-  const LoginForm({super.key});
+  final Function(String, String)? onValuesChanged;
+
+  const LoginForm({super.key, this.onValuesChanged});
 
   @override
   State<LoginForm> createState() => _LoginFormState();
@@ -160,7 +164,16 @@ class _LoginFormState extends State<LoginForm> {
         return FilledButton.icon(
           onPressed: state is AuthLoading
               ? null
-              : () {
+              : () async {
+                  final String? email = await BiometricService.email;
+                  if (email != null && email != _emailController.text) {
+                    BiometricService.disableBiometric();
+                  }
+
+                  widget.onValuesChanged!(
+                    _emailController.text,
+                    _passwordController.text,
+                  );
                   if (_formKey.currentState?.validate() ?? false) {
                     context.read<AuthBloc>().add(
                           SignInWithEmailAndPassword(
@@ -180,7 +193,10 @@ class _LoginFormState extends State<LoginForm> {
                     strokeWidth: 3,
                   ),
                 )
-              : const Icon(Icons.login_rounded),
+              : const Icon(
+                  Icons.person_rounded,
+                  color: Colors.blue,
+                ),
           label: Text(
             l10n.signIn,
             style: const TextStyle(

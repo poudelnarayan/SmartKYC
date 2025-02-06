@@ -1,10 +1,18 @@
+import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:smartkyc/core/theme/app_color_scheme.dart';
+import 'package:smartkyc/domain/entities/user.dart';
+import 'package:smartkyc/domain/usecases/get_user.dart';
+import 'package:smartkyc/features/auth/presentation/pages/sign_up_page.dart';
 import 'package:smartkyc/features/auth/presentation/pages/verify_email_page.dart';
+import 'package:smartkyc/features/auth/presentation/widgets/biometric_prompt_dialog.dart';
 import 'package:smartkyc/features/language/presentation/widgets/language_switcher.dart';
+import 'package:smartkyc/features/user_profile/presentation/pages/user_profile_page.dart';
 import '../../../../config/routes.dart';
+import '../../../../core/services/biometric_services.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../verification_steps/presentation/widgets/verification_progress_overlay.dart';
 import '../bloc/auth_bloc.dart';
@@ -32,8 +40,19 @@ class _SigninPageState extends State<SigninPage> {
     }
   }
 
+  String _email = '';
+  String _password = '';
+
+  void updateValues(String email, String password) {
+    setState(() {
+      _email = email;
+      _password = password;
+    });
+  }
+
   void _showErrorSnackBar(String error) {
     final errorDetails = _getErrorDetails(error, context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -43,12 +62,13 @@ class _SigninPageState extends State<SigninPage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
+                  color: AppColorScheme.getCardBackground(isDark)
+                      .withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
                   errorDetails.icon,
-                  color: Colors.white,
+                  color: isDark ? AppColorScheme.darkText : Colors.white,
                   size: 24,
                 ),
               ),
@@ -59,8 +79,8 @@ class _SigninPageState extends State<SigninPage> {
                   children: [
                     Text(
                       errorDetails.title,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: isDark ? AppColorScheme.darkText : Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -69,7 +89,9 @@ class _SigninPageState extends State<SigninPage> {
                       Text(
                         errorDetails.message,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
+                          color:
+                              (isDark ? AppColorScheme.darkText : Colors.white)
+                                  .withOpacity(0.9),
                           fontSize: 13,
                         ),
                       ),
@@ -84,7 +106,8 @@ class _SigninPageState extends State<SigninPage> {
                     errorDetails.action!();
                   },
                   style: TextButton.styleFrom(
-                    foregroundColor: Colors.white,
+                    foregroundColor:
+                        isDark ? AppColorScheme.darkText : Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                   ),
                   child: Text(
@@ -108,6 +131,8 @@ class _SigninPageState extends State<SigninPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) async {
         if (state is AuthError) {
@@ -115,18 +140,52 @@ class _SigninPageState extends State<SigninPage> {
         } else if (state is EmailVerificationRequired) {
           context.go(VerifyEmailPage.pageName);
         } else if (state is SigninSuccess) {
-          await _checkNavigation();
-          if (mounted) {
-            Navigator.push(
-              context,
-              PageRouteBuilder(
-                opaque: true,
-                pageBuilder: (context, _, __) => VerificationProgressOverlay(
-                  completedStep: 0,
-                  nextRoute: nextRoute,
+          // Check if biometric login is enabled
+          final isBiometricEnabled =
+              await BiometricService.isBiometricEnabled();
+
+          if (!isBiometricEnabled) {
+            // Check if biometrics are available on the device
+            final isAvailable = await BiometricService.isBiometricsAvailable();
+            if (isAvailable && mounted) {
+              // Show biometric prompt
+              await showDialog<bool>(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => BiometricPromptDialog(
+                  email: _email,
+                  password: _password,
+                  isfirstTimeSignin: true,
                 ),
-              ),
-            );
+              );
+            }
+          }
+
+          final User user = await GetUser().call();
+
+          // After biometric setup (or if skipped/not available), proceed with navigation
+          if (mounted) {
+            if (!user.isEmailVerified ||
+                !user.isDocumentVerified ||
+                !user.isSelfieVerified ||
+                !user.isLivenessVerified) {
+              await _checkNavigation();
+              if (mounted) {
+                Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    opaque: true,
+                    pageBuilder: (context, _, __) =>
+                        VerificationProgressOverlay(
+                      completedStep: 0,
+                      nextRoute: nextRoute,
+                    ),
+                  ),
+                );
+              }
+            } else {
+              context.go(UserProfilePage.pageName);
+            }
           }
         }
       },
@@ -138,10 +197,7 @@ class _SigninPageState extends State<SigninPage> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Theme.of(context).colorScheme.primary,
-                  Theme.of(context).colorScheme.secondary,
-                ],
+                colors: AppColorScheme.getGradientColors(isDark),
               ),
             ),
             child: SafeArea(
@@ -156,7 +212,9 @@ class _SigninPageState extends State<SigninPage> {
                     const SizedBox(height: 32),
                     _buildWelcomeText(context),
                     const SizedBox(height: 48),
-                    const LoginForm(),
+                    LoginForm(
+                      onValuesChanged: updateValues,
+                    ),
                   ],
                 ),
               ),
@@ -168,21 +226,25 @@ class _SigninPageState extends State<SigninPage> {
   }
 
   Widget _buildLogo(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: (isDark ? AppColorScheme.darkText : Colors.white)
+              .withOpacity(0.15),
           shape: BoxShape.circle,
           border: Border.all(
-            color: Colors.white.withOpacity(0.3),
+            color: (isDark ? AppColorScheme.darkText : Colors.white)
+                .withOpacity(0.3),
             width: 2,
           ),
         ),
         child: Icon(
           Icons.lock_outline_rounded,
           size: 48,
-          color: Colors.white.withOpacity(0.9),
+          color: (isDark ? AppColorScheme.darkText : Colors.white)
+              .withOpacity(0.9),
         ),
       ),
     ).animate().scale();
@@ -190,12 +252,13 @@ class _SigninPageState extends State<SigninPage> {
 
   Widget _buildWelcomeText(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       children: [
         Text(
           l10n.welcomeTitle,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: Colors.white,
+                color: isDark ? AppColorScheme.darkText : Colors.white,
                 fontWeight: FontWeight.bold,
               ),
           textAlign: TextAlign.center,
@@ -204,7 +267,8 @@ class _SigninPageState extends State<SigninPage> {
         Text(
           l10n.welcomeSubtitle,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.9),
+            color: (isDark ? AppColorScheme.darkText : Colors.white)
+                .withOpacity(0.9),
           ),
           textAlign: TextAlign.center,
         ).animate().fadeIn().slideY(),
@@ -231,14 +295,18 @@ class ErrorDetails {
   });
 }
 
-ErrorDetails _getErrorDetails(String error, context) {
+ErrorDetails _getErrorDetails(String error, BuildContext context) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final backgroundColor =
+      isDark ? AppColorScheme.darkSurface : const Color(0xFF323232);
+
   if (error.contains('user-not-found')) {
     return ErrorDetails(
       title: 'Account Not Found',
       message: 'Create a new account or try a different email',
       icon: Icons.person_off_outlined,
-      color: const Color(0xFF323232),
-      action: () => context.go('/signup'),
+      color: backgroundColor,
+      action: () => context.go(SignUpPage.pageName),
       actionLabel: 'Sign Up',
     );
   }
@@ -248,16 +316,14 @@ ErrorDetails _getErrorDetails(String error, context) {
       title: 'Incorrect Email or Password',
       message: 'Please check your email or password and try again',
       icon: Icons.lock_outlined,
-      color: const Color(0xFF323232),
+      color: backgroundColor,
     );
   }
-
-  // Add other error cases...
 
   return ErrorDetails(
     title: 'Something Went Wrong',
     message: 'Please try again later',
     icon: Icons.error_outline,
-    color: const Color(0xFF323232),
+    color: backgroundColor,
   );
 }

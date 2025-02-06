@@ -2,13 +2,12 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:smartkyc/l10n/app_localizations.dart';
-
 import 'package:go_router/go_router.dart';
-import 'package:smartkyc/core/presentation/widgets/skip_button.dart';
-import 'package:smartkyc/features/selfie_capture/presentation/pages/selfie_start_page.dart';
-import 'package:smartkyc/features/user_detail_form/presentation/pages/user_detail_form_page.dart';
+import '../../../../core/presentation/widgets/skip_button.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../selfie_capture/presentation/pages/selfie_start_page.dart';
+import '../../../user_detail_form/presentation/pages/user_detail_form_page.dart';
 import '../bloc/upload_document_bloc.dart';
 import '../bloc/upload_document_event.dart';
 import '../bloc/upload_document_state.dart';
@@ -35,7 +34,6 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
     try {
       final storageService = StorageService();
       final downloadUrl = await storageService.uploadDocument(File(file.path));
-
       print('Document uploaded successfully: $downloadUrl');
 
       if (mounted) {
@@ -70,6 +68,7 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
     final bool returnToProfile = (extraData is Map<String, dynamic>)
         ? (extraData['returnToProfile'] ?? false)
         : false;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return BlocConsumer<UploadDocumentBloc, UploadDocumentState>(
       listener: (context, state) {
@@ -94,19 +93,7 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
       },
       builder: (context, state) {
         return Scaffold(
-          appBar: AppBar(
-            elevation: 0,
-            backgroundColor: Colors.transparent,
-            actions: [
-              if (!returnToProfile)
-                SkipButton(onSkip: () {
-                  context.go(SelfieStartPage.pageName);
-                }),
-              SizedBox(
-                width: 25,
-              )
-            ],
-          ),
+          backgroundColor: isDark ? Colors.grey[900] : Colors.white,
           body: SafeArea(
             child: SingleChildScrollView(
               child: Padding(
@@ -114,19 +101,34 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (!returnToProfile)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: SkipButton(
+                          onSkip: () {
+                            context.go(SelfieStartPage.pageName);
+                          },
+                          backgroundColor:
+                              isDark ? Colors.white.withOpacity(0.1) : null,
+                          textColor: isDark ? Colors.white : null,
+                        ),
+                      ),
+                    const SizedBox(height: 24),
                     Text(
                       l10n.documentUpload,
                       style:
                           Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.primary,
+                                color: isDark
+                                    ? Colors.white
+                                    : Theme.of(context).colorScheme.primary,
                               ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       l10n.documentUploadDesc,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Colors.grey[600],
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
                           ),
                     ),
                     const SizedBox(height: 32),
@@ -140,7 +142,9 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
                             const SizedBox(height: 16),
                             Text(
                               l10n.processingImage,
-                              style: Theme.of(context).textTheme.bodyLarge,
+                              style: TextStyle(
+                                color: isDark ? Colors.white : null,
+                              ),
                             ),
                           ],
                         ),
@@ -151,13 +155,15 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
                         child: Container(
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            color: Colors.grey[50],
+                            color: isDark ? Colors.grey[850] : Colors.grey[50],
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withOpacity(0.2),
+                              color: isDark
+                                  ? Colors.grey[700]!
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withOpacity(0.2),
                             ),
                           ),
                           child: Column(
@@ -178,7 +184,9 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
                                         height: 200,
                                         width: double.infinity,
                                         decoration: BoxDecoration(
-                                          color: Colors.grey[200],
+                                          color: isDark
+                                              ? Colors.grey[800]
+                                              : Colors.grey[200],
                                           borderRadius:
                                               BorderRadius.circular(12),
                                         ),
@@ -189,13 +197,17 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
                                             Icon(
                                               Icons.add_a_photo,
                                               size: 48,
-                                              color: Colors.grey[400],
+                                              color: isDark
+                                                  ? Colors.grey[500]
+                                                  : Colors.grey[400],
                                             ),
                                             const SizedBox(height: 16),
                                             Text(
                                               l10n.noDocumentSelected,
                                               style: TextStyle(
-                                                color: Colors.grey[600],
+                                                color: isDark
+                                                    ? Colors.grey[400]
+                                                    : Colors.grey[600],
                                                 fontSize: 16,
                                               ),
                                             ),
@@ -275,14 +287,16 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
                           Icon(
                             Icons.info_outline,
                             size: 20,
-                            color: Colors.grey[600],
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               l10n.documentUploadTip,
                               style: TextStyle(
-                                color: Colors.grey[600],
+                                color: isDark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
                                 fontSize: 14,
                               ),
                             ),
@@ -301,8 +315,11 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
   }
 
   void _showUploadOptions(BuildContext context, AppLocalizations l10n) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showModalBottomSheet(
       context: context,
+      backgroundColor: isDark ? Colors.grey[850] : Colors.white,
       builder: (context) => Container(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -312,7 +329,9 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
               l10n.chooseUploadMethod,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: isDark
+                        ? Colors.white
+                        : Theme.of(context).colorScheme.primary,
                   ),
             ),
             const SizedBox(height: 24),
