@@ -11,6 +11,7 @@ class User extends Equatable {
   final String citizenshipNumber;
   final String phoneNumber;
   final String address;
+  final String gender;
   final bool isEmailVerified;
   final bool isDocumentVerified;
   final bool isSelfieVerified;
@@ -25,6 +26,7 @@ class User extends Equatable {
     required this.dob,
     required this.fatherName,
     required this.citizenshipNumber,
+    required this.gender,
     this.phoneNumber = '', // Default value
     this.address = '', // Default value
     this.isEmailVerified = false,
@@ -47,6 +49,7 @@ class User extends Equatable {
         dob,
         fatherName,
         citizenshipNumber,
+        gender,
         phoneNumber,
         address,
         isEmailVerified,
@@ -67,6 +70,7 @@ class User extends Equatable {
       'citizenshipNumber': citizenshipNumber,
       'phoneNumber': phoneNumber,
       'address': address,
+      'gender': gender,
       'isEmailVerified': isEmailVerified,
       'isDocumentVerified': isDocumentVerified,
       'isSelfieVerified': isSelfieVerified,
@@ -84,6 +88,7 @@ class User extends Equatable {
       dob: DateTime.parse(json['dob'] as String),
       fatherName: json['fatherName'] as String,
       citizenshipNumber: json['citizenshipNumber'] as String,
+      gender: json['gender'] as String,
       phoneNumber: json['phoneNumber'] as String? ?? '',
       address: json['address'] as String? ?? '',
       isEmailVerified: json['isEmailVerified'] as bool? ?? false,
@@ -102,6 +107,7 @@ class User extends Equatable {
     DateTime? dob,
     String? fatherName,
     String? citizenshipNumber,
+    String? gender,
     String? phoneNumber,
     String? address,
     bool? isEmailVerified,
@@ -119,6 +125,7 @@ class User extends Equatable {
       fatherName: fatherName ?? this.fatherName,
       citizenshipNumber: citizenshipNumber ?? this.citizenshipNumber,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      gender: gender ?? this.gender,
       address: address ?? this.address,
       isEmailVerified: isEmailVerified ?? this.isEmailVerified,
       isDocumentVerified: isDocumentVerified ?? this.isDocumentVerified,

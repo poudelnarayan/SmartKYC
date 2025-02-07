@@ -60,6 +60,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             firstName: "User",
             lastName: "Profile",
             dob: DateTime(0),
+            gender: "N/A",
             fatherName: "N/A",
             citizenshipNumber: "N/A",
           ),

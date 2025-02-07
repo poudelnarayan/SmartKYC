@@ -38,6 +38,7 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
     'fatherName': 'Jeevlal Poudel',
     'citizenshipNumber': 'CTZ123456',
     'address': 'Suddhodhan-5 Butwal',
+    'gender': 'Male'
   };
 
   Future<void> _selectDate(BuildContext context, String field) async {
@@ -226,6 +227,7 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
 
   Widget _buildFormSections(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -277,11 +279,122 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
               ],
             ),
             const SizedBox(height: 16),
-            _buildDateField(
-              label: l10n.dateOfBirth,
-              value: _formData['dob'],
-              onTap: () => _selectDate(context, 'dob'),
-              prefixIcon: Icons.cake_outlined,
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: _buildDateField(
+                    label: l10n.dateOfBirth,
+                    value: _formData['dob'],
+                    onTap: () => _selectDate(context, 'dob'),
+                    prefixIcon: Icons.cake_outlined,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  flex: 2,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      color: isDark ? Colors.grey[800] : Colors.grey[50],
+                    ),
+                    child: DropdownButtonFormField<String>(
+                      value: _formData['gender'],
+                      icon: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      ),
+                      decoration: InputDecoration(
+                        labelText: "Gender",
+                        labelStyle: TextStyle(
+                          color: isDark ? Colors.grey[300] : null,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                      ),
+                      dropdownColor: isDark ? Colors.grey[800] : Colors.white,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: 16,
+                      ),
+                      items: [
+                        DropdownMenuItem(
+                          value: "Male",
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.male_rounded,
+                                color: isDark ? Colors.grey[400] : Colors.blue,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                "Male",
+                                style: TextStyle(
+                                  color: isDark ? Colors.white : Colors.black,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: "Female",
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.female_rounded,
+                                color: isDark ? Colors.grey[400] : Colors.pink,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                "Female",
+                                style: TextStyle(
+                                  color: isDark ? Colors.white : Colors.black,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: "Other",
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.person_outline_rounded,
+                                color:
+                                    isDark ? Colors.grey[400] : Colors.purple,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                "Other",
+                                style: TextStyle(
+                                  color: isDark ? Colors.white : Colors.black,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _formData['gender'] = value;
+                        });
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Please select your gender";
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             _buildTextField(
@@ -525,6 +638,7 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
                 firstName: _formData['firstName'],
                 lastName: _formData['lastName'],
                 address: _formData['address'],
+                gender: _formData['gender'],
                 uid: auth.FirebaseAuth.instance.currentUser!.uid,
                 isDocumentVerified: true,
                 isEmailVerified:
