@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:smartkyc/core/extensions/context_extension.dart';
 import 'package:smartkyc/core/theme/app_color_scheme.dart';
 import '../../../../core/services/biometric_services.dart';
 

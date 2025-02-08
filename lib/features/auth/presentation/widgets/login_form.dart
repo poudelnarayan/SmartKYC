@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:smartkyc/core/services/biometric_services.dart';
 import 'package:smartkyc/features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:smartkyc/features/auth/presentation/pages/sign_up_page.dart';
-import 'package:smartkyc/features/auth/presentation/widgets/biometric_prompt_dialog.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';

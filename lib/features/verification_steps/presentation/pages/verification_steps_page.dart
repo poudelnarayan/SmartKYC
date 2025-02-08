@@ -3,7 +3,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartkyc/core/theme/app_color_scheme.dart';
 import 'package:smartkyc/config/routes.dart';
-import 'package:smartkyc/features/language/presentation/widgets/language_switcher.dart';
 import 'package:smartkyc/l10n/app_localizations.dart';
 
 class VerificationStepsPage extends StatelessWidget {

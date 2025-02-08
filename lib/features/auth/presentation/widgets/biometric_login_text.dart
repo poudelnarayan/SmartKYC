@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:smartkyc/core/theme/app_color_scheme.dart';
 import 'package:smartkyc/features/auth/presentation/bloc/auth_bloc.dart';
 
 import '../../../../core/services/biometric_services.dart';
@@ -47,8 +46,6 @@ class BiometricLoginText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return FutureBuilder<bool>(
       future: BiometricService.isBiometricEnabled(),
       builder: (context, snapshot) {

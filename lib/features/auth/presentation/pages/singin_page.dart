@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -9,7 +8,6 @@ import 'package:smartkyc/domain/usecases/get_user.dart';
 import 'package:smartkyc/features/auth/presentation/pages/sign_up_page.dart';
 import 'package:smartkyc/features/auth/presentation/pages/verify_email_page.dart';
 import 'package:smartkyc/features/auth/presentation/widgets/biometric_prompt_dialog.dart';
-import 'package:smartkyc/features/language/presentation/widgets/language_switcher.dart';
 import 'package:smartkyc/features/user_profile/presentation/pages/user_profile_page.dart';
 import '../../../../config/routes.dart';
 import '../../../../core/services/biometric_services.dart';
