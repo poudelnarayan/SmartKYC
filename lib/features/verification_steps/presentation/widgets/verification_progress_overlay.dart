@@ -290,9 +290,9 @@ class _VerificationProgressOverlayState
             child: SizedBox(
               width: 120,
               height: 120,
-              child: Lottie.network(
+              child: Lottie.asset(
                 // Using a more premium and smoother checkmark animation
-                'https://assets10.lottiefiles.com/packages/lf20_jbrw3hcz.json',
+                'assets/lottie/verification_progress_overlay.json',
                 repeat: false,
                 controller: _checkmarkController,
                 onLoaded: (composition) {

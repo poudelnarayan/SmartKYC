@@ -558,6 +558,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
               ? () => _showPhoneVerificationModal(context)
               : null,
           isDark: isDark,
+          showVerifiedBadge: true,
         ),
         ProfileItem(
           icon: Icons.location_on_outlined,

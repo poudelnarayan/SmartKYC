@@ -122,8 +122,8 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                         .withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Lottie.network(
-                    'https://lottie.host/2e26cc42-0d81-49c5-ac2c-aa6e1f64ea71/UyXPnDwXAj.json',
+                  child: Lottie.asset(
+                    'assets/lottie/verify_email.json',
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) {
                       return Icon(

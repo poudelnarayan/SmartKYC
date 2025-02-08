@@ -17,7 +17,7 @@ class VerificationSuccessPage extends StatefulWidget {
 }
 
 class _VerificationSuccessPageState extends State<VerificationSuccessPage> {
-  static const int _countdownDuration = 3;
+  static const int _countdownDuration = 5;
   late Timer _timer;
   int _timeLeft = _countdownDuration;
 
@@ -72,27 +72,38 @@ class _VerificationSuccessPageState extends State<VerificationSuccessPage> {
         ),
         child: SafeArea(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Countdown timer
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Text(
-                  'Redirecting in $_timeLeft',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+              const SizedBox(
+                height: 20,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Text(
+                      'Redirecting in $_timeLeft',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ).animate().fadeIn().scale(),
+                  SizedBox(
+                    width: 10,
                   ),
-                ),
-              ).animate().fadeIn().scale(),
+                ],
+              ),
               const SizedBox(height: 48),
               // Success animation with error handling
               Container(
@@ -104,8 +115,8 @@ class _VerificationSuccessPageState extends State<VerificationSuccessPage> {
                       : Colors.white.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Lottie.network(
-                  'https://lottie.host/2e26cc42-0d81-49c5-ac2c-aa6e1f64ea71/UyXPnDwXAj.json',
+                child: Lottie.asset(
+                  'assets/lottie/verification_success.json',
                   width: 200,
                   height: 200,
                   repeat: true,

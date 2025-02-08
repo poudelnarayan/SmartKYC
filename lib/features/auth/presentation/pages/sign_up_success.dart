@@ -47,8 +47,8 @@ class SignUpSuccessPage extends StatelessWidget {
                         .withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Lottie.network(
-                    "https://lottie.host/6f29e409-6e93-4544-bc90-5586c134a7c8/W6PTsshn7A.json",
+                  child: Lottie.asset(
+                    'assets/lottie/checkmark.json',
                     repeat: false,
                   ),
                 ).animate().scale(),

@@ -85,13 +85,15 @@ class ProfileItem extends StatelessWidget {
   final bool isVerified;
   final VoidCallback? onVerify;
   final bool isDark;
+  final bool showVerifiedBadge;
 
   const ProfileItem({
     super.key,
     required this.icon,
     required this.label,
     required this.value,
-    this.isVerified = false,
+    this.isVerified = true,
+    this.showVerifiedBadge = false,
     this.onVerify,
     required this.isDark,
   });
@@ -137,9 +139,11 @@ class ProfileItem extends StatelessWidget {
                   value,
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
-                    color: isDark
-                        ? AppColorScheme.darkText
-                        : AppColorScheme.lightText,
+                    color: isVerified
+                        ? isDark
+                            ? AppColorScheme.darkText
+                            : AppColorScheme.lightText
+                        : AppColorScheme.error,
                   ),
                 ),
               ],
@@ -156,7 +160,7 @@ class ProfileItem extends StatelessWidget {
               ),
               child: const Text('Verify'),
             ),
-          if (isVerified)
+          if (isVerified && showVerifiedBadge)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(

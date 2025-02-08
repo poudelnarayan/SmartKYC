@@ -125,17 +125,7 @@ class SmartKycApp extends StatelessWidget {
                     stream: authService.authStateChanges,
                     builder: (context, snapshot) {
                       if (snapshot.data == null) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                    'Session expired. Please sign in again.'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        });
+                        WidgetsBinding.instance.addPostFrameCallback((_) {});
                       }
                       return child ?? const SizedBox.shrink();
                     },

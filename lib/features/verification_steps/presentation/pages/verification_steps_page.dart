@@ -28,24 +28,8 @@ class VerificationStepsPage extends StatelessWidget {
         child: SafeArea(
           child: Column(
             children: [
-              const Padding(
-                padding: EdgeInsets.only(
-                  top: 16,
-                  left: 16,
-                  right: 16,
-                  bottom: 3,
-                ),
-                child: LanguageSwitcher(),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 30),
-                child: Text(
-                  l10n.languageSwitchWarn,
-                  style: TextStyle(
-                    color: (isDark ? AppColorScheme.darkText : Colors.white)
-                        .withOpacity(0.6),
-                  ),
-                ),
+              SizedBox(
+                height: 50,
               ),
               Expanded(
                 child: SingleChildScrollView(

@@ -26,8 +26,8 @@ class _DeleteAccountOverlayState extends State<DeleteAccountOverlay> {
                 color: Colors.white.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Lottie.network(
-                'https://lottie.host/2c924e47-a1e2-48de-8c11-5c3ac51dd60f/MYBOcxdpmY.json',
+              child: Lottie.asset(
+                'assets/lottie/delete.json',
                 fit: BoxFit.contain,
                 repeat: false,
                 errorBuilder: (context, error, stackTrace) {

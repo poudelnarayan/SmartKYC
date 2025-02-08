@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -37,9 +38,8 @@ class _PhoneVerificationModalState extends State<PhoneVerificationModal> {
   @override
   void initState() {
     _phoneController = TextEditingController(
-      text: widget.previousNumber ?? "", // ✅ Corrected initialization
+      text: widget.previousNumber ?? "",
     );
-
     super.initState();
   }
 
@@ -72,8 +72,7 @@ class _PhoneVerificationModalState extends State<PhoneVerificationModal> {
   Future<void> _sendOTP() async {
     final phoneNumber = _formatPhoneNumber(_phoneController.text);
 
-    if (phoneNumber.length < 13) {
-      // +977 + 9 digits
+    if (phoneNumber.length != 14) {
       setState(() => _errorMessage = 'Please enter a valid phone number');
       return;
     }
@@ -86,9 +85,12 @@ class _PhoneVerificationModalState extends State<PhoneVerificationModal> {
     try {
       await _auth.verifyPhoneNumber(
         phoneNumber: phoneNumber,
-        verificationCompleted: (PhoneAuthCredential credential) {
-          // Auto-verification completed (rare on Android, never on iOS)
-          _verifyWithCredential(credential);
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          if (widget.isEditing) {
+            await _updatePhoneNumber(credential); // ✅ Directly update
+          } else {
+            await _linkPhoneNumber(credential);
+          }
         },
         verificationFailed: (FirebaseAuthException e) {
           setState(() {
@@ -119,17 +121,73 @@ class _PhoneVerificationModalState extends State<PhoneVerificationModal> {
     }
   }
 
-  Future<void> _verifyWithCredential(PhoneAuthCredential credential) async {
+  Future<void> _updatePhoneNumber(PhoneAuthCredential credential) async {
     try {
-      if (mounted) {
-        widget
-            .onVerificationComplete(_formatPhoneNumber(_phoneController.text));
+      User? user = _auth.currentUser;
+      if (user != null) {
+        await user.updatePhoneNumber(credential); // ✅ Firebase Auth update
+        await _updateUserData(_formatPhoneNumber(
+            _phoneController.text)); // ✅ Update Firestore data
+        if (mounted) {
+          widget.onVerificationComplete(
+              _formatPhoneNumber(_phoneController.text));
+        }
       }
-    } catch (e) {
+    } on FirebaseAuthException catch (e) {
       setState(() {
-        _errorMessage = 'Verification failed: ${e.toString()}';
+        _errorMessage = _getFirebaseErrorMessage(e.code);
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _updateUserData(String phoneNumber) async {
+    try {
+      User? user = _auth.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .update({
+          'phoneNumber': phoneNumber, // ✅ Updating Firestore data
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+    } catch (e) {
+      print("Error updating Firestore: $e");
+    }
+  }
+
+  Future<void> _linkPhoneNumber(PhoneAuthCredential credential) async {
+    try {
+      User? user = _auth.currentUser;
+      if (user != null) {
+        await user.linkWithCredential(credential);
+        if (mounted) {
+          widget.onVerificationComplete(
+              _formatPhoneNumber(_phoneController.text));
+        }
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _errorMessage = _getFirebaseErrorMessage(e.code);
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _getFirebaseErrorMessage(String errorCode) {
+    switch (errorCode) {
+      case 'invalid-verification-code':
+        return 'Invalid OTP code';
+      case 'invalid-verification-id':
+        return 'Verification failed, please try again';
+      case 'credential-already-in-use':
+        return 'Phone number already linked to another account';
+      case 'too-many-requests':
+        return 'Too many attempts, please try again later';
+      default:
+        return 'Verification failed, please try again';
     }
   }
 
@@ -149,7 +207,13 @@ class _PhoneVerificationModalState extends State<PhoneVerificationModal> {
         verificationId: _verificationId!,
         smsCode: _otpCode!,
       );
-      await _verifyWithCredential(credential);
+
+      if (widget.isEditing) {
+        await _updatePhoneNumber(credential); // ✅ Update phone
+      } else {
+        await _linkPhoneNumber(
+            credential); // ✅ Link phone for first-time verification
+      }
     } catch (e) {
       setState(() {
         _errorMessage = 'Invalid OTP';
@@ -163,7 +227,7 @@ class _PhoneVerificationModalState extends State<PhoneVerificationModal> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: EdgeInsets.only(
+      padding: const EdgeInsets.only(
         left: 24,
         right: 24,
         top: 24,

@@ -65,6 +65,11 @@ flutter:
     - assets/images/onboarding2.png
     - assets/images/onboarding3.png
     - assets/images/driving_liscense_spicemen.jpg
+    - assets/lottie/checkmark.json
+    - assets/lottie/verify_email.json
+    - assets/lottie/delete.json
+    - assets/lottie/verification_progress_overlay.json
+    - assets/lottie/verification_success.json
 
 flutter_icons:
   android: true
