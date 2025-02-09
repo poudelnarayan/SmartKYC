@@ -154,7 +154,7 @@ class _ContactVerificationModalState extends State<ContactVerificationModal> {
                         .shimmer(duration: const Duration(milliseconds: 1200)),
                     const SizedBox(height: 24),
                     Text(
-                      'Verify Your Identity',
+                      'Verify It\'s You',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: isDark
