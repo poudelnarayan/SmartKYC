@@ -1,9 +1,17 @@
+import 'dart:developer';
 import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:smartkyc/core/services/face_storage_service.dart';
 import '../../../../core/presentation/widgets/skip_button.dart';
+import '../../../../core/services/locator.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../selfie_capture/presentation/pages/selfie_start_page.dart';
@@ -12,6 +20,12 @@ import '../bloc/upload_document_bloc.dart';
 import '../bloc/upload_document_event.dart';
 import '../bloc/upload_document_state.dart';
 import './document_camera_page.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:tflite_flutter/tflite_flutter.dart';
+import 'dart:io';
+import 'package:image/image.dart' as img;
 
 class UploadDocumentPage extends StatefulWidget {
   const UploadDocumentPage({Key? key}) : super(key: key);
@@ -24,26 +38,171 @@ class UploadDocumentPage extends StatefulWidget {
 
 class _UploadDocumentPageState extends State<UploadDocumentPage> {
   bool _isUploading = false;
+  Map<String, String> userData = {};
+
+  Future<File?> extractFaceFromDocument(File documentImage) async {
+    final String apiKey = dotenv.env['API_KEY']!;
+    Uri url = Uri.parse(
+        "https://vision.googleapis.com/v1/images:annotate?key=$apiKey");
+
+    // Read image as Base64
+    List<int> imageBytes = await documentImage.readAsBytes();
+    String base64Image = base64Encode(imageBytes);
+
+    // Create request payload
+    var requestBody = {
+      "requests": [
+        {
+          "image": {"content": base64Image},
+          "features": [
+            {"type": "FACE_DETECTION"}
+          ]
+        }
+      ]
+    };
+
+    try {
+      var response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        var jsonResponse = jsonDecode(response.body);
+        var faceAnnotations = jsonResponse['responses'][0]['faceAnnotations'];
+
+        if (faceAnnotations.isNotEmpty) {
+          // Extract bounding box
+          var boundingBox = faceAnnotations[0]['boundingPoly']['vertices'];
+          int xMin = boundingBox[0]['x'];
+          int yMin = boundingBox[0]['y'];
+          int xMax = boundingBox[2]['x'];
+          int yMax = boundingBox[2]['y'];
+
+          print("✅ Face Found: ($xMin, $yMin) to ($xMax, $yMax)");
+
+          // Crop face (You need to do this in Flutter UI using Image Cropping)
+          return documentImage;
+        } else {
+          print("❌ No face detected.");
+          return null;
+        }
+      } else {
+        print("❌ API Error: ${response.body}");
+        return null;
+      }
+    } catch (e) {
+      print("❌ Error: $e");
+      return null;
+    }
+  }
+
+  List<List<List<List<double>>>> preprocessImage(File imageFile) {
+    img.Image? image = img.decodeImage(imageFile.readAsBytesSync());
+    image = img.copyResize(image!, width: 224, height: 224);
+
+    List<List<List<List<double>>>> input = [
+      List.generate(
+        224,
+        (y) => List.generate(
+          224,
+          (x) {
+            var pixel = image?.getPixel(x, y);
+            return [
+              pixel!.r / 255.0, // Normalize Red
+              pixel.g / 255.0, // Normalize Green
+              pixel.b / 255.0 // Normalize Blue
+            ];
+          },
+        ),
+      )
+    ]; // Wrap in a batch dimension
+
+    print(
+        "📸 Input Shape: ${input.length}x${input[0].length}x${input[0][0].length}x${input[0][0][0].length}");
+
+    return input;
+  }
+
+  Future<bool> isNepaliLicense(File imageFile) async {
+    try {
+      final interpreter = await Interpreter.fromAsset(
+          'assets/model/nepali_license_detector.tflite');
+
+      // Preprocess Image
+      var input = preprocessImage(imageFile);
+
+      // Run inference
+      var output = List.filled(1, 0).reshape([1, 1]);
+      interpreter.run(input, output);
+
+      double confidence = output[0][0];
+      print("🔍 License Confidence Score: $confidence"); // ✅ Debugging Log
+
+      return confidence > 0.9;
+    } catch (e) {
+      print("⚠️ Error running TFLite model: $e");
+      return false;
+    }
+  }
+
+  final FaceStorageService faceStorage = locator<FaceStorageService>();
 
   Future<void> _handleImageUpload(
-      BuildContext context, XFile file, Object? extradata) async {
+      BuildContext context, XFile file, bool returnToProfile) async {
     setState(() {
       _isUploading = true;
     });
 
     try {
-      final storageService = StorageService();
-      final downloadUrl = await storageService.uploadDocument(File(file.path));
-      print('Document uploaded successfully: $downloadUrl');
+      print("🔍 Checking if image is a driving license...");
+      File documentImage = File(file.path);
+      bool isLicense = await isNepaliLicense(File(file.path));
+      File? extractedFace = await extractFaceFromDocument(documentImage);
+      if (extractedFace == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text("No face detected in document!"),
+              backgroundColor: Colors.red),
+        );
+        return;
+      }
+      faceStorage.saveExtractedFace(extractedFace);
+      print("✅ Face extracted successfully: ${extractedFace.path}");
+      if (!isLicense) {
+        print("❌ Image is NOT a driving license!");
+        if (mounted) {
+          ScaffoldMessenger.of(context).clearSnackBars();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content:
+                  Text('Uploaded image does not look like a  driving license!'),
+              backgroundColor: const Color.fromARGB(255, 14, 55, 131),
+            ),
+          );
+        }
+        setState(() {
+          _isUploading = false;
+        });
+        return;
+      }
+
+      print("✅ Image is verified as a driving license!");
+      await extractTextFromImage(file);
 
       if (mounted) {
         context.goNamed(
           UserDetailFormPage.pageName,
-          extra: extradata,
+          extra: {
+            'returnToProfile': returnToProfile,
+            'userData': userData,
+            'file': file,
+          },
         );
       }
     } catch (e) {
-      print('Error uploading document: $e');
+      print('⚠️ Error uploading document: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -53,22 +212,184 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
         );
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isUploading = false;
-        });
+      setState(() {
+        _isUploading = false;
+      });
+    }
+  }
+
+  Future<void> extractTextFromImage(XFile file) async {
+    try {
+      // Load Google Cloud API key from asset (or use directly)
+      final String apiKey = dotenv.env['API_KEY']!;
+
+      final File imageFile = File(file.path);
+      final List<int> imageBytes = await imageFile.readAsBytes();
+      final String base64Image = base64Encode(imageBytes);
+
+      final Map<String, dynamic> requestBody = {
+        "requests": [
+          {
+            "image": {"content": base64Image},
+            "features": [
+              {"type": "TEXT_DETECTION"} // Using OCR
+            ]
+          }
+        ]
+      };
+
+      final Uri url = Uri.parse(
+          "https://vision.googleapis.com/v1/images:annotate?key=$apiKey");
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonResponse = jsonDecode(response.body);
+        final textAnnotations =
+            jsonResponse['responses'][0]['textAnnotations'] as List<dynamic>;
+
+        if (textAnnotations.isNotEmpty) {
+          final extractedText = textAnnotations[0]['description'];
+          final cleantext = extractedText.replaceAll('\n', ' ').trim();
+          final removednoiseText = cleantext.replaceAll(' BA ', '');
+
+          // Extract specific details using RegExp
+          parseExtractedText(removednoiseText);
+        } else {
+          print('No text detected in the image.');
+        }
+      } else {
+        print('Failed to process image: ${response.body}');
       }
+    } catch (e) {
+      print('Error extracting text: $e');
+    }
+  }
+
+  String capitalize(String name) {
+    if (name.isEmpty) return name;
+    return name[0].toUpperCase() + name.substring(1).toLowerCase();
+  }
+
+  Map<String, String> parseExtractedText(String text) {
+    Map<String, String> extractedData = {};
+
+    // 1️⃣ Extract Driving License Number (Format: xx-xx-xxxxxxxx)
+    RegExp licenseRegExp = RegExp(
+        r'D\.L\.No\.*\s*[:]*\s*([\d]{2}-[\d]{2}-[\d]{8})',
+        caseSensitive: false);
+    Match? licenseMatch = licenseRegExp.firstMatch(text);
+    extractedData['licenseNumber'] = licenseMatch?.group(1) ?? 'Not found';
+
+    // 2️⃣ Extract Name and split into First Name & Last Name
+    RegExp nameRegExp =
+        RegExp(r'Name:\s*([A-Za-z]+)\s+([A-Za-z]+)', caseSensitive: false);
+    Match? nameMatch = nameRegExp.firstMatch(text);
+    String firstName = nameMatch?.group(1) ?? 'Not found';
+    String lastName = nameMatch?.group(2) ?? 'Not found';
+
+    // Apply capitalization
+    extractedData['firstName'] = capitalize(firstName);
+    extractedData['lastName'] = capitalize(lastName);
+
+    // 3️⃣ Extract Date of Birth (Format: xx-xx-xxxx)
+    RegExp dobRegExp = RegExp(r'D\.O\.B\.*\s*[:]*\s*([\d]{2}-[\d]{2}-[\d]{4})',
+        caseSensitive: false);
+    Match? dobMatch = dobRegExp.firstMatch(text);
+    extractedData['dob'] = dobMatch?.group(1) ?? 'Not found';
+
+    // 4️⃣ Extract Citizenship Number (Format: xx-xx-xx-xxxxx)
+    RegExp citizenshipRegExp = RegExp(
+        r'Citizenship No\.*\s*[:]*\s*([\d]{2}-[\d]{2}-[\d]{2}-[\d]{5})',
+        caseSensitive: false);
+    Match? citizenshipMatch = citizenshipRegExp.firstMatch(text);
+    extractedData['citizenshipNumber'] =
+        citizenshipMatch?.group(1) ?? 'Not found';
+
+    // 5️⃣ Extract Father's Name (Max 3 words, ends at Last Name)
+    RegExp fatherNameRegExp = RegExp(
+        r'F/H Name:\s*([A-Za-z]+\s*[A-Za-z]*\s*[A-Za-z]*)\s*' + lastName,
+        caseSensitive: false);
+    Match? fatherNameMatch = fatherNameRegExp.firstMatch(text);
+    String fatherName = fatherNameMatch != null
+        ? "${fatherNameMatch.group(1)} $lastName"
+        : 'Not found';
+
+    // Apply capitalization to Father's Name
+    extractedData["fatherName"] =
+        fatherName.split(' ').map(capitalize).join(' ');
+
+    // 6️⃣ Extract Address (Between "Address:" and "Nepal")
+    RegExp addressRegExp = RegExp(r'Address:\s*(.*?\bNepal\b)',
+        caseSensitive: false, dotAll: true);
+    Match? addressMatch = addressRegExp.firstMatch(text);
+    extractedData['address'] = addressMatch?.group(1)?.trim() ?? 'Not found';
+    extractedData['gender'] = 'Male';
+
+    setState(() {
+      userData = extractedData;
+    });
+
+    return extractedData;
+  }
+
+  Future<void> sendImageToFastAPI(XFile file) async {
+    try {
+      // Convert XFile to File
+      File imageFile = File(file.path);
+
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('https://tesseract-ocr-1.onrender.com/upload/'),
+      );
+      request.files
+          .add(await http.MultipartFile.fromPath('file', imageFile.path));
+
+      var response = await request.send();
+      var responseData = await response.stream.bytesToString();
+
+      if (response.statusCode == 200) {
+        var jsonResponse = json.decode(responseData);
+        print('Response: $jsonResponse');
+        print('Extracted Text: ${jsonResponse['extracted_text']}');
+        print('Structured Data: ${jsonResponse['structured_data']}');
+
+        // Print structured fields individually
+        print(
+            'License Number: ${jsonResponse['structured_data']['License Number']}');
+        print('First Name: ${jsonResponse['structured_data']['First Name']}');
+        print('Last Name: ${jsonResponse['structured_data']['Last Name']}');
+        print(
+            'Father\'s Name: ${jsonResponse['structured_data']['Father\'s Name']}');
+        print(
+            'Citizenship Number: ${jsonResponse['structured_data']['Citizenship Number']}');
+        print('Address: ${jsonResponse['structured_data']['Address']}');
+        print(
+            'Date of Birth: ${jsonResponse['structured_data']['Date of Birth']}');
+      } else {
+        print('Failed to process image: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      print('Error uploading image: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent, // Background color
+      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+    ));
     final l10n = AppLocalizations.of(context);
     final extraData = GoRouterState.of(context).extra;
     final bool returnToProfile = (extraData is Map<String, dynamic>)
         ? (extraData['returnToProfile'] ?? false)
         : false;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return BlocConsumer<UploadDocumentBloc, UploadDocumentState>(
       listener: (context, state) {
@@ -252,7 +573,7 @@ class _UploadDocumentPageState extends State<UploadDocumentPage> {
                             : () => _handleImageUpload(
                                   context,
                                   state.file,
-                                  extraData,
+                                  returnToProfile,
                                 ),
                         style: FilledButton.styleFrom(
                           padding: const EdgeInsets.all(16),

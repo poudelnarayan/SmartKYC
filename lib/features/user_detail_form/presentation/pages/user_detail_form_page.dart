@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -30,11 +31,11 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
   final _formKey = GlobalKey<FormState>();
   final _dateFormat = DateFormat('dd/MM/yyyy');
 
-  final Map<String, dynamic> _formData = {
+  Map<String, dynamic> _formData = {
     'licenseNumber': 'DL123456789',
     'firstName': 'Narayan',
     'lastName': 'Poudel',
-    'dob': DateTime(1990, 1, 1),
+    'dob': '1990-1-1',
     'fatherName': 'Jeevlal Poudel',
     'citizenshipNumber': 'CTZ123456',
     'address': 'Suddhodhan-5 Butwal',
@@ -45,7 +46,9 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _formData[field] ?? DateTime.now(),
+      initialDate: _formData['dob'] != 'Not found'
+          ? DateFormat("dd-MM-yyyy").parse(_formData['dob'])
+          : DateTime.now(),
       firstDate: DateTime(1900),
       lastDate: DateTime(2100),
       builder: (context, child) {
@@ -71,12 +74,6 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
 
   bool isSelfieVerified = false;
   bool isLivenessVerified = false;
-
-  @override
-  void initState() {
-    super.initState();
-    fetchUserData();
-  }
 
   Future<void> fetchUserData() async {
     final getUser = GetUser();
@@ -106,10 +103,18 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    print(isLivenessVerified);
-    print(isSelfieVerified);
+    final extraData = GoRouterState.of(context).extra as Map<String, dynamic>;
 
-    return BlocConsumer<UserBloc, UserState>(
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent, // Background color
+      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+    ));
+
+    setState(() {
+      _formData = extraData['userData'];
+    });
+
+    return BlocConsumer<UserBloc, UserAndFileState>(
       listener: (context, state) {
         if (state is UserUpdateError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -121,10 +126,7 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
           );
         }
         if (state is UserUpdated) {
-          final extraData = GoRouterState.of(context).extra;
-          final returnToProfile = (extraData is Map<String, dynamic>)
-              ? extraData['returnToProfile'] ?? false
-              : false;
+          final returnToProfile = extraData['returnToProfile'] ?? false;
 
           if (returnToProfile) {
             context.go(UserProfilePage.pageName);
@@ -144,7 +146,7 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
         }
       },
       builder: (context, state) {
-        return state is UserUpdating
+        return state is UserUpdating || state is FileUploading
             ? UploadOverlay(
                 title: "Uploading Details",
                 message: 'Please wait while we process your details...',
@@ -154,70 +156,72 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
                   UploadOverlay.hide(context);
                 },
               )
-            : Scaffold(
-                backgroundColor: isDark ? Colors.grey[900] : Colors.grey[100],
-                appBar: AppBar(
-                  leading: IconButton(
-                    icon: Icon(
-                      Icons.arrow_back,
-                      color: isDark ? Colors.white : Colors.black,
+            : SafeArea(
+                child: Scaffold(
+                  backgroundColor: isDark ? Colors.grey[900] : Colors.grey[100],
+                  appBar: AppBar(
+                    leading: IconButton(
+                      icon: Icon(
+                        Icons.arrow_back,
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
+                      onPressed: () => context.pop(),
                     ),
-                    onPressed: () => context.pop(),
+                    title: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.assignment_ind,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          l10n.licenseDetails,
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: isDark ? Colors.white : Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                    centerTitle: false,
+                    elevation: 0,
+                    backgroundColor: Colors.transparent,
                   ),
-                  title: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          Icons.assignment_ind,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        l10n.licenseDetails,
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: isDark ? Colors.white : Colors.black,
-                        ),
-                      ),
-                    ],
-                  ),
-                  centerTitle: false,
-                  elevation: 0,
-                  backgroundColor: Colors.transparent,
-                ),
-                body: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: FocusScope.of(context).unfocus,
-                          child: SingleChildScrollView(
-                            child: Column(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      _buildFormSections(context),
-                                    ],
+                  body: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: FocusScope.of(context).unfocus,
+                            child: SingleChildScrollView(
+                              child: Column(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _buildFormSections(context),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      _buildBottomBar(context),
-                    ],
+                        _buildBottomBar(context, extraData['file']),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -285,7 +289,9 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
                   flex: 2,
                   child: _buildDateField(
                     label: l10n.dateOfBirth,
-                    value: _formData['dob'],
+                    value: _formData['dob'] != 'Not found'
+                        ? DateFormat("dd-MM-yyyy").parse(_formData['dob'])
+                        : DateTime(0000, 01, 01),
                     onTap: () => _selectDate(context, 'dob'),
                     prefixIcon: Icons.cake_outlined,
                   ),
@@ -607,7 +613,7 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
     };
   }
 
-  Widget _buildBottomBar(BuildContext context) {
+  Widget _buildBottomBar(BuildContext context, file) {
     final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -627,12 +633,14 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
       ),
       child: SafeArea(
         child: FilledButton.icon(
-          onPressed: () {
+          onPressed: () async {
             if (_formKey.currentState?.validate() ?? false) {
               final User user = User(
                 licenseNumber: _formData['licenseNumber'],
                 citizenshipNumber: _formData['citizenshipNumber'],
-                dob: _formData['dob'],
+                dob: _formData['dob'] != 'Not found'
+                    ? DateFormat("dd-MM-yyyy").parse(_formData['dob'])
+                    : DateTime(0000, 01, 01),
                 email: auth.FirebaseAuth.instance.currentUser!.email!,
                 fatherName: _formData['fatherName'],
                 firstName: _formData['firstName'],
@@ -647,9 +655,12 @@ class _UserDetailFormPageState extends State<UserDetailFormPage> {
                 isSelfieVerified: isSelfieVerified,
               );
               context.read<UserBloc>().add(UpdateUserEvent(user));
+              context.read<UserBloc>().add(UpploadFileEvent(file));
             }
           },
-          icon: const Icon(Icons.check_circle_outline),
+          icon: const Icon(
+            Icons.check_circle_outline,
+          ),
           label: Text(
             l10n.submit,
             style: const TextStyle(

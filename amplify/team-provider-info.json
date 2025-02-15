@@ -1,0 +1,20 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-smartkyc-dev-3c31f-authRole",
+      "UnauthRoleArn": "arn:aws:iam::841162705953:role/amplify-smartkyc-dev-3c31f-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::841162705953:role/amplify-smartkyc-dev-3c31f-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-smartkyc-dev-3c31f-deployment",
+      "UnauthRoleName": "amplify-smartkyc-dev-3c31f-unauthRole",
+      "StackName": "amplify-smartkyc-dev-3c31f",
+      "StackId": "arn:aws:cloudformation:us-east-1:841162705953:stack/amplify-smartkyc-dev-3c31f/028f0110-ea59-11ef-84d1-0efab9cacd29",
+      "AmplifyAppId": "dcha46mn0hn4"
+    },
+    "categories": {
+      "auth": {
+        "smartkyc57130487": {}
+      }
+    }
+  }
+}

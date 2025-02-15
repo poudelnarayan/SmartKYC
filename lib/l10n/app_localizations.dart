@@ -257,6 +257,12 @@ abstract class AppLocalizations {
   /// **'Sign In'**
   String get signIn;
 
+  /// No description provided for @signingIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing In...'**
+  String get signingIn;
+
   /// No description provided for @logoutConfirmation.
   ///
   /// In en, this message translates to:

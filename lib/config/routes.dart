@@ -121,9 +121,9 @@ final appRouter = GoRouter(
         builder: (context, state) => LivenessDetectionStartPage(),
         routes: [
           GoRoute(
-            name: LivenessDetectoinPage.pageName,
-            path: LivenessDetectoinPage.pageName,
-            builder: (context, state) => LivenessDetectoinPage(),
+            name: LivenessDetectionPage.pageName,
+            path: LivenessDetectionPage.pageName,
+            builder: (context, state) => LivenessDetectionPage(),
           ),
         ]),
     GoRoute(
@@ -155,7 +155,7 @@ final appRouter = GoRouter(
       UploadDocumentPage.pageName,
       SelfieCapturePage.pageName,
       VerificationSuccessPage.pageName,
-      LivenessDetectoinPage.pageName,
+      LivenessDetectionPage.pageName,
       VerificationStepsPage.pageName,
       LivenessDetectionStartPage.pageName,
       SelfieStartPage.pageName,

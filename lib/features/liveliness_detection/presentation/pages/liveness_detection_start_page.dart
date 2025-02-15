@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartkyc/l10n/app_localizations.dart';
 import 'package:smartkyc/core/presentation/widgets/skip_button.dart';
@@ -12,12 +13,17 @@ class LivenessDetectionStartPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent, // Background color
+      statusBarIconBrightness: Brightness.light,
+    ));
     final l10n = AppLocalizations.of(context);
     final extraData = GoRouterState.of(context).extra;
     final bool returnToProfile = (extraData is Map<String, dynamic>)
         ? (extraData['returnToProfile'] ?? false)
         : false;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: Container(
@@ -144,7 +150,7 @@ class LivenessDetectionStartPage extends StatelessWidget {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () => context.pushNamed(
-                          LivenessDetectoinPage.pageName,
+                          LivenessDetectionPage.pageName,
                           extra: extraData,
                         ),
                         style: ElevatedButton.styleFrom(

@@ -9,6 +9,8 @@ import 'package:smartkyc/l10n/app_localizations.dart';
 import 'package:smartkyc/domain/usecases/update_user.dart';
 import 'package:smartkyc/features/liveliness_detection/presentation/pages/liveness_detection_start_page.dart';
 import 'package:smartkyc/features/user_profile/presentation/pages/user_profile_page.dart';
+import '../../../../core/services/face_matching_service.dart';
+import '../../../../core/services/face_storage_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../verification_steps/presentation/widgets/verification_progress_overlay.dart';
 import '../bloc/selfie_capture_bloc.dart';
@@ -27,6 +29,8 @@ class SelfieCapturePage extends StatefulWidget {
   @override
   _SelfieCapturePageState createState() => _SelfieCapturePageState();
 }
+
+final FaceStorageService faceStorage = GetIt.instance<FaceStorageService>();
 
 class _SelfieCapturePageState extends State<SelfieCapturePage> {
   late CameraController _cameraController;
@@ -64,6 +68,34 @@ class _SelfieCapturePageState extends State<SelfieCapturePage> {
     context.read<SelfieCaptureBloc>().add(CaptureSelfie());
   }
 
+  Future<bool> _matchSelfie(File selfie) async {
+    File? extractedFace = faceStorage.getExtractedFace();
+
+    if (extractedFace == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                "❌ No extracted face found! Please upload a document first."),
+            backgroundColor: Colors.red),
+      );
+      return false;
+    }
+
+    // Call face matching API
+    bool isMatch = await matchFaces(extractedFace, selfie);
+    return isMatch;
+    // if (isMatch) {
+    //   print("✅ Face Matched! Proceeding to Liveness Detection...");
+    // } else {
+    //   print("❌ Face Mismatch! Show error message.");
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(
+    //         content: Text("Selfie does not match the license photo!"),
+    //         backgroundColor: Colors.red),
+    //   );
+    // }
+  }
+
   Future<void> _handleUploadAndNavigate(
       BuildContext context, XFile image) async {
     setState(() {
@@ -71,17 +103,29 @@ class _SelfieCapturePageState extends State<SelfieCapturePage> {
     });
 
     try {
-      final storageService = StorageService();
-      final downloadUrl = await storageService.uploadSelfie(File(image.path));
-      await UpdateUser().verifySelfie(
-        FirebaseAuth.instance.currentUser!.uid,
-        'isSelfieVerified',
-        true,
-      );
-      print('Selfie uploaded successfully: $downloadUrl');
+      final bool isMatched = await _matchSelfie(File(image.path));
+      if (isMatched) {
+        print("✅ Face Matched! Proceeding to Liveness Detection...");
+        final storageService = StorageService();
+        final downloadUrl = await storageService.uploadSelfie(File(image.path));
+        await UpdateUser().verifySelfie(
+          FirebaseAuth.instance.currentUser!.uid,
+          'isSelfieVerified',
+          true,
+        );
+        print('Selfie uploaded successfully: $downloadUrl');
 
-      if (mounted) {
-        await _navigateToLiveliness(context);
+        if (mounted) {
+          await _navigateToLiveliness(context);
+        }
+      } else {
+        print("❌ Face Mismatch! Show error message.");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Selfie does not match the license photo!"),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } catch (e) {
       print('Error uploading selfie: $e');

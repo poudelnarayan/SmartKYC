@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -138,7 +139,9 @@ class _SigninPageState extends State<SigninPage> {
         } else if (state is EmailVerificationRequired) {
           context.go(VerifyEmailPage.pageName);
         } else if (state is SigninSuccess) {
-          // Check if biometric login is enabled
+          FocusScope.of(context).unfocus();
+          SystemChannels.textInput.invokeMethod('TextInput.hide');
+
           final isBiometricEnabled =
               await BiometricService.isBiometricEnabled();
 

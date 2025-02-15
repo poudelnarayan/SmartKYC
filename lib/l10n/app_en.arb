@@ -34,6 +34,7 @@
   "backToSignIn": "Back to Sign In",
   "resetLinkSentDesc": "If an account exists with this email, you will receive a password reset link shortly.",
   "signIn": "Sign In",
+  "signingIn": "Signing In...",
   "logoutConfirmation": "Logout Confirmation",
   "logoutConfirmationDesc": "Are you sure you want to logout?",
   "cancel": "Cancel",
@@ -225,7 +226,7 @@
   "documentVerification": "Document Verification",
   "selfieVerification": "Selfie Verification",
   "livenessVerification": "Liveness Verification",
-  "notVerified":"Not Verified",
-  "verifyNowTxt":"Verify Now",
-  "retry":"Retry"
+  "notVerified": "Not Verified",
+  "verifyNowTxt": "Verify Now",
+  "retry": "Retry"
 }

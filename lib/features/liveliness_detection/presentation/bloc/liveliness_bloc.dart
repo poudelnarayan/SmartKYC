@@ -23,7 +23,7 @@ class LivenessBloc extends Bloc<LivenessEvent, LivenessState> {
   ) {
     emit(state.copyWith(
       recordingState: RecordingState.lookUp,
-      instruction: 'Please look up slowly',
+      instruction: 'Please look up slowly',                                                             
       isRecording: true,
     ));
 

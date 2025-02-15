@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -174,6 +175,8 @@ class _LoginFormState extends State<LoginForm> {
                     _passwordController.text,
                   );
                   if (_formKey.currentState?.validate() ?? false) {
+                    FocusScope.of(context).unfocus();
+                    SystemChannels.textInput.invokeMethod('TextInput.hide');
                     context.read<AuthBloc>().add(
                           SignInWithEmailAndPassword(
                             email: _emailController.text,
@@ -197,10 +200,11 @@ class _LoginFormState extends State<LoginForm> {
                   color: Colors.blue,
                 ),
           label: Text(
-            l10n.signIn,
-            style: const TextStyle(
+            state is AuthLoading ? l10n.signingIn : l10n.signIn,
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
+              color: state is AuthLoading ? Colors.grey : Colors.blue,
             ),
           ),
           style: FilledButton.styleFrom(
@@ -252,6 +256,7 @@ class _LoginFormState extends State<LoginForm> {
         icon,
         color: Colors.white.withOpacity(0.7),
       ),
+      errorStyle: const TextStyle(color: Colors.white),
       suffixIcon: suffixIcon,
       border: _getInputBorder(),
       enabledBorder: _getInputBorder(),

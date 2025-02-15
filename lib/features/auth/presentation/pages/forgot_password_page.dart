@@ -125,7 +125,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       onPressed: () {
                         context.pop();
                       },
-                      icon: Icon(Icons.arrow_back)),
+                      icon: Icon(
+                        Icons.cancel_presentation_rounded,
+                        color: Colors.white,
+                      )),
                   const SizedBox(height: AppDimensions.s48),
                   // Icon
                   Center(

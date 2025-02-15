@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
@@ -100,42 +101,43 @@ class _VerificationProgressOverlayState
   Widget build(BuildContext context) {
     return Material(
       color: Colors.black.withOpacity(0.9),
-      child: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton.icon(
-                    onPressed: () => context.go(widget.nextRoute),
-                    icon: const Icon(Icons.skip_next, color: Colors.white),
-                    label: Text(
-                      'Skip',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
-                      ),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 35,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: () => context.go(widget.nextRoute),
+                  icon: const Icon(Icons.skip_next, color: Colors.white),
+                  label: Text(
+                    'Skip',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.8),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 40),
-                      _buildSteps(context),
-                    ],
-                  ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 40),
+                    _buildSteps(context),
+                  ],
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -1,13 +1,17 @@
+import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
+import 'package:amplify_core/amplify_core.dart';
 import 'package:camera/camera.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get_it/get_it.dart';
 import 'package:smartkyc/core/services/locator.dart';
 import 'package:smartkyc/core/services/preferences_service.dart';
+import 'package:smartkyc/core/theme/app_color_scheme.dart';
 import 'package:smartkyc/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:smartkyc/features/auth/domain/usecases/sign_in.dart';
 import 'package:smartkyc/features/auth/domain/usecases/sign_up.dart';
@@ -20,6 +24,7 @@ import 'package:smartkyc/features/upload_document/presentation/bloc/upload_docum
 import 'package:smartkyc/features/user_detail_form/presentation/bloc/user_detail_form_bloc.dart';
 import 'package:smartkyc/features/user_profile/presentation/bloc/user_profile_bloc.dart';
 import 'package:smartkyc/l10n/app_localizations.dart';
+import 'amplifyconfiguration.dart';
 import 'config/routes.dart';
 import 'core/theme/app_theme.dart';
 import 'domain/services/auth_service.dart';
@@ -31,12 +36,33 @@ import 'firebase_options.dart';
 
 final getIt = GetIt.instance;
 
+Future<void> configureAmplify() async {
+  try {
+    // Add Auth plugin
+    final authPlugin = AmplifyAuthCognito();
+    await Amplify.addPlugin(authPlugin);
+
+    // Configure Amplify
+    await Amplify.configure(amplifyconfig);
+    print('✅ Amplify Configured');
+  } catch (e) {
+    print('❌ Error configuring Amplify: $e');
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   setupLocator();
+   await configureAmplify();
 
   final onboardingService = GetIt.instance<OnboardingService>();
   await onboardingService.init();
+  try {
+    await dotenv.load(fileName: "assets/.env"); // Ensure the file exists
+    print(" ✅ API Key Loaded: ${dotenv.env['API_KEY']}");
+  } catch (e) {
+    print(" ❌ Error loading .env file: $e"); // Debugging
+  }
 
   try {
     await Firebase.initializeApp(
@@ -62,6 +88,10 @@ void main() async {
   final deleteUser = DeleteUser();
   final updateUser = UpdateUser();
   final authService = AuthService();
+  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent, // Background color
+    statusBarIconBrightness: Brightness.light,
+  ));
 
   runApp(
     MultiBlocProvider(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartkyc/l10n/app_localizations.dart';
 import 'package:smartkyc/features/selfie_capture/presentation/pages/selfie_capture_page.dart';
@@ -20,8 +21,12 @@ class _SelfieStartPageState extends State<SelfieStartPage> {
 
   @override
   void initState() {
-    super.initState();
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent, // Background color
+      statusBarIconBrightness: Brightness.dark,
+    ));
     _checkNavigation();
+    super.initState();
   }
 
   Future<void> _checkNavigation() async {
@@ -35,173 +40,186 @@ class _SelfieStartPageState extends State<SelfieStartPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent, // Background color
+      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+    ));
     final l10n = AppLocalizations.of(context);
     final extraData = GoRouterState.of(context).extra;
     final bool returnToProfile = (extraData is Map<String, dynamic>)
         ? (extraData['returnToProfile'] ?? false)
         : false;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: isDark ? Colors.grey[900] : Colors.white,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        actions: [
-          if (!returnToProfile)
-            Column(
-              children: [
-                const SizedBox(
-                  height: 14,
-                ),
-                SkipButton(
-                  onSkip: () {
-                    context.go(nextRoute);
-                  },
-                  backgroundColor:
-                      isDark ? Colors.white.withOpacity(0.1) : null,
-                  textColor: isDark ? Colors.white : null,
-                ),
-              ],
-            ),
-          const SizedBox(width: 25),
-        ],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.only(
-              left: 24.0,
-              right: 24,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.selfieCapture,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  l10n.selfieCaptureDesc,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: isDark ? Colors.grey[400] : Colors.grey[600],
-                      ),
-                ),
-                const SizedBox(height: 20),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color:
-                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: isDark ? Colors.grey[900] : Colors.white,
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          actions: [
+            if (!returnToProfile)
+              Column(
+                children: [
+                  const SizedBox(
+                    height: 14,
                   ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.camera_front,
-                        size: 64,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        l10n.selfieGuidelines,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                      ),
-                    ],
+                  SkipButton(
+                    onSkip: () {
+                      context.go(nextRoute);
+                    },
+                    backgroundColor:
+                        isDark ? Colors.white.withOpacity(0.1) : null,
+                    textColor: isDark ? Colors.white : null,
                   ),
-                ),
-                const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.grey[850] : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: isDark
-                            ? Colors.black.withOpacity(0.3)
-                            : Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                ],
+              ),
+            const SizedBox(width: 25),
+          ],
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.only(
+                left: 24.0,
+                right: 24,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.selfieCapture,
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                   ),
-                  child: Column(
-                    children: [
-                      _buildGuidelineItem(
-                        context,
-                        icon: Icons.wb_sunny,
-                        title: l10n.goodLighting,
-                        description: l10n.goodLightingDesc,
-                      ),
-                      const SizedBox(height: 20),
-                      _buildGuidelineItem(
-                        context,
-                        icon: Icons.face,
-                        title: l10n.facePosition,
-                        description: l10n.facePositionDesc,
-                      ),
-                      const SizedBox(height: 20),
-                      _buildGuidelineItem(
-                        context,
-                        icon: Icons.no_flash,
-                        title: l10n.noFlash,
-                        description: l10n.noFlashDesc,
-                      ),
-                    ],
+                  const SizedBox(height: 6),
+                  Text(
+                    l10n.selfieCaptureDesc,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                FilledButton.icon(
-                  onPressed: () => context.pushNamed(
-                    SelfieCapturePage.pageName,
-                    extra: extraData,
-                  ),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.all(16),
-                    minimumSize: const Size(double.infinity, 56),
-                  ),
-                  icon: const Icon(Icons.camera_alt),
-                  label: Text(
-                    l10n.startCamera,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                  const SizedBox(height: 20),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.camera_front,
+                          size: 64,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          l10n.selfieGuidelines,
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleLarge
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 15),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        size: 20,
-                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.grey[850] : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isDark
+                              ? Colors.black.withOpacity(0.3)
+                              : Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        _buildGuidelineItem(
+                          context,
+                          icon: Icons.wb_sunny,
+                          title: l10n.goodLighting,
+                          description: l10n.goodLightingDesc,
+                        ),
+                        const SizedBox(height: 20),
+                        _buildGuidelineItem(
+                          context,
+                          icon: Icons.face,
+                          title: l10n.facePosition,
+                          description: l10n.facePositionDesc,
+                        ),
+                        const SizedBox(height: 20),
+                        _buildGuidelineItem(
+                          context,
+                          icon: Icons.no_flash,
+                          title: l10n.noFlash,
+                          description: l10n.noFlashDesc,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  FilledButton.icon(
+                    onPressed: () => context.pushNamed(
+                      SelfieCapturePage.pageName,
+                      extra: extraData,
+                    ),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.all(16),
+                      minimumSize: const Size(double.infinity, 56),
+                    ),
+                    icon: const Icon(Icons.camera_alt),
+                    label: Text(
+                      l10n.startCamera,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          l10n.lightingTip,
-                          style: TextStyle(
-                            color: isDark ? Colors.grey[400] : Colors.grey[600],
-                            fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          size: 20,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            l10n.lightingTip,
+                            style: TextStyle(
+                              color:
+                                  isDark ? Colors.grey[400] : Colors.grey[600],
+                              fontSize: 14,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

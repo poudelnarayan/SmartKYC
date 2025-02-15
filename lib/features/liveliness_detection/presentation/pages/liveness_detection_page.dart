@@ -15,15 +15,16 @@ import '../bloc/liveliness_event.dart';
 import '../widgets/oval_face_camera_preview.dart';
 import '../../domain/entities/recording_state.dart';
 import '../../../../core/services/storage_service.dart';
-class LivenessDetectoinPage extends StatefulWidget {
-  const LivenessDetectoinPage({super.key});
+
+class LivenessDetectionPage extends StatefulWidget {
+  const LivenessDetectionPage({super.key});
   static const pageName = "livelinessDetection";
 
   @override
-  State<LivenessDetectoinPage> createState() => _LivelinessPageState();
+  State<LivenessDetectionPage> createState() => _LivelinessPageState();
 }
 
-class _LivelinessPageState extends State<LivenessDetectoinPage> {
+class _LivelinessPageState extends State<LivenessDetectionPage> {
   CameraController? _controller;
   bool _isCameraInitialized = false;
   bool _isUploading = false;
@@ -110,7 +111,6 @@ class _LivelinessPageState extends State<LivenessDetectoinPage> {
           await storageService.uploadLivenessVideo(File(newPath));
       print('Liveness video uploaded successfully: $downloadUrl');
 
-      // Clean up the copied file
       await File(newPath).delete();
       await UpdateUser().verifySelfie(
         FirebaseAuth.instance.currentUser!.uid,
@@ -159,7 +159,6 @@ class _LivelinessPageState extends State<LivenessDetectoinPage> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       body: BlocConsumer<LivenessBloc, LivenessState>(
         listener: (context, state) async {

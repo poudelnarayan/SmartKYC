@@ -90,6 +90,9 @@ class AppLocalizationsNe extends AppLocalizations {
   String get signIn => 'साइन इन';
 
   @override
+  String get signingIn => 'Signing In...';
+
+  @override
   String get logoutConfirmation => 'लगआउट पुष्टिकरण';
 
   @override

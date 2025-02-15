@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:smartkyc/core/theme/app_color_scheme.dart';
 import '../../../../core/services/biometric_services.dart';
@@ -64,6 +65,8 @@ class _BiometricPromptDialogState extends State<BiometricPromptDialog> {
 
       if (mounted) {
         Navigator.pop(context, true);
+        FocusScope.of(context).unfocus();
+        SystemChannels.textInput.invokeMethod('TextInput.hide');
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
@@ -261,7 +264,11 @@ class _BiometricPromptDialogState extends State<BiometricPromptDialog> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: FilledButton(
-                    onPressed: _isVerifying ? null : _verifyAndEnableBiometrics,
+                    onPressed: _isVerifying
+                        ? null
+                        : () {
+                            _verifyAndEnableBiometrics();
+                          },
                     style: FilledButton.styleFrom(
                       backgroundColor: isDark
                           ? AppColorScheme.darkPrimary

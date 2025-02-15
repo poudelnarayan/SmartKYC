@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smartkyc/core/theme/app_color_scheme.dart';
@@ -129,6 +130,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent, // Background color
+      statusBarIconBrightness: Brightness.light,
+    ));
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final gradientColors = AppColorScheme.getGradientColors(isDark);
     final l10n = AppLocalizations.of(context);
@@ -355,7 +360,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 Text(
                   state.user.fullName,
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 21,
                     fontWeight: FontWeight.bold,
                     color: isDark
                         ? AppColorScheme.darkText

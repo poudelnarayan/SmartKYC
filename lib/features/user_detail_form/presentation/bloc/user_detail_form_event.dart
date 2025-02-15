@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:camera/camera.dart';
 import 'package:equatable/equatable.dart';
 import 'package:smartkyc/domain/entities/user.dart';
 
@@ -13,4 +16,13 @@ class UpdateUserEvent extends UserEvent {
 
   @override
   List<Object> get props => [user];
+}
+
+class UpploadFileEvent extends UserEvent {
+  final XFile file;
+
+  UpploadFileEvent(this.file);
+
+  @override
+  List<Object> get props => [file];
 }

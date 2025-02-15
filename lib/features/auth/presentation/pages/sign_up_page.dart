@@ -325,6 +325,7 @@ class _SignUpPageState extends State<SignUpPage> {
         icon,
         color: textColor.withOpacity(0.7),
       ),
+      errorStyle: const TextStyle(color: Colors.white),
       suffixIcon: suffixIcon,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),

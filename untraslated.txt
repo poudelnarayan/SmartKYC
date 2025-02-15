@@ -1,5 +1,6 @@
 {
   "ne": [
+    "signingIn",
     "selfieCapture",
     "selfieCaptureDesc"
   ]
