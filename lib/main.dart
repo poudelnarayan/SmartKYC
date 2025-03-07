@@ -36,24 +36,11 @@ import 'firebase_options.dart';
 
 final getIt = GetIt.instance;
 
-Future<void> configureAmplify() async {
-  try {
-    // Add Auth plugin
-    final authPlugin = AmplifyAuthCognito();
-    await Amplify.addPlugin(authPlugin);
 
-    // Configure Amplify
-    await Amplify.configure(amplifyconfig);
-    print('✅ Amplify Configured');
-  } catch (e) {
-    print('❌ Error configuring Amplify: $e');
-  }
-}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   setupLocator();
-   await configureAmplify();
 
   final onboardingService = GetIt.instance<OnboardingService>();
   await onboardingService.init();

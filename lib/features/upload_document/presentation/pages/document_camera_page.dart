@@ -80,6 +80,7 @@ class _DocumentCameraPageState extends State<DocumentCameraPage> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -87,8 +88,18 @@ class _DocumentCameraPageState extends State<DocumentCameraPage> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            RotatedBox(quarterTurns: 1, child: CameraPreview(_controller!)),
-
+            Positioned(
+              top: 190,
+              left: 32,
+              child: SizedBox(
+                width: size.width * 0.85,
+                height: size.height * 0.50,
+                child: RotatedBox(
+                  quarterTurns: 1,
+                  child: CameraPreview(_controller!),
+                ),
+              ),
+            ),
             CustomPaint(
               painter: DocumentFramePainter(),
             ),
