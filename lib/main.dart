@@ -16,7 +16,7 @@ import 'package:smartkyc/features/auth/data/repositories/auth_repository_impl.da
 import 'package:smartkyc/features/auth/domain/usecases/sign_in.dart';
 import 'package:smartkyc/features/auth/domain/usecases/sign_up.dart';
 import 'package:smartkyc/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:smartkyc/features/language/presentation/bloc/language_bloc.dart';
+import 'package:smartkyc/features/language/presentation/bloc/language_bloc.dart';````
 import 'package:smartkyc/features/liveliness_detection/presentation/bloc/liveliness_bloc.dart';
 import 'package:smartkyc/features/onboarding/presentation/bloc/onboarding_bloc.dart';
 import 'package:smartkyc/features/theme/presentation/bloc/theme_bloc.dart';

@@ -6,7 +6,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:camera/camera.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lottie/lottie.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:smartkyc/features/success/presentation/pages/verification_success_page.dart';
 import 'package:smartkyc/features/user_profile/presentation/pages/user_profile_page.dart';
@@ -15,8 +14,11 @@ import '../bloc/liveliness_bloc.dart';
 import '../bloc/liveliness_state.dart';
 import '../bloc/liveliness_event.dart';
 import '../widgets/oval_face_camera_preview.dart';
+import '../widgets/movement_indicator.dart';
+import '../widgets/center_indicator.dart';
+import '../widgets/floating_instruction.dart';
 import '../../domain/entities/recording_state.dart';
-import '../../../../core/services/storage_service.dart';
+import '../../domain/entities/liveness_verification.dart';
 
 class LivenessDetectionPage extends StatefulWidget {
   const LivenessDetectionPage({super.key});
@@ -26,34 +28,40 @@ class LivenessDetectionPage extends StatefulWidget {
   State<LivenessDetectionPage> createState() => _LivenessDetectionPageState();
 }
 
-class _LivenessDetectionPageState extends State<LivenessDetectionPage> {
+class _LivenessDetectionPageState extends State<LivenessDetectionPage>
+    with WidgetsBindingObserver {
   CameraController? _controller;
   late FaceDetector _faceDetector;
   bool _isCameraInitialized = false;
   bool _isProcessing = false;
-  bool _isUploading = false;
-  bool _verificationFailed = false;
-  double? _lastY;
-  double? _lastX;
+  bool _isNavigating = false;
+  double? _initialY;
+  double? _initialX;
   Timer? _faceProcTimer;
-  XFile? _recordedVideo;
-
-  // Track which movements have been completed
-  final Map<String, bool> _completedMovements = {
+  Map<String, bool> _movementInProgress = {
     'up': false,
     'down': false,
     'left': false,
     'right': false
   };
 
-  int get _completedMovementsCount =>
-      _completedMovements.values.where((completed) => completed).length;
-
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initializeFaceDetector();
     _initializeCamera();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive) {
+      _controller?.dispose();
+    } else if (state == AppLifecycleState.resumed) {
+      if (_controller != null) {
+        _initializeCamera();
+      }
+    }
   }
 
   void _initializeFaceDetector() {
@@ -90,42 +98,47 @@ class _LivenessDetectionPageState extends State<LivenessDetectionPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error initializing camera: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showError('Error initializing camera: $e');
       }
     }
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
   }
 
   Future<void> _startRecording() async {
     if (_controller == null || !_controller!.value.isInitialized) return;
 
-    setState(() {
-      _verificationFailed = false;
-      _completedMovements.updateAll((key, value) => false);
-    });
+    _initialX = null;
+    _initialY = null;
+    _movementInProgress = {
+      'up': false,
+      'down': false,
+      'left': false,
+      'right': false
+    };
 
     try {
       await _controller!.startVideoRecording();
       context.read<LivenessBloc>().add(StartDetectionProcess());
-
-      // Start face tracking after recording begins
       _startFaceTracking();
     } catch (e) {
-      print('Error starting recording: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to start recording: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showError('Failed to start recording: $e');
     }
   }
 
   void _startFaceTracking() {
+    _faceProcTimer?.cancel();
     _faceProcTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
       _processNextFrame();
     });
@@ -141,176 +154,136 @@ class _LivenessDetectionPageState extends State<LivenessDetectionPage> {
     _isProcessing = true;
 
     try {
-      // Capture an image for processing
       final XFile imageFile = await _controller!.takePicture();
-
-      // Process the image file with ML Kit
       final inputImage = InputImage.fromFilePath(imageFile.path);
       final faces = await _faceDetector.processImage(inputImage);
 
       if (faces.isNotEmpty) {
         final face = faces.first;
-
         final y = face.boundingBox.top + (face.boundingBox.height / 2);
         final x = face.boundingBox.left + (face.boundingBox.width / 2);
 
-        final bloc = context.read<LivenessBloc>();
-        final currentState = bloc.state.recordingState;
-
-        if (_lastY != null && _lastX != null) {
-          // Check movements based on current state
-          if (y < _lastY! - 15) {
-            // Looking up
-            setState(() {
-              _completedMovements['up'] = true;
-            });
-
-            if (currentState == RecordingState.lookUp) {
-              // Advance to next instruction with a small delay for feedback
-              Future.delayed(const Duration(milliseconds: 300), () {
-                bloc.add(AutoCompleteMovement());
-              });
-            }
-          } else if (y > _lastY! + 15) {
-            // Looking down
-            setState(() {
-              _completedMovements['down'] = true;
-            });
-
-            if (currentState == RecordingState.lookDown) {
-              // Advance to next instruction with a small delay for feedback
-              Future.delayed(const Duration(milliseconds: 300), () {
-                bloc.add(AutoCompleteMovement());
-              });
-            }
-          } else if (x < _lastX! - 15) {
-            // Looking left
-            setState(() {
-              _completedMovements['left'] = true;
-            });
-
-            if (currentState == RecordingState.lookLeft) {
-              // Advance to next instruction with a small delay for feedback
-              Future.delayed(const Duration(milliseconds: 300), () {
-                bloc.add(AutoCompleteMovement());
-              });
-            }
-          } else if (x > _lastX! + 15) {
-            // Looking right
-            setState(() {
-              _completedMovements['right'] = true;
-            });
-
-            if (currentState == RecordingState.lookRight) {
-              // Advance to next instruction with a small delay for feedback
-              Future.delayed(const Duration(milliseconds: 300), () {
-                bloc.add(AutoCompleteMovement());
-              });
-            }
-          }
+        if (_initialY == null || _initialX == null) {
+          _initialY = y;
+          _initialX = x;
+        } else {
+          _checkMovement(y, x, context.read<LivenessBloc>());
         }
-
-        _lastY = y;
-        _lastX = x;
-      } else {
-        // Reset position tracking when face is lost
-        _lastY = null;
-        _lastX = null;
       }
 
-      // Delete the temporary file
       await File(imageFile.path).delete();
     } catch (e) {
-      print("Error processing image: $e");
+      debugPrint("Error processing image: $e");
     } finally {
       _isProcessing = false;
     }
   }
 
+  void _checkMovement(double y, double x, LivenessBloc bloc) {
+    const threshold = 30.0;
+    final state = bloc.state.recordingState;
+
+    switch (state) {
+      case RecordingState.lookUp:
+        if (y < _initialY! - threshold && !_movementInProgress['up']!) {
+          _movementInProgress['up'] = true;
+          bloc
+            ..add(const UpdateMovementStatus(movement: 'up', completed: true))
+            ..add(AutoCompleteMovement());
+        }
+        break;
+      case RecordingState.lookDown:
+        if (y > _initialY! + threshold && !_movementInProgress['down']!) {
+          _movementInProgress['down'] = true;
+          bloc
+            ..add(const UpdateMovementStatus(movement: 'down', completed: true))
+            ..add(AutoCompleteMovement());
+        }
+        break;
+      case RecordingState.lookLeft:
+        if (x < _initialX! - threshold && !_movementInProgress['left']!) {
+          _movementInProgress['left'] = true;
+          bloc
+            ..add(const UpdateMovementStatus(movement: 'left', completed: true))
+            ..add(AutoCompleteMovement());
+        }
+        break;
+      case RecordingState.lookRight:
+        if (x > _initialX! + threshold && !_movementInProgress['right']!) {
+          _movementInProgress['right'] = true;
+          bloc
+            ..add(
+                const UpdateMovementStatus(movement: 'right', completed: true))
+            ..add(AutoCompleteMovement());
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
   Future<void> _stopAndUploadRecording(BuildContext context) async {
-    if (_controller == null || !_controller!.value.isInitialized) return;
-
-    // Cancel face processing timer
-    _faceProcTimer?.cancel();
-
-    // Check if at least two movements were completed
-    if (_completedMovementsCount < 2) {
-      setState(() {
-        _verificationFailed = true;
-      });
-
-      // Stop recording but don't upload
-      try {
-        final video = await _controller!.stopVideoRecording();
-        await File(video.path).delete(); // Cleanup
-      } catch (e) {
-        print("Error stopping recording: $e");
-      }
-
+    if (_controller == null ||
+        !_controller!.value.isInitialized ||
+        _isNavigating) {
       return;
     }
 
-    setState(() {
-      _isUploading = true;
-    });
+    _isNavigating = true;
+    _faceProcTimer?.cancel();
+    final bloc = context.read<LivenessBloc>();
+
+    if (!bloc.state.hasCompletedRequiredMovements) {
+      bloc.add(SetVerificationFailed());
+      try {
+        final video = await _controller!.stopVideoRecording();
+        await File(video.path).delete();
+      } catch (e) {
+        debugPrint("Error stopping recording: $e");
+      }
+      _isNavigating = false;
+      return;
+    }
+
+    bloc.add(const SetProcessingStatus(true));
 
     try {
       final video = await _controller!.stopVideoRecording();
-      _recordedVideo = video;
-
-      // Create a new file with .mp4 extension
       final videoFile = File(video.path);
-      final directory = await videoFile.parent.create(recursive: true);
-      final newPath =
-          '${directory.path}/${DateTime.now().millisecondsSinceEpoch}.mp4';
-      await videoFile.copy(newPath);
-      await videoFile.delete(); // Delete the original temp file
+      await videoFile.delete();
 
-      final storageService = StorageService();
-      final downloadUrl =
-          await storageService.uploadLivenessVideo(File(newPath));
-      print('Liveness video uploaded successfully: $downloadUrl');
-
-      await File(newPath).delete();
       await UpdateUser().verifySelfie(
         FirebaseAuth.instance.currentUser!.uid,
         'isLivenessVerified',
         true,
       );
 
-      final extraData = GoRouterState.of(context).extra;
-      final bool returnToProfile = (extraData is Map<String, dynamic>)
-          ? (extraData['returnToProfile'] ?? false)
-          : false;
+      bloc.add(const SetProcessingStatus(false));
 
       if (mounted) {
+        final extraData = GoRouterState.of(context).extra;
+        final bool returnToProfile = (extraData is Map<String, dynamic>)
+            ? (extraData['returnToProfile'] ?? false)
+            : false;
+
         if (returnToProfile) {
-          context.pushReplacement(UserProfilePage.pageName);
+          context.go(UserProfilePage.pageName);
         } else {
           context.go(VerificationSuccessPage.pageName);
         }
       }
     } catch (e) {
-      print('Error handling video: $e');
+      bloc.add(const SetProcessingStatus(false));
+      _isNavigating = false;
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to upload video: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isUploading = false;
-        });
+        _showError('Failed to upload video: $e');
       }
     }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _faceProcTimer?.cancel();
     _controller?.dispose();
     _faceDetector.close();
@@ -319,98 +292,193 @@ class _LivenessDetectionPageState extends State<LivenessDetectionPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: BlocConsumer<LivenessBloc, LivenessState>(
-        listener: (context, state) async {
-          if (state.recordingState == RecordingState.completed) {
-            await _stopAndUploadRecording(context);
-          }
-        },
-        builder: (context, state) {
-          return Stack(
+    return BlocConsumer<LivenessBloc, LivenessState>(
+      listener: (context, state) async {
+        if (state.recordingState == RecordingState.completed &&
+            !_isNavigating) {
+          await _stopAndUploadRecording(context);
+        }
+      },
+      builder: (context, state) {
+        return Scaffold(
+          body: Stack(
             children: [
-              // Background gradient
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.secondary,
-                    ],
-                  ),
-                ),
-              ),
-
-              // Camera preview with face oval overlay
+              _buildBackground(context),
               if (_isCameraInitialized && _controller != null)
-                OvalFaceCameraPreview(
-                  controller: _controller!,
-                  recordingState: state.recordingState,
-                  // We'll provide our own instructions, not duplicated
-                  instruction: '',
-                ),
-
-              // Loading indicator
-              if (!_isCameraInitialized)
-                const Center(
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
+                Positioned.fill(
+                  child: OvalFaceCameraPreview(
+                    controller: _controller!,
+                    recordingState: state.recordingState,
+                    instruction: '',
                   ),
                 ),
-
-              // UI Elements
-              _buildUIOverlay(context, state),
-
-              // Verification failed overlay
-              if (_verificationFailed) _buildVerificationFailure(),
-
-              // Processing overlay
-              if (_isUploading) _buildProcessingOverlay(),
-
-              // Action button
-              if (!_isUploading && !_verificationFailed)
+              if (!_isCameraInitialized) _buildLoadingIndicator(),
+              if (state.isRecording) ...[
+                _buildDirectionalIndicators(state),
+                Positioned(
+                  bottom: 70,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: FloatingInstruction(
+                      recordingState: state.recordingState,
+                      completedMovementsCount: state.completedMovementsCount,
+                    ),
+                  ),
+                ),
+              ],
+              SafeArea(
+                child: _buildTopBar(context, state),
+              ),
+              if (state.isVerificationFailed)
+                _buildVerificationFailure(context),
+              if (state.isProcessing) _buildProcessingOverlay(),
+              if (!state.isProcessing && !state.isVerificationFailed)
                 _buildActionButton(context, state),
             ],
-          );
-        },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBackground(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Theme.of(context).colorScheme.primary,
+            Theme.of(context).colorScheme.primaryContainer,
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildUIOverlay(BuildContext context, LivenessState state) {
-    return SafeArea(
-      child: Column(
-        children: [
-          _buildTopBar(context, state),
-          if (state.isRecording) ...[
-            _buildProgressIndicator(context, state),
-            const Spacer(),
-            _buildInstructionCard(state),
-            const SizedBox(height: 100), // Space for button
+  Widget _buildLoadingIndicator() {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              spreadRadius: 5,
+            ),
           ],
-        ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(
+              'Initializing Camera',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildDirectionalIndicators(LivenessState state) {
+    return Stack(
+      children: [
+        Center(
+          child: CenterIndicator(
+            recordingState: state.recordingState,
+            isHoldingStill: state.recordingState == RecordingState.recording,
+          ),
+        ),
+        Positioned(
+          top: 180,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: MovementIndicator(
+              direction: 'up',
+              icon: Icons.keyboard_arrow_up_rounded,
+              completed: state.completedMovements['up']!,
+              active: state.recordingState == RecordingState.lookUp,
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 180,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: MovementIndicator(
+              direction: 'down',
+              icon: Icons.keyboard_arrow_down_rounded,
+              completed: state.completedMovements['down']!,
+              active: state.recordingState == RecordingState.lookDown,
+            ),
+          ),
+        ),
+        Positioned(
+          left: 40,
+          top: 0,
+          bottom: 0,
+          child: Center(
+            child: MovementIndicator(
+              direction: 'left',
+              icon: Icons.keyboard_arrow_left_rounded,
+              completed: state.completedMovements['left']!,
+              active: state.recordingState == RecordingState.lookLeft,
+            ),
+          ),
+        ),
+        Positioned(
+          right: 40,
+          top: 0,
+          bottom: 0,
+          child: Center(
+            child: MovementIndicator(
+              direction: 'right',
+              icon: Icons.keyboard_arrow_right_rounded,
+              completed: state.completedMovements['right']!,
+              active: state.recordingState == RecordingState.lookRight,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildTopBar(BuildContext context, LivenessState state) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    return Padding(
+      padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          IconButton(
-            onPressed: () => context.pop(),
-            icon: const Icon(Icons.close, color: Colors.white),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.close, color: Colors.white),
+              onPressed: () => context.pop(),
+            ),
           ),
           const Spacer(),
           if (state.isRecording)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.red.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.red.withOpacity(0.3)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -428,7 +496,7 @@ class _LivenessDetectionPageState extends State<LivenessDetectionPage> {
                     'Recording',
                     style: TextStyle(
                       color: Colors.white,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
@@ -442,172 +510,16 @@ class _LivenessDetectionPageState extends State<LivenessDetectionPage> {
     );
   }
 
-  Widget _buildProgressIndicator(BuildContext context, LivenessState state) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
-      child: Column(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: state.recordingDuration.inSeconds / 15,
-              backgroundColor: Colors.white24,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                Theme.of(context).colorScheme.tertiary,
-              ),
-              minHeight: 6,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${state.recordingDuration.inSeconds}s / 15s',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.7),
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn();
-  }
-
-  Widget _buildInstructionCard(LivenessState state) {
-    String getPromptIcon() {
-      if (state.recordingState == RecordingState.lookUp) return '↑';
-      if (state.recordingState == RecordingState.lookDown) return '↓';
-      if (state.recordingState == RecordingState.lookLeft) return '←';
-      if (state.recordingState == RecordingState.lookRight) return '→';
-      return '';
-    }
-
-    String getCompletedText() {
-      int count = _completedMovementsCount;
-      if (count == 0) return 'Complete 2 movements';
-      if (count == 1) return '1 of 2 movements detected';
-      return '$count movements detected';
-    }
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.4),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.2),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Main instruction
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (getPromptIcon().isNotEmpty)
-                Text(
-                  getPromptIcon(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              const SizedBox(width: 12),
-              Text(
-                state.instruction,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // Movement indicators
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildMovementIndicator('Up', _completedMovements['up']!),
-              _buildMovementIndicator('Down', _completedMovements['down']!),
-              _buildMovementIndicator('Left', _completedMovements['left']!),
-              _buildMovementIndicator('Right', _completedMovements['right']!),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // Progress text
-          Text(
-            getCompletedText(),
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
-              fontSize: 14,
-              fontWeight: _completedMovementsCount >= 2
-                  ? FontWeight.bold
-                  : FontWeight.normal,
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn();
-  }
-
-  Widget _buildMovementIndicator(String label, bool completed) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: completed
-                  ? Colors.green.withOpacity(0.3)
-                  : Colors.white.withOpacity(0.1),
-              border: Border.all(
-                color: completed ? Colors.green : Colors.white.withOpacity(0.3),
-                width: 2,
-              ),
-            ),
-            child: Center(
-              child: Icon(
-                completed ? Icons.check : Icons.arrow_drop_up,
-                color: completed ? Colors.green : Colors.white.withOpacity(0.5),
-                size: 24,
-              ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: completed ? Colors.green : Colors.white.withOpacity(0.7),
-              fontSize: 12,
-              fontWeight: completed ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVerificationFailure() {
+  Widget _buildVerificationFailure(BuildContext context) {
     return Container(
       color: Colors.black.withOpacity(0.85),
       child: Center(
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 32),
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(32),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.3),
@@ -620,49 +532,50 @@ class _LivenessDetectionPageState extends State<LivenessDetectionPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 70,
-                height: 70,
+                width: 80,
+                height: 80,
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.error.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.error_outline,
+                  Icons.error_outline_rounded,
                   color: Theme.of(context).colorScheme.error,
                   size: 40,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               const Text(
                 'Verification Failed',
                 style: TextStyle(
-                  color: Colors.black,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 12),
-              const Text(
-                'Please complete at least 2 different head movements during the verification process.',
+              const SizedBox(height: 16),
+              Text(
+                'Please complete at least ${LivenessVerification.requiredMovements} different head movements during the verification process.',
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.black87,
                   fontSize: 16,
+                  height: 1.5,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: _startRecording,
+                  onPressed: () {
+                    context.read<LivenessBloc>().add(ResetVerification());
+                    _startRecording();
+                  },
                   style: FilledButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 16,
-                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
                   child: const Text(
@@ -685,51 +598,52 @@ class _LivenessDetectionPageState extends State<LivenessDetectionPage> {
     return Container(
       color: Colors.black.withOpacity(0.9),
       child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 200,
-              height: 200,
-              child: Lottie.network(
-                'https://lottie.host/c9ef1b27-5c36-4287-98d0-f6cde70ae043/KKBXQbo4ma.json',
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return const CircularProgressIndicator(
-                    color: Colors.white,
-                  );
-                },
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 32),
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 20,
+                spreadRadius: 5,
               ),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Processing Video',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 12,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: const Text(
-                'Analyzing facial movements...',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 120,
+                height: 120,
+                child: CircularProgressIndicator(
+                  strokeWidth: 8,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).colorScheme.primary,
+                  ),
                 ),
-                textAlign: TextAlign.center,
               ),
-            ),
-          ],
+              const SizedBox(height: 32),
+              const Text(
+                'Processing Video',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Please wait while we verify your identity',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.black54,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
         ).animate().fadeIn().scale(),
       ),
     );
@@ -738,7 +652,7 @@ class _LivenessDetectionPageState extends State<LivenessDetectionPage> {
   Widget _buildActionButton(BuildContext context, LivenessState state) {
     if (state.recordingState == RecordingState.initial) {
       return Positioned(
-        bottom: 30,
+        bottom: 40,
         left: 0,
         right: 0,
         child: Center(
@@ -751,11 +665,12 @@ class _LivenessDetectionPageState extends State<LivenessDetectionPage> {
               foregroundColor: Theme.of(context).colorScheme.primary,
               padding: const EdgeInsets.symmetric(
                 horizontal: 32,
-                vertical: 16,
+                vertical: 20,
               ),
               textStyle: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
               ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
@@ -765,49 +680,6 @@ class _LivenessDetectionPageState extends State<LivenessDetectionPage> {
         ),
       );
     }
-
-    return Positioned(
-      bottom: 30,
-      left: 0,
-      right: 0,
-      child: Center(
-        child: Container(
-          width: 70,
-          height: 70,
-          padding: const EdgeInsets.all(5),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: Colors.white,
-              width: 2,
-            ),
-          ),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.videocam,
-              color: Theme.of(context).colorScheme.primary,
-              size: 36,
-            ),
-          ),
-        )
-            .animate(onPlay: (controller) => controller.repeat())
-            .scale(
-              duration: const Duration(seconds: 1),
-              begin: const Offset(1, 1),
-              end: const Offset(1.15, 1.15),
-            )
-            .then()
-            .scale(
-              duration: const Duration(seconds: 1),
-              begin: const Offset(1.15, 1.15),
-              end: const Offset(1, 1),
-            ),
-      ),
-    );
+    return const SizedBox.shrink();
   }
 }
